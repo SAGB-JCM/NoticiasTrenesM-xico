@@ -542,8 +542,8 @@
                             <div class="flex items-center space-x-2">
                                 <label for="reportes-data-source" class="block text-sm font-medium text-gray-700">Fuente de datos:</label>
                                 <select id="reportes-data-source" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
-                                    <option value="noticias">Noticias</option>
                                     <option value="historico">Histórico</option>
+                                    <option value="noticias">Noticias</option>
                                     <option value="combinado">Noticias + Histórico</option>
                                 </select>
                             </div>
@@ -1529,10 +1529,21 @@
             data.forEach(newsItem => {
                 proyectoCounts[newsItem.proyecto || 'N/A'] = (proyectoCounts[newsItem.proyecto || 'N/A'] || 0) + 1;
                 categoriaCounts[newsItem.categoria || 'N/A'] = (categoriaCounts[newsItem.categoria || 'N/A'] || 0) + 1;
-                
+
+
                 if (newsItem.fecha) {
                     try {
-                        const newsDate = new Date(newsItem.fecha);
+                        // Parsear como fecha LOCAL para evitar el desfase por zona horaria
+                        let newsDate;
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(newsItem.fecha)) {
+                            const [y, m, d] = newsItem.fecha.split('-').map(Number);
+                            newsDate = new Date(y, m - 1, d);
+                        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(newsItem.fecha)) {
+                            const [d, m, y] = newsItem.fecha.split('/').map(Number);
+                            newsDate = new Date(y, m - 1, d);
+                        } else {
+                            newsDate = new Date(newsItem.fecha);
+                        }
                         const dayOfWeek = daysOfWeek[newsDate.getDay()];
                         dayOfWeekCounts[dayOfWeek] = (dayOfWeekCounts[dayOfWeek] || 0) + 1;
                     } catch (e) { /* Ignorar */ }
