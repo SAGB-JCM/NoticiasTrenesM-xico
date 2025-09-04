@@ -381,6 +381,39 @@
             border: none;
             border-radius: 0.5rem;
         }
+
+        /* Estilos para el modal de detalles de la noticia */
+        .details-modal-content {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+        .details-header {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .details-header .date {
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .details-header .project {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-top: 0.25rem;
+        }
+        .details-section {
+            margin-bottom: 1.5rem;
+        }
+        .details-section h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
     </style>
     
     <script>
@@ -966,6 +999,22 @@
             }
         }
 
+        function formatLongDate(dateString) {
+            if (!dateString) return 'Fecha no disponible';
+            try {
+                const [year, month, day] = dateString.split('-').map(Number);
+                const date = new Date(Date.UTC(year, month - 1, day));
+                
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    timeZone: 'UTC'
+                };
+                return new Intl.DateTimeFormat('es-ES', options).format(date);
+            } catch (e) { return dateString; }
+        }
         // =============================================
         // MÓDULO: Interfaz de usuario
         // =============================================
@@ -1272,34 +1321,40 @@
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
 
+            const sourceLink = newsItem.fuente && isValidUrl(newsItem.fuente) 
+                ? `<a href="${newsItem.fuente}" target="_blank" class="text-blue-600 hover:underline break-all">${newsItem.fuente}</a>` 
+                : `<p class="text-gray-700">${newsItem.fuente || 'N/A'}</p>`;
+
             detailsModalContent.innerHTML = `
-                <div class="details-field">
-                    <label>Fecha</label>
-                    <p>${formatDate(newsItem.fecha)}</p>
+                <div class="details-header">
+                    <p class="date">${formatLongDate(newsItem.fecha)}</p>
+                    <h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>
                 </div>
-                <div class="details-field">
-                    <label>Proyecto</label>
-                    <p>${newsItem.proyecto || 'N/A'}</p>
+
+                <div class="details-section">
+                    <h4>Resumen de la Noticia</h4>
+                    <p class="text-gray-800 text-base leading-relaxed">${newsItem.resumen || 'No hay resumen disponible.'}</p>
                 </div>
-                <div class="details-field">
-                    <label>Categoría</label>
-                    <p>${newsItem.categoria || 'N/A'}</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div class="details-section">
+                        <h4>Categoría</h4>
+                        <p class="text-gray-700">${newsItem.categoria || 'N/A'}</p>
+                    </div>
+                    <div class="details-section">
+                        <h4>Medio de Difusión</h4>
+                        <p class="text-gray-700">${newsItem.medio || 'N/A'}</p>
+                    </div>
                 </div>
-                <div class="details-field">
-                    <label>Medio</label>
-                    <p>${newsItem.medio || 'N/A'}</p>
+
+                <div class="details-section">
+                    <h4>Fuente Original (URL)</h4>
+                    ${sourceLink}
                 </div>
-                <div class="details-field details-field-full">
-                    <label>Fuente (URL)</label>
-                    <p>${newsItem.fuente ? `<a href="${newsItem.fuente}" target="_blank" class="text-blue-600 hover:underline">${newsItem.fuente}</a>` : 'N/A'}</p>
-                </div>
-                <div class="details-field details-field-full">
-                    <label>Resumen</label>
-                    <p>${newsItem.resumen || 'N/A'}</p>
-                </div>
-                <div class="details-field details-field-full">
-                    <label>Comentario</label>
-                    <p>${newsItem.comentario || 'N/A'}</p>
+
+                <div class="details-section">
+                    <h4>Comentarios Adicionales</h4>
+                    <p class="text-gray-700 italic">${newsItem.comentario || 'Sin comentarios.'}</p>
                 </div>
             `;
 
