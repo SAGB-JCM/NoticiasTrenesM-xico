@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noticias Sobre los Trenes de México</title>
     
+    <!-- jQuery (requerido por Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -28,6 +31,13 @@
     
     <!-- html2pdf para generar reportes en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Firebase App (el módulo central de Firebase) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Auth -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <style>
         :root {
@@ -796,27 +806,24 @@
         <label>Secretaría Anticorrupción y Buen Gobierno, México - Algunos derechos reservados © 2025 </label>
     </footer>
 
-    <script type="module">
+    <script>
         // =============================================
         // MÓDULO: Configuración de Firebase
         // =============================================
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, writeBatch, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
         const firebaseConfig = {
-            apiKey: "AIzaSyDbvGa-79AsyP1KJv78YzKoTSBhF-1iDYU",
-            authDomain: "noticiastrenesm-xico.firebaseapp.com",
-            projectId: "noticiastrenesm-xico",
-            storageBucket: "noticiastrenesm-xico.firebasestorage.app",
-            messagingSenderId: "566647349885",
-            appId: "1:566647349885:web:1ebf1d30757eadf1494714",
-            measurementId: "G-NTHDMJV2EM"
+            apiKey: "AIzaSyBdiTQPTIklfTx4W4_cWn4wule50FKXknY",
+            authDomain: "llamadasicoin.firebaseapp.com",
+            projectId: "llamadasicoin",
+            storageBucket: "llamadasicoin.appspot.com",
+            messagingSenderId: "689552307207",
+            appId: "1:689552307207:web:a18fdf88cdf2583fa466a2",
+            measurementId: "G-Z97PD6VZR4"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
         // =============================================
         // MÓDULO: Variables globales y estado de la aplicación
@@ -825,8 +832,8 @@
         let historicalNews = [];
         let userId;
         
-        const newsCollectionRef = collection(db, "news");
-        const historicalNewsCollectionRef = collection(db, "historicalNews");
+        const newsCollectionRef = db.collection("news");
+        const historicalNewsCollectionRef = db.collection("historicalNews");
         
         // Elementos del DOM
         const loader = document.getElementById('loader');
@@ -1068,64 +1075,76 @@
         // MÓDULO: Gestión de noticias
         // =============================================
         
-        async function saveNews(newsData) {
-            try {
-                await addDoc(newsCollectionRef, { ...newsData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        function saveNews(newsData) {
+            newsCollectionRef.add({
+                ...newsData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
                 showAlert("Noticia guardada con éxito!", "success");
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Error al guardar la noticia:", error);
                 showAlert(`Error al guardar: ${error.message}`, "error");
-            }
+            });
         }
 
-        async function updateNews(id, updateData, isHistorical) {
+        function updateNews(id, updateData, isHistorical) {
             if (!id) {
                 console.error("ID no válido para actualización");
                 showAlert("Error interno: ID no válido", "error");
                 return;
             }
             
-            try {
-                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
-                const newsDocRef = doc(db, collectionRef.path, id);
-                
-                const docSnapshot = await getDoc(newsDocRef);
-                if (!docSnapshot.exists()) {
+            const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+            
+            collectionRef.doc(id).get()
+            .then((docSnapshot) => {
+                if (!docSnapshot.exists) {
                     showAlert("El registro que intentas actualizar no existe", "error");
                     return;
                 }
                 
-                await updateDoc(newsDocRef, { ...updateData, updatedAt: serverTimestamp() });
+                return collectionRef.doc(id).update({
+                    ...updateData,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(() => {
                 showAlert("Noticia actualizada con éxito!", "success");
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Error al actualizar la noticia:", error);
                 showAlert(`Error al actualizar: ${error.message}`, "error");
-            }
+            });
         }
 
-        async function deleteNews(id, isHistorical) {
+        function deleteNews(id, isHistorical) {
             if (!id) {
                 console.error("ID no válido para eliminación");
                 showAlert("Error interno: ID no válido", "error");
                 return;
             }
             
-            try {
-                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
-                const newsDocRef = doc(db, collectionRef.path, id);
-                
-                const docSnapshot = await getDoc(newsDocRef);
-                if (!docSnapshot.exists()) {
+            const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+            
+            collectionRef.doc(id).get()
+            .then((docSnapshot) => {
+                if (!docSnapshot.exists) {
                     showAlert("El registro que intentas eliminar no existe", "error");
                     return;
                 }
                 
-                await deleteDoc(newsDocRef);
+                return collectionRef.doc(id).delete();
+            })
+            .then(() => {
                 showAlert("Noticia eliminada con éxito!", "success");
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Error al eliminar la noticia:", error);
                 showAlert(`Error al eliminar: ${error.message}`, "error");
-            }
+            });
         }
 
         function handleEditClick(button) {
@@ -1181,32 +1200,43 @@
         // MÓDULO: Gestión de datos históricos
         // =============================================
         
-        async function deleteAllHistorical() {
-            const batch = writeBatch(db);
+        function deleteAllHistorical() {
+            const batch = db.batch();
             historicalNews.forEach(newsItem => {
-                const ref = doc(historicalNewsCollectionRef, newsItem.id);
+                const ref = historicalNewsCollectionRef.doc(newsItem.id);
                 batch.delete(ref);
             });
-            await batch.commit(); 
+            batch.commit()
+            .then(() => {
+                showAlert("Histórico eliminado correctamente", "success");
+            })
+            .catch((error) => {
+                console.error("Error al eliminar histórico:", error);
+                showAlert(`Error al eliminar histórico: ${error.message}`, "error");
+            });
         }
 
-        async function importHistoricalData(data) {
-            try {
-                const batch = writeBatch(db);
-                data.forEach(item => {
-                    const docRef = doc(historicalNewsCollectionRef);
-                    batch.set(docRef, { ...item, importedAt: serverTimestamp() });
+        function importHistoricalData(data) {
+            const batch = db.batch();
+            
+            data.forEach(item => {
+                const docRef = historicalNewsCollectionRef.doc();
+                batch.set(docRef, { 
+                    ...item, 
+                    importedAt: firebase.firestore.FieldValue.serverTimestamp() 
                 });
-                await batch.commit();
+            });
+            
+            batch.commit()
+            .then(() => {
                 showAlert(`Se han importado ${data.length} registros históricos.`, "success");
-                
                 updateDynamicSelectOptions();
                 renderTable(historicalTableBody, historicalNews, true);
-
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Error al importar datos históricos:", error);
                 showAlert(`Error al importar: ${error.message}`, "error");
-            }
+            });
         }
 
         // =============================================
@@ -1283,7 +1313,7 @@
             }
         }
 
-        async function findAndReplaceInDatabase(field, oldValue, newValue) {
+        function findAndReplaceInDatabase(field, oldValue, newValue) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
                 'categorias': 'categoria'
@@ -1292,28 +1322,35 @@
             const dbField = fieldToDbFieldMap[field];
             if (!dbField) return;
             
-            try {
-                const newsQuery = query(newsCollectionRef, where(dbField, '==', oldValue));
-                const newsSnapshot = await getDocs(newsQuery);
-                
-                const batch = writeBatch(db);
-                newsSnapshot.forEach(doc => batch.update(doc.ref, { [dbField]: newValue }));
-                
-                const historicalQuery = query(historicalNewsCollectionRef, where(dbField, '==', oldValue));
-                const historicalSnapshot = await getDocs(historicalQuery);
-                
-                historicalSnapshot.forEach(doc => batch.update(doc.ref, { [dbField]: newValue }));
-                
-                await batch.commit();
-                
+            // Actualizar en noticias
+            newsCollectionRef.where(dbField, '==', oldValue).get()
+            .then((querySnapshot) => {
+                const batch = db.batch();
+                querySnapshot.forEach((doc) => {
+                    batch.update(doc.ref, { [dbField]: newValue });
+                });
+                return batch.commit();
+            })
+            .then(() => {
+                // Actualizar en histórico
+                return historicalNewsCollectionRef.where(dbField, '==', oldValue).get();
+            })
+            .then((querySnapshot) => {
+                const batch = db.batch();
+                querySnapshot.forEach((doc) => {
+                    batch.update(doc.ref, { [dbField]: newValue });
+                });
+                return batch.commit();
+            })
+            .then(() => {
                 fieldOptions[field] = [...new Set([...fieldOptions[field], newValue])].sort();
                 updateSelectOptions(field, fieldOptions[field]);
-                
-                showAlert(`Se actualizaron ${newsSnapshot.size + historicalSnapshot.size} registros.`, "success");
-            } catch (error) {
+                showAlert("Opción actualizada correctamente en todos los registros.", "success");
+            })
+            .catch((error) => {
                 console.error("Error al actualizar registros:", error);
                 showAlert("Error al actualizar registros existentes", "error");
-            }
+            });
         }
 
         function setupAddEditButtons() {
@@ -1369,10 +1406,10 @@
 
                 closeModal(editOptionModal);
                 
-                requirePassword(async () => {
+                requirePassword(() => {
                     try {
                         if (['proyectos', 'categorias'].includes(currentEditingField)) {
-                            await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
+                            findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
                         } else {
                             // For non-select fields, just update the input value
                             let inputElement;
@@ -1440,28 +1477,35 @@
             openModal(passwordModal);
         }
 
-        async function initializeAppWithAuth() {
-            onAuthStateChanged(auth, async (user) => {
+        function initializeAppWithAuth() {
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     userId = user.uid;
                     userInfo.textContent = `Usuario Anónimo: ${userId.substring(0, 8)}...`;
                     setupRealtimeListeners();
                     showApp();
                 } else {
-                    await signInAnonymously(auth);
+                    try {
+                        await auth.signInAnonymously();
+                    } catch (error) {
+                        console.error("Error en autenticación anónima:", error);
+                        showAlert("Error de autenticación. Recargue la página.", "error");
+                    }
                 }
             });
         }
         
         function setupRealtimeListeners() {
-            onSnapshot(query(newsCollectionRef), (snapshot) => {
+            // Listener para noticias
+            newsCollectionRef.onSnapshot((snapshot) => {
                 news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(newsTableBody, news, false);
                 updateCharts();
                 updateDynamicSelectOptions();
             }, (error) => console.error("Error en listener de noticias:", error));
             
-            onSnapshot(query(historicalNewsCollectionRef), (snapshot) => {
+            // Listener para histórico
+            historicalNewsCollectionRef.onSnapshot((snapshot) => {
                 historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(historicalTableBody, historicalNews, true);
                 updateCharts();
@@ -1692,41 +1736,40 @@
         // MÓDULO: Migración de datos
         // =============================================
         
-        async function migrateNewsToHistorical() {
-            try {
-                if (news.length === 0) {
-                    showAlert("No hay noticias para migrar.", "warning");
-                    return;
-                }
-                
-                const batch = writeBatch(db);
-                const newsCount = news.length;
-                
-                news.forEach(newsItem => {
-                    const historicalDocRef = doc(historicalNewsCollectionRef);
-                    const { id, ...newsData } = newsItem;
-                    batch.set(historicalDocRef, { 
-                        ...newsData,
-                        migratedAt: serverTimestamp(),
-                        originalId: id
-                    });
+        function migrateNewsToHistorical() {
+            if (news.length === 0) {
+                showAlert("No hay noticias para migrar.", "warning");
+                return;
+            }
+            
+            const batch = db.batch();
+            const newsCount = news.length;
+            
+            news.forEach(newsItem => {
+                const historicalDocRef = historicalNewsCollectionRef.doc();
+                const { id, ...newsData } = newsItem;
+                batch.set(historicalDocRef, { 
+                    ...newsData,
+                    migratedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    originalId: id
                 });
-                
-                news.forEach(newsItem => {
-                    const newsDocRef = doc(newsCollectionRef, newsItem.id);
-                    batch.delete(newsDocRef);
-                });
-                
-                await batch.commit();
-                
+            });
+            
+            news.forEach(newsItem => {
+                const newsDocRef = newsCollectionRef.doc(newsItem.id);
+                batch.delete(newsDocRef);
+            });
+            
+            batch.commit()
+            .then(() => {
                 news = [];
                 sortAndRenderTable(newsTableBody, news, false);
-                
                 showAlert(`Se migraron ${newsCount} noticias al histórico.`, "success");
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Error al migrar noticias:", error);
                 showAlert(`Error al migrar: ${error.message}`, "error");
-            }
+            });
         }
 
         // =============================================
@@ -1781,7 +1824,7 @@
             
             closeEditModalBtn.addEventListener('click', () => closeModal(editModal));
             
-            editForm.addEventListener('submit', async (e) => {
+            editForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (!editForm.checkValidity()) {
                     return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
@@ -1791,43 +1834,31 @@
                 const updateData = Object.fromEntries(formData.entries());
                 const id = document.getElementById('edit-id').value;
                 
-                await updateNews(id, updateData, currentEditIsHistorical);
+                updateNews(id, updateData, currentEditIsHistorical);
                 closeModal(editModal);
             });
 
             let newsToDeleteId = null;
             let newsToDeleteIsHistorical = false;
 
-            function handleDeleteClick(e) {
-                requirePassword(() => {
-                    newsToDeleteId = e.currentTarget.dataset.id;
-                    newsToDeleteIsHistorical = e.currentTarget.dataset.isHistorical === 'true';
-                    openModal(confirmModal);
-                });
+            function handleTableClick(e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('edit-btn')) handleEditClick(target);
+                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
             }
 
-            newsTableBody.addEventListener('click', e => {
-                const target = e.target.closest('button');
-                if (!target) return;
-                if (target.classList.contains('edit-btn')) handleEditClick(target);
-                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
-            });
-
-            historicalTableBody.addEventListener('click', e => {
-                const target = e.target.closest('button');
-                if (!target) return;
-                if (target.classList.contains('edit-btn')) handleEditClick(target);
-                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
-            });
+            newsTableBody.addEventListener('click', handleTableClick);
+            historicalTableBody.addEventListener('click', handleTableClick);
 
             cancelDeleteBtn.addEventListener('click', () => {
                 closeModal(confirmModal);
                 newsToDeleteId = null;
             });
             
-            confirmDeleteBtn.addEventListener('click', async () => {
+            confirmDeleteBtn.addEventListener('click', () => {
                 if (newsToDeleteId) {
-                    await deleteNews(newsToDeleteId, newsToDeleteIsHistorical);
+                    deleteNews(newsToDeleteId, newsToDeleteIsHistorical);
                     closeModal(confirmModal);
                 }
             });
@@ -1844,7 +1875,7 @@
             });
 
             importHistoricalBtn.addEventListener('click', () => {
-                requirePassword(async () => {
+                requirePassword(() => {
                     const file = historicalFileInput.files[0];
                     if (!file) {
                         showAlert("Por favor, selecciona un archivo Excel primero.", "warning");
@@ -1852,14 +1883,17 @@
                     }
                     
                     const reader = new FileReader();
-                    reader.onload = async (e) => {
+                    reader.onload = (e) => {
                         try {
                             const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
                             const sheetName = workbook.SheetNames[0];
                             const worksheet = workbook.Sheets[sheetName];
                             const jsonData = XLSX.utils.sheet_to_json(worksheet);
                             
-                            if (jsonData.length === 0) return showAlert("El archivo no contiene datos válidos.", "warning");
+                            if (jsonData.length === 0) {
+                                showAlert("El archivo no contiene datos válidos.", "warning");
+                                return;
+                            }
 
                             const processedData = jsonData.map(row => {
                                 const mapKeys = (obj, keyMap) => Object.keys(obj).reduce((acc, key) => {
@@ -1892,28 +1926,38 @@
                                 };
                             });
 
-                            if (processedData.length === 0) return showAlert("El archivo Excel está vacío o no es válido.", "warning");
+                            if (processedData.length === 0) {
+                                showAlert("El archivo Excel está vacío o no es válido.", "warning");
+                                return;
+                            }
                             
-                            let replace = false;
+                            // Ask if user wants to replace existing historical data
                             if (historicalNews.length > 0) {
                                 openModal(replaceHistoricalModal);
-                                await new Promise(resolve => {
-                                    confirmReplaceBtn.onclick = () => {
-                                        replace = true;
-                                        closeModal(replaceHistoricalModal);
-                                        resolve();
-                                    };
-                                    cancelReplaceBtn.onclick = () => {
-                                        replace = false;
-                                        closeModal(replaceHistoricalModal);
-                                        resolve();
-                                    };
-                                });
-                                if (replace) {
-                                    await deleteAllHistorical();
-                                }
+                                
+                                const replaceHandler = () => {
+                                    deleteAllHistorical();
+                                    importHistoricalData(processedData);
+                                    closeModal(replaceHistoricalModal);
+                                    // Remove event listeners after use
+                                    confirmReplaceBtn.removeEventListener('click', replaceHandler);
+                                    cancelReplaceBtn.removeEventListener('click', cancelHandler);
+                                };
+                                
+                                const cancelHandler = () => {
+                                    importHistoricalData(processedData);
+                                    closeModal(replaceHistoricalModal);
+                                    // Remove event listeners after use
+                                    confirmReplaceBtn.removeEventListener('click', replaceHandler);
+                                    cancelReplaceBtn.removeEventListener('click', cancelHandler);
+                                };
+                                
+                                confirmReplaceBtn.addEventListener('click', replaceHandler);
+                                cancelReplaceBtn.addEventListener('click', cancelHandler);
+                            } else {
+                                importHistoricalData(processedData);
                             }
-                            await importHistoricalData(processedData);
+                            
                             historicalFileInput.value = '';
                             historicalFileName.textContent = 'Seleccionar archivo Excel (.xlsx)';
                             importHistoricalBtn.disabled = true;                        
@@ -1928,7 +1972,10 @@
             });
 
             downloadExcelBtn.addEventListener('click', () => {
-                if (news.length === 0) return showAlert("No hay datos para descargar.", "warning");
+                if (news.length === 0) {
+                    showAlert("No hay datos para descargar.", "warning");
+                    return;
+                }
                 const data = prepareExportData(news);
                 const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
                 const wb = XLSX.utils.book_new();
@@ -1937,7 +1984,10 @@
             });
             
             document.getElementById('download-historical-excel-btn').addEventListener('click', () => {
-                if (historicalNews.length === 0) return showAlert("No hay datos históricos para descargar.", "warning");
+                if (historicalNews.length === 0) {
+                    showAlert("No hay datos históricos para descargar.", "warning");
+                    return;
+                }
                 const data = prepareExportData(historicalNews);
                 const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
                 const wb = XLSX.utils.book_new();
@@ -1956,18 +2006,13 @@
             
             cancelMigrateBtn.addEventListener('click', () => closeModal(migrateModal));
             
-            confirmMigrateBtn.addEventListener('click', async () => {
-                try {
-                    await migrateNewsToHistorical();
-                    closeModal(migrateModal);
-                } catch (error) {
-                    console.error("Error en migración:", error);
-                    showAlert("Error durante la migración: " + error.message, "error");
-                }
+            confirmMigrateBtn.addEventListener('click', () => {
+                migrateNewsToHistorical();
+                closeModal(migrateModal);
             });
 
             // Set current date as default when opening the modal
-            newsModal.addEventListener('shown', () => {
+            $('#news-modal').on('shown.bs.modal', function () {
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('news-date').value = today;
             });
@@ -1996,9 +2041,11 @@
             document.getElementById('news-date').value = today;
         }
 
-        // Iniciar la aplicación
-        initialize();
+        // Iniciar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            initialize();
+        });
 
     </script>
 </body> 
-</html> 
+</html>
