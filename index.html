@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias Sobre los Trenes de México</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- js-xlsx para leer archivos de Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Select2 for searchable dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- html2pdf para generar reportes en PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #9C2348;
+            --secondary-color: #A6802D;
+            --accent-color: #1E5B4F;
+            --success-color: #10B981;
+            --danger-color: #EF4444;
+        }
+        
+        html { font-size: 65%; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        
+        .bg-primary { background-color: var(--primary-color); }
+        .text-primary { color: var(--primary-color); }
+        .border-primary { border-color: var(--primary-color); }
+        .focus\:ring-primary:focus { --tw-ring-color: var(--primary-color); }
+        
+        .bg-secondary { background-color: var(--secondary-color); }
+        .text-secondary { color: var(--secondary-color); }
+        .border-secondary { border-color: var(--secondary-color); }
+        
+        .bg-accent { background-color: var(--accent-color); }
+        .text-accent { color: var(--accent-color); }
+        .border-accent { border-color: var(--accent-color); }
+        
+        .bg-success { background-color: var(--success-color); }
+        .hover\:bg-success-dark:hover { background-color: #059669; }
+        
+        .bg-danger { background-color: var(--danger-color); }
+        .hover\:bg-danger-dark:hover { background-color: #DC2626; }
+        
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+        
+        .hidden { display: none; }
+        .tab-btn.active { border-color: var(--primary-color); color: var(--primary-color); font-weight: bold; }
+        
+        .loader { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(255, 255, 255, 0.9); z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .loader .spinner { 
+            border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; 
+            border-left-color: var(--primary-color); animation: spin 1s ease infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .table-container { 
+            overflow-x: auto; 
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .sortable-header { cursor: pointer; }
+        .sortable-header .sort-icon { display: none; }
+        .sortable-header.asc .sort-icon.asc,
+        .sortable-header.desc .sort-icon.desc { display: inline-block; }
+        
+        input:invalid, select:invalid { border-color: #ef4444; }
+        
+        .section-title { font-weight: bold; color: var(--primary-color); margin-bottom: 1rem; }
+        
+        .max-w-7xl {
+            max-width: 100% !important;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .table-container table {
+            width: 100%;
+            min-width: 1200px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .form-field {
+            margin-bottom: 0.5rem;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .news-form-container {
+            max-height: 75vh;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .news-form-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .news-form-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .news-form-container::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+
+        .news-form-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .flex-with-buttons {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .flex-with-buttons .select2-container {
+            flex-grow: 1;
+            margin-bottom: 1px;
+            min-width: 0;
+        }
+
+        .flex-with-buttons button {
+            height: 38px;
+            width: 38px;
+            margin-bottom: 1px;
+            flex-shrink: 0;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .flex-with-buttons button.edit-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .flex-with-buttons button.edit-btn:hover {
+            background-color: #8a6b22;
+        }
+
+        .select2-container--default .select2-selection--single {
+            height: 38px;
+            padding: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 26px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-selection__rendered {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .link-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #1a56db;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .wide-modal .relative {
+            max-width: 72rem !important;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .dynamic-chart-container {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .dynamic-chart-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        
+        .dynamic-chart-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .dynamic-table-container {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .dynamic-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .dynamic-table th, .dynamic-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        
+        .dynamic-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .dynamic-table tr:nth-child(even) {
+            background-color: #f3f4f6;
+        }
+        
+        #toggle-labels-btn {
+            transition: all 0.3s ease;
+        }
+
+        #toggle-labels-btn.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .footer-container {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 0.6rem;
+            margin-top: 0.6rem;
+            border-radius: 0.6rem;
+            box-shadow: 0 -3px 5px rgba(0, 0, 0, 0.08);
+        }
+        .footer-container label {
+            color: #4a5568;
+            font-size: 0.65rem;
+        }
+
+        .webview-modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .webview-container {
+            position: relative;
+            height: 80vh;
+            width: 80vw;
+            max-width: 1000px;
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#9C2348',
+                            light: '#b52e5a',
+                            dark: '#7d1c3a'
+                        },
+                        secondary: {
+                            DEFAULT: '#A6802D',
+                            light: '#bf9a41',
+                            dark: '#8a6b22'
+                        },
+                        accent: {
+                            DEFAULT: '#1E5B4F',
+                            light: '#267c6c',
+                            dark: '#16463c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased text-slate-700">
+
+    <div id="loader" class="loader">
+        <div class="spinner"></div>
+        <p class="mt-4 text-sm text-slate-600">Cargando datos, por favor espera...</p>
+    </div>
+
+    <div id="app" class="min-h-screen hidden">
+
+        <header class="bg-primary shadow-lg sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2972/2972424.png" alt="Logo Tren México" class="h-14 w-auto">
+                    <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Noticias Sobre los Trenes de México</h1>
+                </div>
+                <div id="user-info" class="text-white text-sm font-mono"></div>
+            </div>
+        </header>
+
+        <div class="bg-white shadow-sm sticky top-[56px] z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div id="tabs" class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button data-tab="noticias" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Noticias</button>
+                        <button data-tab="historico" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Histórico</button>
+                        <button data-tab="reportes" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Reportes</button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+            <main id="tab-content-noticias" class="tab-content">
+                <section class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-xl font-semibold text-slate-800">Gestión de Noticias</h3>
+                        <p class="text-slate-500">Registra nuevas noticias sobre los trenes de México.</p>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center space-x-3">
+                            <i class="fa-solid fa-plus h-6 w-6"></i>
+                            <span>Registrar Nueva Noticia</span>
+                        </button>
+                    </div>
+                </section>
+                
+                <section id="news-log">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-primary">Registro de Noticias</h2>
+                        <div class="flex items-center space-x-2">
+                            <div class="relative w-full">
+                                <input type="text" id="filter-input-main" placeholder="Buscar..." class="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                <button id="clear-filter-btn-main" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden">
+                                    <i class="fa-solid fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <button id="download-excel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Descargar Excel</span>
+                            </button>
+                            <button id="migrate-news-btn" class="migrate-btn bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
+                                <i class="fa-solid fa-database"></i>
+                                <span>Migrar a Histórico</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md table-container">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr id="main-table-header">
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="no">No. <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="fecha">Fecha <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="fuente">Fuente <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="proyecto">Proyecto <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="resumen">Resumen <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="categoria">Categoría <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="comentario">Comentario <span class="sort-icon asc"><i class="fa-solid fa-caret-up"></i></span><span class="sort-icon desc"><i class="fa-solid fa-caret-down"></i></span></th>
+                                    <th scope="col" class="py-3 px-6">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="news-table-body"></tbody>
+                        </table>
+                        <div id="no-news-message" class="p-6 text-center text-slate-500 hidden">
+                            <p>No hay noticias registradas en la base de datos.</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <div id="tab-content-historico" class="tab-content hidden">
+                <section class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-2xl font-bold text-primary mb-4">Cargar Histórico desde Excel</h2>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <label for="historical-file-input" class="w-full md:w-auto cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-lg shadow-sm transition-all duration-200 ease-in-out text-center flex-grow">
+                            <i class="fa-solid fa-file-upload mr-2"></i>
+                            <span id="file-name">Seleccionar archivo Excel (.xlsx)</span>
+                            <input type="file" id="historical-file-input" class="hidden" accept=".xlsx, .xls">
+                        </label>
+                        <button id="import-historical-btn" class="w-full md:w-auto bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-database mr-2"></i>Importar a la Base de Datos
+                        </button>
+                    </div>
+                </section>
+
+                <section id="historical-log" class="mt-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-primary">Registro Histórico</h2>
+                        <div class="flex items-center space-x-2">
+                            <div class="relative w-full">
+                                <input type="text" id="filter-input-historical" placeholder="Buscar..." class="w-full pl-10 pr-10 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                <button id="clear-filter-btn-historical" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden">
+                                    <i class="fa-solid fa-times-circle"></i>
+                                </button>
+                            </div>
+                            <button id="download-historical-excel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Descargar Histórico</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md table-container">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr id="historical-table-header">
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="no">No.</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="fecha">Fecha</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="fuente">Fuente</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="proyecto">Proyecto</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="resumen">Resumen</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="categoria">Categoría</th>
+                                    <th scope="col" class="py-3 px-6 sortable-header" data-sort-by="comentario">Comentario</th>
+                                    <th scope="col" class="py-3 px-6">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historical-table-body"></tbody>
+                        </table>
+                        <div id="no-historical-message" class="p-6 text-center text-slate-500 hidden">
+                            <p>No hay datos históricos cargados.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="tab-content-reportes" class="tab-content hidden">
+                <section id="reportes" class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-primary">Reportes</h2>
+                        <div class="flex items-center space-x-4">
+                            <button id="generate-report-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Generar Reporte</span>
+                            </button>
+                            <div class="flex items-center space-x-2">
+                                <label for="reportes-data-source" class="block text-sm font-medium text-gray-700">Fuente de datos:</label>
+                                <select id="reportes-data-source" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
+                                    <option value="noticias">Noticias</option>
+                                    <option value="historico">Histórico</option>
+                                    <option value="combinado">Noticias + Histórico</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="chart-wrapper">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Proyecto</h3>
+                            <canvas id="proyectoChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Categoría</h3>
+                            <canvas id="categoriaChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Semana</h3>
+                            <canvas id="weekChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="dynamic-chart-container">
+                        <div class="dynamic-chart-header">
+                            <h3 class="text-xl font-semibold text-slate-800">Noticias por</h3>
+                            <select id="dynamic-chart-variable" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
+                                <option value="proyecto">Proyecto</option>
+                                <option value="categoria">Categoría</option>
+                            </select>
+                            <button id="toggle-labels-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded ml-2">
+                                <i class="fa-solid fa-tag"></i>
+                            </button>
+                        </div>
+                        <div class="dynamic-chart-content">
+                            <div class="chart-wrapper">
+                                <canvas id="dynamicChart"></canvas>
+                            </div>
+                            <div class="dynamic-table-container">
+                                <h4 class="text-lg font-semibold text-slate-800 mb-2 text-center">Distribución</h4>
+                                <table class="dynamic-table">
+                                    <thead>
+                                        <tr>
+                                            <th id="dynamic-table-header">Variable</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dynamic-table-body">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    
+    <div id="news-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-primary mb-6">Registrar Nueva Noticia</h3>
+            <div class="news-form-container">
+                <form id="news-form" class="space-y-6" novalidate>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="news-date">Fecha de la Noticia</label>
+                            <input type="date" id="news-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="news-source">Fuente de la Noticia (URL)</label>
+                            <div class="flex-with-buttons">
+                                <input type="url" id="news-source" name="fuente" placeholder="https://ejemplo.com/noticia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                                <button type="button" id="edit-source-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="news-project">Proyecto</label>
+                            <div class="flex-with-buttons">
+                                <select id="news-project" name="proyecto" required></select>
+                                <button type="button" id="edit-project-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="news-category">Categoría</label>
+                            <div class="flex-with-buttons">
+                                <select id="news-category" name="categoria" required></select>
+                                <button type="button" id="edit-category-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="news-summary">Resumen de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="news-summary" name="resumen" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></textarea>
+                            <button type="button" id="edit-summary-btn" class="edit-btn">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="news-comment">Comentario</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-comment-btn" class="edit-btn">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end pt-4">
+                        <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Noticia</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
+            <button id="close-edit-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-primary mb-6">Editar Noticia</h3>
+            <div class="news-form-container">
+                <form id="edit-form" class="space-y-6" novalidate>
+                    <input type="hidden" id="edit-id">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="edit-news-date">Fecha de la Noticia</label>
+                            <input type="date" id="edit-news-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-news-source">Fuente de la Noticia (URL)</label>
+                            <div class="flex-with-buttons">
+                                <input type="url" id="edit-news-source" name="fuente" placeholder="https://ejemplo.com/noticia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                                <button type="button" id="edit-source-edit-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="edit-news-project">Proyecto</label>
+                            <div class="flex-with-buttons">
+                                <select id="edit-news-project" name="proyecto" required></select>
+                                <button type="button" id="edit-project-edit-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-news-category">Categoría</label>
+                            <div class="flex-with-buttons">
+                                <select id="edit-news-category" name="categoria" required></select>
+                                <button type="button" id="edit-category-edit-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="edit-news-summary">Resumen de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="edit-news-summary" name="resumen" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></textarea>
+                            <button type="button" id="edit-summary-edit-btn" class="edit-btn">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="edit-news-comment">Comentario</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="edit-news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-comment-edit-btn" class="edit-btn">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end pt-4">
+                        <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">Confirmar Eliminación</h3>
+            <p class="text-slate-600 mb-6">¿Estás seguro de que deseas eliminar este registro?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-delete-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-danger hover:bg-danger-dark text-white font-bold py-2 px-4 rounded-lg">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="replace-historical-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
+            <h3 class="text-xl font-bold text-primary mb-4">Reemplazar Histórico</h3>
+            <p class="text-slate-600 mb-6">¿Desea reemplazar el histórico actual?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-replace-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">No</button>
+                <button id="confirm-replace-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Sí</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-option-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
+            <h3 class="text-xl font-bold text-primary mb-4">Editar Opción</h3>
+            <input type="text" id="edit-option-input" placeholder="Edite la opción" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-edit-option-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirm-edit-option-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
+            <h3 class="text-xl font-bold text-primary mb-4">Verificación de Seguridad</h3>
+            <p class="text-slate-600 mb-4">Esta acción requiere autenticación. Por favor, ingrese la contraseña.</p>
+            <input type="password" id="password-input" placeholder="Contraseña" class="w-full p-2 border border-gray-300 rounded-md mb-4">
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-password-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirm-password-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Verificar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="webview-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-6xl mx-4 webview-container">
+            <button id="close-webview-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <div class="w-full h-full">
+                <iframe id="webview-frame" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="migrate-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
+            <h3 class="text-xl font-bold text-primary mb-4">Migrar Noticias</h3>
+            <p class="text-slate-600 mb-6">¿Está seguro de que desea migrar todas las noticias al Histórico? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-migrate-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirm-migrate-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Migrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer-container">
+        <label>Insurgentes Sur 1735, Col. Guadalupe Inn Ciudad de México., C.P 01020 - Tel. 2000 3000</label><br>
+        <label>Secretaría Anticorrupción y Buen Gobierno, México - Algunos derechos reservados © 2025 </label>
+    </footer>
+
+    <script type="module">
+        // =============================================
+        // MÓDULO: Configuración de Firebase
+        // =============================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, writeBatch, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbvGa-79AsyP1KJv78YzKoTSBhF-1iDYU",
+            authDomain: "noticiastrenesm-xico.firebaseapp.com",
+            projectId: "noticiastrenesm-xico",
+            storageBucket: "noticiastrenesm-xico.firebasestorage.app",
+            messagingSenderId: "566647349885",
+            appId: "1:566647349885:web:1ebf1d30757eadf1494714",
+            measurementId: "G-NTHDMJV2EM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // =============================================
+        // MÓDULO: Variables globales y estado de la aplicación
+        // =============================================
+        let news = [];
+        let historicalNews = [];
+        let userId;
+        
+        const newsCollectionRef = collection(db, "news");
+        const historicalNewsCollectionRef = collection(db, "historicalNews");
+        
+        // Elementos del DOM
+        const loader = document.getElementById('loader');
+        const appContainer = document.getElementById('app');
+        const userInfo = document.getElementById('user-info');
+        const tabsContainer = document.getElementById('tabs');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const addNewsBtn = document.getElementById('add-news-btn');
+        const downloadExcelBtn = document.getElementById('download-excel-btn');
+        const migrateNewsBtn = document.getElementById('migrate-news-btn');
+        const newsTableBody = document.getElementById('news-table-body');
+        const noNewsMessage = document.getElementById('no-news-message');
+        const historicalTableBody = document.getElementById('historical-table-body');
+        const noHistoricalMessage = document.getElementById('no-historical-message');
+        const historicalFileInput = document.getElementById('historical-file-input');
+        const historicalFileName = document.getElementById('file-name');
+        const importHistoricalBtn = document.getElementById('import-historical-btn');
+        const reportesDataSource = document.getElementById('reportes-data-source');
+        const proyectoChartCanvas = document.getElementById('proyectoChart');
+        const categoriaChartCanvas = document.getElementById('categoriaChart');
+        const weekChartCanvas = document.getElementById('weekChart');
+        const dynamicChartCanvas = document.getElementById('dynamicChart');
+        const dynamicChartVariable = document.getElementById('dynamic-chart-variable');
+        const toggleLabelsBtn = document.getElementById('toggle-labels-btn');
+        const dynamicTableBody = document.getElementById('dynamic-table-body');
+        const dynamicTableHeader = document.getElementById('dynamic-table-header');
+        let proyectoChart, categoriaChart, weekChart, dynamicChart;
+        const newsModal = document.getElementById('news-modal');
+        const newsForm = document.getElementById('news-form');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const replaceHistoricalModal = document.getElementById('replace-historical-modal');
+        const cancelReplaceBtn = document.getElementById('cancel-replace-btn');
+        const confirmReplaceBtn = document.getElementById('confirm-replace-btn');
+        const editOptionModal = document.getElementById('edit-option-modal');
+        const editOptionInput = document.getElementById('edit-option-input');
+        const cancelEditOptionBtn = document.getElementById('cancel-edit-option-btn');
+        const confirmEditOptionBtn = document.getElementById('confirm-edit-option-btn');
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('password-input');
+        const cancelPasswordBtn = document.getElementById('cancel-password-btn');
+        const confirmPasswordBtn = document.getElementById('confirm-password-btn');
+        const webviewModal = document.getElementById('webview-modal');
+        const webviewFrame = document.getElementById('webview-frame');
+        const closeWebviewBtn = document.getElementById('close-webview-btn');
+        const migrateModal = document.getElementById('migrate-modal');
+        const cancelMigrateBtn = document.getElementById('cancel-migrate-btn');
+        const confirmMigrateBtn = document.getElementById('confirm-migrate-btn');
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        
+        let currentEditIsHistorical = false;
+        
+        let fieldOptions = {
+            proyectos: [],
+            categorias: []
+        };
+
+        let currentEditingField = null;
+        let currentEditingValue = null;
+        let pendingAction = null;
+        let showChartLabels = true;
+
+        // =============================================
+        // MÓDULO: Utilidades
+        // =============================================
+        
+        function showApp() {
+            loader.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.createElement('div');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-gray-500' };
+            alertContainer.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white transform transition-all duration-300 z-[60] ${colors[type]}`;
+            alertContainer.textContent = message;
+            document.body.appendChild(alertContainer);
+            setTimeout(() => { alertContainer.remove(); }, 3000);
+        }
+
+        function openModal(modal) {
+            modal.classList.remove('hidden', 'modal-leave');
+            modal.classList.add('modal-enter');
+        }
+
+        function closeModal(modal) {
+            modal.classList.remove('modal-enter');
+            modal.classList.add('modal-leave');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES');
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        function truncateText(text, maxLength = 50) {
+            if (!text) return 'N/A';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // =============================================
+        // MÓDULO: Interfaz de usuario
+        // =============================================
+        
+        function setupTabs() {
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.tab-btn')) {
+                    const tabName = e.target.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    tabContents.forEach(content => content.classList.toggle('hidden', content.id !== `tab-content-${tabName}`));
+                    if (tabName === 'reportes') {
+                        setTimeout(updateCharts, 50);
+                    }
+                }
+            });
+        }
+
+        function renderTable(tableBody, data, isHistorical = false) {
+            const noDataMessage = isHistorical ? noHistoricalMessage : noNewsMessage;
+            tableBody.innerHTML = '';
+            noDataMessage.classList.toggle('hidden', data.length > 0);
+
+            data.forEach((newsItem, index) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="py-4 px-6">${index + 1}</td>
+                    <td class="py-4 px-6">${formatDate(newsItem.fecha)}</td>
+                    <td class="py-4 px-6">
+                        ${newsItem.fuente && isValidUrl(newsItem.fuente) 
+                            ? `<span class="link-cell" data-url="${newsItem.fuente}">${truncateText(newsItem.fuente, 30)}</span>` 
+                            : truncateText(newsItem.fuente, 30)}
+                    </td>
+                    <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.resumen, 50)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
+                    <td class="py-4 px-6 flex space-x-2">
+                        <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="edit-btn text-blue-500 hover:text-blue-700">
+                            <i class="fa-solid fa-edit"></i>
+                        </button>
+                        <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="delete-btn text-red-500 hover:text-red-700">
+                            <i class="fa-solid fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+
+            // Add event listeners to link cells
+            document.querySelectorAll('.link-cell').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const url = e.target.getAttribute('data-url');
+                    if (url && isValidUrl(url)) {
+                        openWebviewModal(url);
+                    }
+                });
+            });
+        }
+
+        function setupSorting(headerId, tableBody, dataProvider, renderFunc) {
+            document.getElementById(headerId).addEventListener('click', (e) => {
+                const header = e.target.closest('.sortable-header');
+                if (!header) return;
+                
+                const sortBy = header.dataset.sortBy;
+                let sortOrder = header.dataset.sortOrder === 'asc' ? 'desc' : 'asc';
+
+                document.querySelectorAll(`#${headerId} .sortable-header`).forEach(h => {
+                    h.dataset.sortOrder = ''; h.classList.remove('asc', 'desc');
+                });
+                header.dataset.sortOrder = sortOrder; header.classList.add(sortOrder);
+                
+                const data = dataProvider();
+                const sortedData = [...data].sort((a, b) => {
+                    const valA = a[sortBy] || ''; const valB = b[sortBy] || '';
+                    const comparison = typeof valA === 'string' ? valA.localeCompare(valB, 'es', { numeric: true }) : valA - valB;
+                    return sortOrder === 'asc' ? comparison : -comparison;
+                });
+                renderFunc(tableBody, sortedData, headerId.includes('historical'));
+            });
+        }
+        
+        function setupFiltering(inputId, tableBody, dataProvider, renderFunc, isHistorical = false) {
+            const filterInput = document.getElementById(inputId);
+            const clearFilterBtn = document.getElementById(`clear-filter-btn-${inputId.split('-')[2]}`);
+            filterInput.addEventListener('input', () => {
+                const filterText = filterInput.value.toLowerCase();
+                clearFilterBtn.classList.toggle('hidden', !filterText);
+                const data = dataProvider();
+                const filteredData = data.filter(newsItem => Object.values(newsItem).some(value => String(value).toLowerCase().includes(filterText)));
+                renderFunc(tableBody, filteredData, isHistorical);
+            });
+            clearFilterBtn.addEventListener('click', () => {
+                filterInput.value = ''; filterInput.dispatchEvent(new Event('input'));
+            });
+        }
+
+        function sortAndRenderTable(tableBody, data, isHistorical) {
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = new Date(a.fecha?.split('/').reverse().join('-'));
+                const dateB = new Date(b.fecha?.split('/').reverse().join('-'));
+                if (isNaN(dateA)) return 1;
+                if (isNaN(dateB)) return -1;
+                return dateB - dateA;
+            });
+            renderTable(tableBody, sortedData, isHistorical);
+        }
+
+        function openWebviewModal(url) {
+            webviewFrame.src = url;
+            openModal(webviewModal);
+        }
+
+        // =============================================
+        // MÓDULO: Gestión de noticias
+        // =============================================
+        
+        async function saveNews(newsData) {
+            try {
+                await addDoc(newsCollectionRef, { ...newsData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+                showAlert("Noticia guardada con éxito!", "success");
+            } catch (error) {
+                console.error("Error al guardar la noticia:", error);
+                showAlert(`Error al guardar: ${error.message}`, "error");
+            }
+        }
+
+        async function updateNews(id, updateData, isHistorical) {
+            if (!id) {
+                console.error("ID no válido para actualización");
+                showAlert("Error interno: ID no válido", "error");
+                return;
+            }
+            
+            try {
+                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+                const newsDocRef = doc(db, collectionRef.path, id);
+                
+                const docSnapshot = await getDoc(newsDocRef);
+                if (!docSnapshot.exists()) {
+                    showAlert("El registro que intentas actualizar no existe", "error");
+                    return;
+                }
+                
+                await updateDoc(newsDocRef, { ...updateData, updatedAt: serverTimestamp() });
+                showAlert("Noticia actualizada con éxito!", "success");
+            } catch (error) {
+                console.error("Error al actualizar la noticia:", error);
+                showAlert(`Error al actualizar: ${error.message}`, "error");
+            }
+        }
+
+        async function deleteNews(id, isHistorical) {
+            if (!id) {
+                console.error("ID no válido para eliminación");
+                showAlert("Error interno: ID no válido", "error");
+                return;
+            }
+            
+            try {
+                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+                const newsDocRef = doc(db, collectionRef.path, id);
+                
+                const docSnapshot = await getDoc(newsDocRef);
+                if (!docSnapshot.exists()) {
+                    showAlert("El registro que intentas eliminar no existe", "error");
+                    return;
+                }
+                
+                await deleteDoc(newsDocRef);
+                showAlert("Noticia eliminada con éxito!", "success");
+            } catch (error) {
+                console.error("Error al eliminar la noticia:", error);
+                showAlert(`Error al eliminar: ${error.message}`, "error");
+            }
+        }
+
+        function handleEditClick(button) {
+            requirePassword(() => {
+                const newsId = button.getAttribute('data-id');
+                const isHistorical = button.getAttribute('data-is-historical') === 'true';
+
+                if (!newsId) {
+                    console.error("ID de noticia no encontrado para edición");
+                    return;
+                }
+
+                currentEditIsHistorical = isHistorical;
+                const allData = isHistorical ? historicalNews : news;
+                const newsToEdit = allData.find(item => item.id === newsId);
+
+                if (!newsToEdit) {
+                    showAlert("No se pudo encontrar la noticia para editar", "error");
+                    return;
+                }
+
+                document.getElementById('edit-id').value = newsId;
+
+                // Set form values
+                document.getElementById('edit-news-date').value = newsToEdit.fecha || '';
+                document.getElementById('edit-news-source').value = newsToEdit.fuente || '';
+                document.getElementById('edit-news-summary').value = newsToEdit.resumen || '';
+                document.getElementById('edit-news-comment').value = newsToEdit.comentario || '';
+                
+                // Set select values
+                $('#edit-news-project').val(newsToEdit.proyecto || '').trigger('change');
+                $('#edit-news-category').val(newsToEdit.categoria || '').trigger('change');
+
+                openModal(editModal);
+            });
+        }
+
+        function handleDeleteClick(button) {
+            requirePassword(() => {
+                newsToDeleteId = button.getAttribute('data-id');
+                newsToDeleteIsHistorical = button.getAttribute('data-is-historical') === 'true';
+                
+                if (!newsToDeleteId) {
+                    console.error("ID de noticia no encontrado para eliminación");
+                    return;
+                }
+                
+                openModal(confirmModal);
+            });
+        }
+
+        // =============================================
+        // MÓDULO: Gestión de datos históricos
+        // =============================================
+        
+        async function deleteAllHistorical() {
+            const batch = writeBatch(db);
+            historicalNews.forEach(newsItem => {
+                const ref = doc(historicalNewsCollectionRef, newsItem.id);
+                batch.delete(ref);
+            });
+            await batch.commit(); 
+        }
+
+        async function importHistoricalData(data) {
+            try {
+                const batch = writeBatch(db);
+                data.forEach(item => {
+                    const docRef = doc(historicalNewsCollectionRef);
+                    batch.set(docRef, { ...item, importedAt: serverTimestamp() });
+                });
+                await batch.commit();
+                showAlert(`Se han importado ${data.length} registros históricos.`, "success");
+                
+                updateDynamicSelectOptions();
+                renderTable(historicalTableBody, historicalNews, true);
+
+            } catch (error) {
+                console.error("Error al importar datos históricos:", error);
+                showAlert(`Error al importar: ${error.message}`, "error");
+            }
+        }
+
+        // =============================================
+        // MÓDULO: Gestión de opciones dinámicas
+        // =============================================
+   
+        const catalogoProyectos = [
+            "Tren Maya",
+            "Tren Interurbano México-Toluca",
+            "Tren Transístmico",
+            "Ferrocarril Mexiquense",
+            "Otros proyectos ferroviarios"
+        ];
+
+        const catalogoCategorias = [
+            "Avances de obra",
+            "Inauguraciones",
+            "Eventos y ceremonias",
+            "Impacto social",
+            "Impacto económico",
+            "Impacto ambiental",
+            "Controversias",
+            "Acuerdos y convenios",
+            "Nombramientos y personal",
+            "Tecnología e innovación"
+        ];
+
+        function updateDynamicSelectOptions() {
+            const allData = [...news, ...historicalNews];
+            
+            // Proyectos - combinar catálogo con datos existentes
+            const historicalProyectos = allData.map(c => c.proyecto).filter(Boolean);
+            const combinedProyectos = [...new Set([...catalogoProyectos, ...historicalProyectos])].sort();
+            fieldOptions.proyectos = combinedProyectos;
+            updateSelectOptions('proyectos', fieldOptions.proyectos);
+        
+            // Categorías - combinar catálogo con datos existentes
+            const historicalCategorias = allData.map(c => c.categoria).filter(Boolean);
+            const combinedCategorias = [...new Set([...catalogoCategorias, ...historicalCategorias])].sort();
+            fieldOptions.categorias = combinedCategorias;
+            updateSelectOptions('categorias', fieldOptions.categorias);
+        }
+
+        function updateSelectOptions(field, options, selectedId = null) {
+            const fieldToSelectMap = {
+                'proyectos': ['news-project', 'edit-news-project'],
+                'categorias': ['news-category', 'edit-news-category']
+            };
+
+            const normalizedOptions = options.map(opt => ({id: opt, text: opt}));
+
+            if (fieldToSelectMap[field]) {
+                fieldToSelectMap[field].forEach(selectId => {
+                    const select = $(`#${selectId}`);
+                    if (select.length) {
+                        const currentValue = select.val();
+                        
+                        select.empty().select2({
+                            data: normalizedOptions,
+                            tags: true,
+                            placeholder: "Seleccione o escriba una opción",
+                            allowClear: true,
+                            width: '100%'
+                        });
+
+                        if (currentValue && normalizedOptions.some(o => o.id === currentValue)) {
+                            select.val(currentValue).trigger('change.select2');
+                        }
+                        else if (selectedId && normalizedOptions.some(o => o.id === selectedId)) {
+                            select.val(selectedId).trigger('change.select2');
+                        }
+                    }
+                });
+            }
+        }
+
+        async function findAndReplaceInDatabase(field, oldValue, newValue) {
+            const fieldToDbFieldMap = {
+                'proyectos': 'proyecto', 
+                'categorias': 'categoria'
+            };
+            
+            const dbField = fieldToDbFieldMap[field];
+            if (!dbField) return;
+            
+            try {
+                const newsQuery = query(newsCollectionRef, where(dbField, '==', oldValue));
+                const newsSnapshot = await getDocs(newsQuery);
+                
+                const batch = writeBatch(db);
+                newsSnapshot.forEach(doc => batch.update(doc.ref, { [dbField]: newValue }));
+                
+                const historicalQuery = query(historicalNewsCollectionRef, where(dbField, '==', oldValue));
+                const historicalSnapshot = await getDocs(historicalQuery);
+                
+                historicalSnapshot.forEach(doc => batch.update(doc.ref, { [dbField]: newValue }));
+                
+                await batch.commit();
+                
+                fieldOptions[field] = [...new Set([...fieldOptions[field], newValue])].sort();
+                updateSelectOptions(field, fieldOptions[field]);
+                
+                showAlert(`Se actualizaron ${newsSnapshot.size + historicalSnapshot.size} registros.`, "success");
+            } catch (error) {
+                console.error("Error al actualizar registros:", error);
+                showAlert("Error al actualizar registros existentes", "error");
+            }
+        }
+
+        function setupAddEditButtons() {
+            const buttonToFieldMap = {
+                'edit-project-btn': 'proyectos',
+                'edit-category-btn': 'categorias',
+                'edit-source-btn': 'fuente',
+                'edit-summary-btn': 'resumen',
+                'edit-comment-btn': 'comentario',
+                'edit-project-edit-btn': 'proyectos',
+                'edit-category-edit-btn': 'categorias',
+                'edit-source-edit-btn': 'fuente',
+                'edit-summary-edit-btn': 'resumen',
+                'edit-comment-edit-btn': 'comentario'
+            };
+            
+            Object.entries(buttonToFieldMap).forEach(([buttonId, field]) => {
+                const button = document.getElementById(buttonId);
+                if (!button) return;
+
+                button.addEventListener('click', (e) => {
+                    let inputElement;
+                    
+                    if (field === 'fuente' || field === 'resumen' || field === 'comentario') {
+                        // For text inputs and textareas
+                        inputElement = e.currentTarget.parentElement.querySelector('input') || 
+                                      e.currentTarget.parentElement.querySelector('textarea');
+                    } else {
+                        // For select elements
+                        inputElement = e.currentTarget.parentElement.querySelector('select');
+                    }
+                    
+                    const currentValue = inputElement.value;
+                        
+                    if (!currentValue) {
+                        return showAlert("Por favor, ingrese un valor para editar.", "warning");
+                    }
+                       
+                    currentEditingField = field;
+                    currentEditingValue = currentValue;
+                    editOptionInput.value = currentValue;
+                    editOptionInput.placeholder = `Edite la opción para ${field}`;
+                    openModal(editOptionModal);
+                });
+            });
+            
+            confirmEditOptionBtn.addEventListener('click', () => {
+                const newValue = editOptionInput.value.trim();
+
+                if (!newValue || !currentEditingField || !currentEditingValue) {
+                    return;
+                }
+
+                closeModal(editOptionModal);
+                
+                requirePassword(async () => {
+                    try {
+                        if (['proyectos', 'categorias'].includes(currentEditingField)) {
+                            await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
+                        } else {
+                            // For non-select fields, just update the input value
+                            let inputElement;
+                            if (currentEditingField === 'fuente') {
+                                inputElement = document.getElementById('news-source') || document.getElementById('edit-news-source');
+                            } else if (currentEditingField === 'resumen') {
+                                inputElement = document.getElementById('news-summary') || document.getElementById('edit-news-summary');
+                            } else if (currentEditingField === 'comentario') {
+                                inputElement = document.getElementById('news-comment') || document.getElementById('edit-news-comment');
+                            }
+                            
+                            if (inputElement) {
+                                inputElement.value = newValue;
+                            }
+                        }
+                        
+                    } catch (dbErr) {
+                        console.error('Error al actualizar la base de datos:', dbErr);
+                        showAlert("Error al actualizar la opción", "error");
+                    }
+                });
+            });
+
+            cancelEditOptionBtn.addEventListener('click', () => {
+                closeModal(editOptionModal);
+            });
+        }
+
+        // =============================================
+        // MÓDULO: Autenticación y seguridad
+        // =============================================
+
+        function verifyPassword() {
+            const password = passwordInput.value;
+            
+            if (password === 'admin') {
+                closeModal(passwordModal);
+                passwordInput.value = '';
+                if (pendingAction) {
+                    pendingAction();
+                    pendingAction = null;
+                }
+            } else {
+                showAlert("Contraseña incorrecta", "error");
+                passwordInput.value = '';
+            }
+        }
+
+        function setupPasswordVerification() {
+            confirmPasswordBtn.addEventListener('click', verifyPassword);
+            cancelPasswordBtn.addEventListener('click', () => {
+                closeModal(passwordModal);
+                pendingAction = null;
+            });
+            
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    verifyPassword();
+                }
+            });
+        }
+
+        function requirePassword(action) {
+            pendingAction = action;
+            openModal(passwordModal);
+        }
+
+        async function initializeAppWithAuth() {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userInfo.textContent = `Usuario Anónimo: ${userId.substring(0, 8)}...`;
+                    setupRealtimeListeners();
+                    showApp();
+                } else {
+                    await signInAnonymously(auth);
+                }
+            });
+        }
+        
+        function setupRealtimeListeners() {
+            onSnapshot(query(newsCollectionRef), (snapshot) => {
+                news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                sortAndRenderTable(newsTableBody, news, false);
+                updateCharts();
+                updateDynamicSelectOptions();
+            }, (error) => console.error("Error en listener de noticias:", error));
+            
+            onSnapshot(query(historicalNewsCollectionRef), (snapshot) => {
+                historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                sortAndRenderTable(historicalTableBody, historicalNews, true);
+                updateCharts();
+                updateDynamicSelectOptions();
+            }, (error) => console.error("Error en listener de histórico:", error));
+        }
+
+        // =============================================
+        // MÓDULO: Gráficos y reportes
+        // =============================================
+        
+        function updateCharts() {
+            const source = reportesDataSource.value;
+            let data = [];
+            if (source === 'noticias') data = news;
+            else if (source === 'historico') data = historicalNews;
+            else data = [...news, ...historicalNews];
+            
+            const proyectoCounts = {}, categoriaCounts = {}, weekCounts = {};
+            
+            // Initialize week counts for last 8 weeks
+            const weeks = [];
+            for (let i = 7; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i * 7);
+                const weekNumber = getWeekNumber(date);
+                weeks.push(`Semana ${weekNumber}`);
+                weekCounts[`Semana ${weekNumber}`] = 0;
+            }
+            
+            data.forEach(newsItem => {
+                proyectoCounts[newsItem.proyecto || 'N/A'] = (proyectoCounts[newsItem.proyecto || 'N/A'] || 0) + 1;
+                categoriaCounts[newsItem.categoria || 'N/A'] = (categoriaCounts[newsItem.categoria || 'N/A'] || 0) + 1;
+                
+                if (newsItem.fecha) {
+                    try {
+                        const newsDate = new Date(newsItem.fecha);
+                        const weekNumber = getWeekNumber(newsDate);
+                        const weekKey = `Semana ${weekNumber}`;
+                        
+                        // Only count if it's within the last 8 weeks
+                        if (weeks.includes(weekKey)) {
+                            weekCounts[weekKey] = (weekCounts[weekKey] || 0) + 1;
+                        }
+                    } catch (e) { /* Ignorar */ }
+                }
+            });
+
+            if (proyectoChart) proyectoChart.destroy();
+            if (categoriaChart) categoriaChart.destroy();
+            if (weekChart) weekChart.destroy();
+            if (dynamicChart) dynamicChart.destroy();
+
+            // Create proyecto chart (pie)
+            proyectoChart = new Chart(proyectoChartCanvas, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(proyectoCounts),
+                    datasets: [{
+                        data: Object.values(proyectoCounts),
+                        backgroundColor: ['#9C2348', '#1E5B4F', '#A6802D', '#3B82F6', '#8B5CF6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Create categoria chart (bar)
+            categoriaChart = new Chart(categoriaChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categoriaCounts),
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: Object.values(categoriaCounts),
+                        backgroundColor: '#1E5B4F'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Create week chart (line)
+            weekChart = new Chart(weekChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Noticias por semana',
+                        data: weeks.map(week => weekCounts[week] || 0),
+                        borderColor: '#A6802D',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Update dynamic chart
+            updateDynamicChart();
+        }
+
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+
+        function updateDynamicChart() {
+            const source = reportesDataSource.value;
+            let data = [];
+            if (source === 'noticias') data = news;
+            else if (source === 'historico') data = historicalNews;
+            else data = [...news, ...historicalNews];
+            
+            const selectedVariable = dynamicChartVariable.value;
+            const variableCounts = {};
+            
+            data.forEach(newsItem => {
+                const value = newsItem[selectedVariable] || 'N/A';
+                variableCounts[value] = (variableCounts[value] || 0) + 1;
+            });
+            
+            // Update dynamic table
+            dynamicTableBody.innerHTML = '';
+            dynamicTableHeader.textContent = selectedVariable.charAt(0).toUpperCase() + selectedVariable.slice(1);
+            
+            let total = 0;
+
+            Object.entries(variableCounts).forEach(([value, count]) => {
+                total += count;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${value}</td>
+                    <td>${count}</td>
+                `;
+                dynamicTableBody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'bg-slate-200 font-bold';
+            totalRow.innerHTML = `
+                <td>Total</td>
+                <td>${total}</td>
+            `;
+            dynamicTableBody.appendChild(totalRow);
+            
+            // Update dynamic chart
+            if (dynamicChart) dynamicChart.destroy();
+            
+            const labels = Object.keys(variableCounts);
+            const chartData = Object.values(variableCounts);
+            
+            dynamicChart = new Chart(dynamicChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cantidad',
+                        data: chartData,
+                        backgroundColor: '#9C2348'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                display: showChartLabels,
+                                maxRotation: showChartLabels ? 90 : 0,
+                                minRotation: showChartLabels ? 45 : 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =============================================
+        // MÓDULO: Exportación/Importación
+        // =============================================
+
+        const exportHeaders = [
+            "No.", "Fecha", "Fuente", "Proyecto", "Resumen", "Categoría", "Comentario"
+        ];
+
+        function prepareExportData(data) {
+            return data.map((newsItem, index) => ({
+                "No.": index + 1, 
+                "Fecha": formatDate(newsItem.fecha), 
+                "Fuente": newsItem.fuente || "",
+                "Proyecto": newsItem.proyecto || "", 
+                "Resumen": newsItem.resumen || "",
+                "Categoría": newsItem.categoria || "", 
+                "Comentario": newsItem.comentario || ""
+            }));
+        }
+
+        // =============================================
+        // MÓDULO: Migración de datos
+        // =============================================
+        
+        async function migrateNewsToHistorical() {
+            try {
+                if (news.length === 0) {
+                    showAlert("No hay noticias para migrar.", "warning");
+                    return;
+                }
+                
+                const batch = writeBatch(db);
+                const newsCount = news.length;
+                
+                news.forEach(newsItem => {
+                    const historicalDocRef = doc(historicalNewsCollectionRef);
+                    const { id, ...newsData } = newsItem;
+                    batch.set(historicalDocRef, { 
+                        ...newsData,
+                        migratedAt: serverTimestamp(),
+                        originalId: id
+                    });
+                });
+                
+                news.forEach(newsItem => {
+                    const newsDocRef = doc(newsCollectionRef, newsItem.id);
+                    batch.delete(newsDocRef);
+                });
+                
+                await batch.commit();
+                
+                news = [];
+                sortAndRenderTable(newsTableBody, news, false);
+                
+                showAlert(`Se migraron ${newsCount} noticias al histórico.`, "success");
+            } catch (error) {
+                console.error("Error al migrar noticias:", error);
+                showAlert(`Error al migrar: ${error.message}`, "error");
+            }
+        }
+
+        // =============================================
+        // MÓDULO: Configuración de eventos
+        // =============================================
+        
+        function setupEventListeners() {
+            setupTabs();
+            setupSorting('main-table-header', newsTableBody, () => news, renderTable);
+            setupSorting('historical-table-header', historicalTableBody, () => historicalNews, renderTable);
+            setupFiltering('filter-input-main', newsTableBody, () => news, renderTable, false);
+            setupFiltering('filter-input-historical', historicalTableBody, () => historicalNews, renderTable, true);
+            setupAddEditButtons();
+            setupPasswordVerification();
+            
+            reportesDataSource.addEventListener('change', updateCharts);
+            dynamicChartVariable.addEventListener('change', updateDynamicChart);
+            
+            toggleLabelsBtn.addEventListener('click', () => {
+                showChartLabels = !showChartLabels;
+                toggleLabelsBtn.classList.toggle('bg-primary', showChartLabels);
+                toggleLabelsBtn.classList.toggle('text-white', showChartLabels);
+                updateDynamicChart();
+            });
+            
+            addNewsBtn.addEventListener('click', () => {
+                // Set default date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('news-date').value = today;
+                
+                // Clear form
+                newsForm.reset();
+                $('#news-project, #news-category').val(null).trigger('change');
+                
+                openModal(newsModal);
+            });
+            
+            closeModalBtn.addEventListener('click', () => closeModal(newsModal));
+            
+            newsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!newsForm.checkValidity()) {
+                    return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
+                }
+                
+                const formData = new FormData(newsForm);
+                const newsData = Object.fromEntries(formData.entries());
+                
+                saveNews(newsData);
+                closeModal(newsModal);
+            });
+            
+            closeEditModalBtn.addEventListener('click', () => closeModal(editModal));
+            
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!editForm.checkValidity()) {
+                    return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
+                }
+                
+                const formData = new FormData(editForm);
+                const updateData = Object.fromEntries(formData.entries());
+                const id = document.getElementById('edit-id').value;
+                
+                await updateNews(id, updateData, currentEditIsHistorical);
+                closeModal(editModal);
+            });
+
+            let newsToDeleteId = null;
+            let newsToDeleteIsHistorical = false;
+
+            function handleDeleteClick(e) {
+                requirePassword(() => {
+                    newsToDeleteId = e.currentTarget.dataset.id;
+                    newsToDeleteIsHistorical = e.currentTarget.dataset.isHistorical === 'true';
+                    openModal(confirmModal);
+                });
+            }
+
+            newsTableBody.addEventListener('click', e => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('edit-btn')) handleEditClick(target);
+                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+            });
+
+            historicalTableBody.addEventListener('click', e => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('edit-btn')) handleEditClick(target);
+                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+            });
+
+            cancelDeleteBtn.addEventListener('click', () => {
+                closeModal(confirmModal);
+                newsToDeleteId = null;
+            });
+            
+            confirmDeleteBtn.addEventListener('click', async () => {
+                if (newsToDeleteId) {
+                    await deleteNews(newsToDeleteId, newsToDeleteIsHistorical);
+                    closeModal(confirmModal);
+                }
+            });
+
+            historicalFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    historicalFileName.textContent = file.name;
+                    importHistoricalBtn.disabled = false;
+                } else {
+                    historicalFileName.textContent = 'Seleccionar archivo Excel (.xlsx)';
+                    importHistoricalBtn.disabled = true;
+                }
+            });
+
+            importHistoricalBtn.addEventListener('click', () => {
+                requirePassword(async () => {
+                    const file = historicalFileInput.files[0];
+                    if (!file) {
+                        showAlert("Por favor, selecciona un archivo Excel primero.", "warning");
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                            
+                            if (jsonData.length === 0) return showAlert("El archivo no contiene datos válidos.", "warning");
+
+                            const processedData = jsonData.map(row => {
+                                const mapKeys = (obj, keyMap) => Object.keys(obj).reduce((acc, key) => {
+                                    const newKey = keyMap[key.toLowerCase().trim()] || key.toLowerCase().trim();
+                                    acc[newKey] = obj[key];
+                                    return acc;
+                                }, {});
+
+                                const keyMapping = { 
+                                    'no.': 'no', 
+                                    'fuente de la noticia': 'fuente',
+                                    'resumen de la noticia': 'resumen'
+                                };
+                                const mappedRow = mapKeys(row, keyMapping);
+
+                                let fecha = mappedRow.fecha;
+                                if (fecha instanceof Date) {
+                                    fecha = fecha.toISOString().split('T')[0];
+                                } else if (!fecha) {
+                                    fecha = '';
+                                }
+
+                                return {
+                                    fecha: fecha,
+                                    fuente: mappedRow.fuente || '',
+                                    proyecto: mappedRow.proyecto || '',
+                                    resumen: mappedRow.resumen || '',
+                                    categoria: mappedRow.categoria || '',
+                                    comentario: mappedRow.comentario || ''
+                                };
+                            });
+
+                            if (processedData.length === 0) return showAlert("El archivo Excel está vacío o no es válido.", "warning");
+                            
+                            let replace = false;
+                            if (historicalNews.length > 0) {
+                                openModal(replaceHistoricalModal);
+                                await new Promise(resolve => {
+                                    confirmReplaceBtn.onclick = () => {
+                                        replace = true;
+                                        closeModal(replaceHistoricalModal);
+                                        resolve();
+                                    };
+                                    cancelReplaceBtn.onclick = () => {
+                                        replace = false;
+                                        closeModal(replaceHistoricalModal);
+                                        resolve();
+                                    };
+                                });
+                                if (replace) {
+                                    await deleteAllHistorical();
+                                }
+                            }
+                            await importHistoricalData(processedData);
+                            historicalFileInput.value = '';
+                            historicalFileName.textContent = 'Seleccionar archivo Excel (.xlsx)';
+                            importHistoricalBtn.disabled = true;                        
+                        
+                        } catch (error) {
+                            console.error("Error al procesar el archivo:", error);
+                            showAlert("Error al procesar el archivo. Asegúrese de que es un Excel válido.", "error");
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+            });
+
+            downloadExcelBtn.addEventListener('click', () => {
+                if (news.length === 0) return showAlert("No hay datos para descargar.", "warning");
+                const data = prepareExportData(news);
+                const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Noticias");
+                XLSX.writeFile(wb, "noticias_trenes.xlsx");
+            });
+            
+            document.getElementById('download-historical-excel-btn').addEventListener('click', () => {
+                if (historicalNews.length === 0) return showAlert("No hay datos históricos para descargar.", "warning");
+                const data = prepareExportData(historicalNews);
+                const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Noticias Históricas");
+                XLSX.writeFile(wb, "noticias_historicas.xlsx");
+            });
+            
+            closeWebviewBtn.addEventListener('click', () => {
+                webviewFrame.src = 'about:blank';
+                closeModal(webviewModal);
+            });
+            
+            migrateNewsBtn.addEventListener('click', () => {
+                requirePassword(() => openModal(migrateModal));
+            });
+            
+            cancelMigrateBtn.addEventListener('click', () => closeModal(migrateModal));
+            
+            confirmMigrateBtn.addEventListener('click', async () => {
+                try {
+                    await migrateNewsToHistorical();
+                    closeModal(migrateModal);
+                } catch (error) {
+                    console.error("Error en migración:", error);
+                    showAlert("Error durante la migración: " + error.message, "error");
+                }
+            });
+
+            // Set current date as default when opening the modal
+            newsModal.addEventListener('shown', () => {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('news-date').value = today;
+            });
+        }
+
+        // =============================================
+        // MÓDULO: Inicialización
+        // =============================================
+
+        function initialize() {
+            initializeAppWithAuth();
+            setupEventListeners();
+            
+            // Configurar Select2 para los selects
+            $('#news-project, #news-category, #edit-news-project, #edit-news-category').each(function() {
+                $(this).select2({
+                    tags: true,
+                    placeholder: "Seleccione o escriba una opción",
+                    allowClear: true,
+                    width: '100%' 
+                }); 
+            });
+
+            // Set current date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('news-date').value = today;
+        }
+
+        // Iniciar la aplicación
+        initialize();
+
+    </script>
+</body> 
+</html> 
