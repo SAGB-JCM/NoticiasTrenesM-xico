@@ -446,7 +446,7 @@
                 <section class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="text-center md:text-left">
                         <h3 class="text-xl font-semibold text-slate-800">Gestión de Noticias</h3>
-                        <p class="text-slate-500">Registra nuevas noticias sobre los trenes de México y otros proyectos.</p>
+                        <p class="text-slate-500">Registra nuevas noticias sobre los trenes de México.</p>
                     </div>
                     <div class="flex items-center gap-6">
                         <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center space-x-3">
@@ -487,6 +487,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Comentario <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
@@ -542,6 +543,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Comentario <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
@@ -582,6 +584,7 @@
                             <select id="dynamic-chart-variable" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
                                 <option value="proyecto">Proyecto</option>
                                 <option value="categoria">Categoría</option>
+                                <option value="medio">Medio</option>
                             </select>
                             <button id="toggle-labels-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded ml-2">
                                 <i class="fa-solid fa-tag"></i>
@@ -653,6 +656,15 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="form-field">
+                            <label for="news-medio">Medio</label>
+                            <div class="flex-with-buttons">
+                                <select id="news-medio" name="medio" required></select>
+                                <button type="button" id="edit-medio-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-field">
                         <label for="news-summary">Resumen de la Noticia</label>
@@ -719,6 +731,15 @@
                             <div class="flex-with-buttons">
                                 <select id="edit-news-category" name="categoria" required></select>
                                 <button type="button" id="edit-category-edit-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-news-medio">Medio</label>
+                            <div class="flex-with-buttons">
+                                <select id="edit-news-medio" name="medio" required></select>
+                                <button type="button" id="edit-medio-edit-btn" class="edit-btn">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                             </div>
@@ -814,6 +835,23 @@
             </div>
         </div>
     </div>
+
+    <div id="view-details-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
+            <button id="close-details-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <div class="flex items-center space-x-4 mb-6">
+                <img src="https://github.com/SAGB-JCM/NoticiasTrenesM-xico/blob/main/Trenes%20de%20M%C3%A9xico%20-%20LOGO.png?raw=true" alt="Logo Tren México" class="h-16 w-auto">
+                <h3 class="text-2xl font-bold text-primary">Detalle de la Noticia</h3>
+            </div>
+            <div class="news-form-container">
+                <div id="details-modal-content" class="details-modal-content">
+                    <!-- El contenido se generará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
     
     <footer class="footer-container">
         <label>Insurgentes Sur 1735, Col. Guadalupe Inn Ciudad de México., C.P 01020 - Tel. 2000 3000</label><br>
@@ -845,66 +883,20 @@
         let news = [];
         let historicalNews = [];
         let userId;
-        
+
+        // Referencias a colecciones de Firebase
         const newsCollectionRef = db.collection("news");
         const historicalNewsCollectionRef = db.collection("historicalNews");
-        
-        // Elementos del DOM
-        const loader = document.getElementById('loader');
-        const appContainer = document.getElementById('app');
-        const userInfo = document.getElementById('user-info');
-        const tabsContainer = document.getElementById('tabs');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const addNewsBtn = document.getElementById('add-news-btn');
-        const downloadExcelBtn = document.getElementById('download-excel-btn');
-        const migrateNewsBtn = document.getElementById('migrate-news-btn');
-        const newsTableBody = document.getElementById('news-table-body');
-        const noNewsMessage = document.getElementById('no-news-message');
-        const historicalTableBody = document.getElementById('historical-table-body');
-        const noHistoricalMessage = document.getElementById('no-historical-message');
-        const historicalFileInput = document.getElementById('historical-file-input');
-        const historicalFileName = document.getElementById('file-name');
-        const importHistoricalBtn = document.getElementById('import-historical-btn');
-        const reportesDataSource = document.getElementById('reportes-data-source');
-        const dynamicChartCanvas = document.getElementById('dynamicChart');
-        const dynamicChartVariable = document.getElementById('dynamic-chart-variable');
-        const toggleLabelsBtn = document.getElementById('toggle-labels-btn');
-        const dynamicTableBody = document.getElementById('dynamic-table-body');
-        const dynamicTableHeader = document.getElementById('dynamic-table-header');
-        let dynamicChart;
-        const newsModal = document.getElementById('news-modal');
-        const newsForm = document.getElementById('news-form');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const editModal = document.getElementById('edit-modal');
-        const editForm = document.getElementById('edit-form');
-        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-        const confirmModal = document.getElementById('confirm-modal');
-        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-        const replaceHistoricalModal = document.getElementById('replace-historical-modal');
-        const cancelReplaceBtn = document.getElementById('cancel-replace-btn');
-        const confirmReplaceBtn = document.getElementById('confirm-replace-btn');
-        const editOptionModal = document.getElementById('edit-option-modal');
-        const editOptionInput = document.getElementById('edit-option-input');
-        const cancelEditOptionBtn = document.getElementById('cancel-edit-option-btn');
-        const confirmEditOptionBtn = document.getElementById('confirm-edit-option-btn');
-        const passwordModal = document.getElementById('password-modal');
-        const passwordInput = document.getElementById('password-input');
-        const cancelPasswordBtn = document.getElementById('cancel-password-btn');
-        const confirmPasswordBtn = document.getElementById('confirm-password-btn');
-        const webviewModal = document.getElementById('webview-modal');
-        const webviewFrame = document.getElementById('webview-frame');
-        const closeWebviewBtn = document.getElementById('close-webview-btn');
-        const migrateModal = document.getElementById('migrate-modal');
-        const cancelMigrateBtn = document.getElementById('cancel-migrate-btn');
-        const confirmMigrateBtn = document.getElementById('confirm-migrate-btn');
-        const generateReportBtn = document.getElementById('generate-report-btn');
+
+        // Variables de estado de la aplicación
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, generateReportBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent;
         
         let currentEditIsHistorical = false;
         
         let fieldOptions = {
             proyectos: [],
-            categorias: []
+            categorias: [],
+            medios: []
         };
 
         let currentEditingField = null;
@@ -1012,6 +1004,7 @@
                     <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.resumen, 50)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="edit-btn text-blue-500 hover:text-blue-700">
@@ -1256,6 +1249,7 @@
                 // Set select values
                 $('#edit-news-project').val(newsToEdit.proyecto || '').trigger('change');
                 $('#edit-news-category').val(newsToEdit.categoria || '').trigger('change');
+                $('#edit-news-medio').val(newsToEdit.medio || '').trigger('change');
 
                 openModal(editModal);
             });
@@ -1274,6 +1268,44 @@
                 openModal(confirmModal);
             });
         }
+
+        function showDetailsModal(newsItem) {
+            if (!newsItem) return;
+
+            detailsModalContent.innerHTML = `
+                <div class="details-field">
+                    <label>Fecha</label>
+                    <p>${formatDate(newsItem.fecha)}</p>
+                </div>
+                <div class="details-field">
+                    <label>Proyecto</label>
+                    <p>${newsItem.proyecto || 'N/A'}</p>
+                </div>
+                <div class="details-field">
+                    <label>Categoría</label>
+                    <p>${newsItem.categoria || 'N/A'}</p>
+                </div>
+                <div class="details-field">
+                    <label>Medio</label>
+                    <p>${newsItem.medio || 'N/A'}</p>
+                </div>
+                <div class="details-field details-field-full">
+                    <label>Fuente (URL)</label>
+                    <p>${newsItem.fuente ? `<a href="${newsItem.fuente}" target="_blank" class="text-blue-600 hover:underline">${newsItem.fuente}</a>` : 'N/A'}</p>
+                </div>
+                <div class="details-field details-field-full">
+                    <label>Resumen</label>
+                    <p>${newsItem.resumen || 'N/A'}</p>
+                </div>
+                <div class="details-field details-field-full">
+                    <label>Comentario</label>
+                    <p>${newsItem.comentario || 'N/A'}</p>
+                </div>
+            `;
+
+            openModal(viewDetailsModal);
+        }
+
 
         // =============================================
         // MÓDULO: Gestión de datos históricos
@@ -1332,6 +1364,13 @@
             "Tecnología e innovación"
         ];
 
+        const catalogoMedios = [
+            "Mañanera",
+            "Internet",
+            "Blog",
+            "Medios Privados"
+        ];
+
         function updateDynamicSelectOptions() {
             const allData = [...news, ...historicalNews];
             
@@ -1346,12 +1385,19 @@
             const combinedCategorias = [...new Set([...catalogoCategorias, ...historicalCategorias])].sort();
             fieldOptions.categorias = combinedCategorias;
             updateSelectOptions('categorias', fieldOptions.categorias);
+
+            // Medios - combinar catálogo con datos existentes
+            const historicalMedios = allData.map(c => c.medio).filter(Boolean);
+            const combinedMedios = [...new Set([...catalogoMedios, ...historicalMedios])].sort();
+            fieldOptions.medios = combinedMedios;
+            updateSelectOptions('medios', fieldOptions.medios);
         }
 
         function updateSelectOptions(field, options, selectedId = null) {
             const fieldToSelectMap = {
                 'proyectos': ['news-project', 'edit-news-project'],
-                'categorias': ['news-category', 'edit-news-category']
+                'categorias': ['news-category', 'edit-news-category'],
+                'medios': ['news-medio', 'edit-news-medio']
             };
 
             const normalizedOptions = options.map(opt => ({id: opt, text: opt}));
@@ -1384,7 +1430,8 @@
         async function findAndReplaceInDatabase(field, oldValue, newValue) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
-                'categorias': 'categoria'
+                'categorias': 'categoria',
+                'medios': 'medio'
             };
             
             const dbField = fieldToDbFieldMap[field];
@@ -1427,6 +1474,7 @@
             const buttonToFieldMap = {
                 'edit-project-btn': 'proyectos',
                 'edit-category-btn': 'categorias',
+                'edit-medio-btn': 'medios',
                 'edit-source-btn': 'fuente',
                 'edit-summary-btn': 'resumen',
                 'edit-comment-btn': 'comentario',
@@ -1434,7 +1482,8 @@
                 'edit-category-edit-btn': 'categorias',
                 'edit-source-edit-btn': 'fuente',
                 'edit-summary-edit-btn': 'resumen',
-                'edit-comment-edit-btn': 'comentario'
+                'edit-comment-edit-btn': 'comentario',
+                'edit-medio-edit-btn': 'medios'
             };
             
             Object.entries(buttonToFieldMap).forEach(([buttonId, field]) => {
@@ -1479,7 +1528,7 @@
                 
                 requirePassword(async () => {
                     try {
-                        if (['proyectos', 'categorias'].includes(currentEditingField)) {
+                        if (['proyectos', 'categorias', 'medios'].includes(currentEditingField)) {
                             await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
                         } else {
                             // For non-select fields, just update the input value
@@ -1685,7 +1734,7 @@
         // =============================================
 
         const exportHeaders = [
-            "No.", "Fecha", "Fuente", "Proyecto", "Resumen", "Categoría", "Comentario"
+            "No.", "Fecha", "Fuente", "Proyecto", "Resumen", "Categoría", "Medio", "Comentario"
         ];
 
         function prepareExportData(data) {
@@ -1695,7 +1744,8 @@
                 "Fuente": newsItem.fuente || "",
                 "Proyecto": newsItem.proyecto || "", 
                 "Resumen": newsItem.resumen || "",
-                "Categoría": newsItem.categoria || "", 
+                "Categoría": newsItem.categoria || "",
+                "Medio": newsItem.medio || "",
                 "Comentario": newsItem.comentario || ""
             }));
         }
@@ -1771,7 +1821,7 @@
                 
                 // Clear form
                 newsForm.reset();
-                $('#news-project, #news-category').val(null).trigger('change');
+                $('#news-project, #news-category, #news-medio').val(null).trigger('change');
                 
                 openModal(newsModal);
             });
@@ -1818,12 +1868,26 @@
                 });
             }
 
+        function handleRowDoubleClick(e, isHistorical) {
+            const row = e.target.closest('tr');
+            if (!row || e.target.closest('button') || e.target.closest('.link-cell')) {
+                return; // No hacer nada si se hace clic en un botón o en el enlace
+            }
+            const newsId = row.querySelector('.edit-btn')?.dataset.id;
+            if (!newsId) return;
+
+            const data = isHistorical ? historicalNews : news;
+            const newsItem = data.find(item => item.id === newsId);
+            showDetailsModal(newsItem);
+        }
+
             newsTableBody.addEventListener('click', e => {
                 const target = e.target.closest('button');
                 if (!target) return;
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
             });
+        newsTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, false));
 
             historicalTableBody.addEventListener('click', e => {
                 const target = e.target.closest('button');
@@ -1831,6 +1895,7 @@
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
             });
+        historicalTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, true));
 
             cancelDeleteBtn.addEventListener('click', () => {
                 closeModal(confirmModal);
@@ -1953,6 +2018,7 @@
                                     proyecto: mappedRow.proyecto || '',
                                     resumen: mappedRow.resumen || '',
                                     categoria: mappedRow.categoria || '',
+                                    medio: mappedRow.medio || '',
                                     comentario: mappedRow.comentario || ''
                                 };
                             });
@@ -2034,38 +2100,95 @@
                 }
             });
 
-            // Set current date as default when opening the modal
-            newsModal.addEventListener('shown', () => {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('news-date').value = today;
-            });
+            closeDetailsModalBtn.addEventListener('click', () => closeModal(viewDetailsModal));
+            
+            // El evento 'shown' no es un evento estándar del DOM. 
+            // La lógica para establecer la fecha ya está en el listener de 'addNewsBtn'.
+            // newsModal.addEventListener('shown', () => {
+            //     const today = new Date().toISOString().split('T')[0];
+            //     document.getElementById('news-date').value = today;
+            // });
         }
 
         // =============================================
         // MÓDULO: Inicialización
         // =============================================
 
-        function initialize() {
+        document.addEventListener('DOMContentLoaded', () => {
+            // Asignar elementos del DOM una vez que la página esté cargada
+            loader = document.getElementById('loader');
+            appContainer = document.getElementById('app');
+            userInfo = document.getElementById('user-info');
+            tabsContainer = document.getElementById('tabs');
+            tabContents = document.querySelectorAll('.tab-content');
+            addNewsBtn = document.getElementById('add-news-btn');
+            downloadExcelBtn = document.getElementById('download-excel-btn');
+            migrateNewsBtn = document.getElementById('migrate-news-btn');
+            newsTableBody = document.getElementById('news-table-body');
+            noNewsMessage = document.getElementById('no-news-message');
+            historicalTableBody = document.getElementById('historical-table-body');
+            noHistoricalMessage = document.getElementById('no-historical-message');
+            historicalFileInput = document.getElementById('historical-file-input');
+            historicalFileName = document.getElementById('file-name');
+            importHistoricalBtn = document.getElementById('import-historical-btn');
+            reportesDataSource = document.getElementById('reportes-data-source');
+            dynamicChartCanvas = document.getElementById('dynamicChart');
+            dynamicChartVariable = document.getElementById('dynamic-chart-variable');
+            toggleLabelsBtn = document.getElementById('toggle-labels-btn');
+            dynamicTableBody = document.getElementById('dynamic-table-body');
+            dynamicTableHeader = document.getElementById('dynamic-table-header');
+            newsModal = document.getElementById('news-modal');
+            newsForm = document.getElementById('news-form');
+            closeModalBtn = document.getElementById('close-modal-btn');
+            editModal = document.getElementById('edit-modal');
+            editForm = document.getElementById('edit-form');
+            closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+            confirmModal = document.getElementById('confirm-modal');
+            cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+            replaceHistoricalModal = document.getElementById('replace-historical-modal');
+            cancelReplaceBtn = document.getElementById('cancel-replace-btn');
+            confirmReplaceBtn = document.getElementById('confirm-replace-btn');
+            editOptionModal = document.getElementById('edit-option-modal');
+            editOptionInput = document.getElementById('edit-option-input');
+            cancelEditOptionBtn = document.getElementById('cancel-edit-option-btn');
+            confirmEditOptionBtn = document.getElementById('confirm-edit-option-btn');
+            passwordModal = document.getElementById('password-modal');
+            passwordInput = document.getElementById('password-input');
+            cancelPasswordBtn = document.getElementById('cancel-password-btn');
+            confirmPasswordBtn = document.getElementById('confirm-password-btn');
+            webviewModal = document.getElementById('webview-modal');
+            webviewFrame = document.getElementById('webview-frame');
+            closeWebviewBtn = document.getElementById('close-webview-btn');
+            migrateModal = document.getElementById('migrate-modal');
+            cancelMigrateBtn = document.getElementById('cancel-migrate-btn');
+            confirmMigrateBtn = document.getElementById('confirm-migrate-btn');
+            generateReportBtn = document.getElementById('generate-report-btn');
+            viewDetailsModal = document.getElementById('view-details-modal');
+            closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
+            detailsModalContent = document.getElementById('details-modal-content');
+
+            // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
             setupEventListeners();
-            
-            // Configurar Select2 para los selects
-            $('#news-project, #news-category, #edit-news-project, #edit-news-category').each(function() {
-                $(this).select2({
-                    tags: true,
-                    placeholder: "Seleccione o escriba una opción",
-                    allowClear: true,
-                    width: '100%' 
-                }); 
-            });
 
-            // Set current date as default
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('news-date').value = today;
-        }
+            // Configurar Select2 para los selects
+            $('#news-project, #news-category, #news-medio, #edit-news-project, #edit-news-category, #edit-news-medio').each(function() {
+                 $(this).select2({
+                     tags: true,
+                     placeholder: "Seleccione o escriba una opción",
+                     allowClear: true,
+                     width: '100%'
+                 });
+             });
+
+             // Set current date as default
+             const today = new Date().toISOString().split('T')[0];
+             document.getElementById('news-date').value = today;
+        });
 
         // Iniciar la aplicación
-        initialize();
+        // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
     </script>
 </body> 
