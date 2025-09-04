@@ -550,12 +550,6 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div class="chart-wrapper">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Día de la Semana</h3>
-                            <canvas id="dayOfWeekChart"></canvas>
-                        </div>
-                    </div>
                     
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
@@ -847,13 +841,12 @@
         const historicalFileName = document.getElementById('file-name');
         const importHistoricalBtn = document.getElementById('import-historical-btn');
         const reportesDataSource = document.getElementById('reportes-data-source');
-        const dayOfWeekChartCanvas = document.getElementById('dayOfWeekChart');
         const dynamicChartCanvas = document.getElementById('dynamicChart');
         const dynamicChartVariable = document.getElementById('dynamic-chart-variable');
         const toggleLabelsBtn = document.getElementById('toggle-labels-btn');
         const dynamicTableBody = document.getElementById('dynamic-table-body');
         const dynamicTableHeader = document.getElementById('dynamic-table-header');
-        let dayOfWeekChart, dynamicChart;
+        let dynamicChart;
         const newsModal = document.getElementById('news-modal');
         const newsForm = document.getElementById('news-form');
         const closeModalBtn = document.getElementById('close-modal-btn');
@@ -1506,68 +1499,9 @@
             else if (source === 'historico') data = historicalNews;
             else data = [...news, ...historicalNews];
             
-            const proyectoCounts = {}, categoriaCounts = {}, dayOfWeekCounts = {};
-            
-            // Días de la semana en español
-            const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-            
-            // Inicializar contadores para días de la semana
-            daysOfWeek.forEach(day => {
-                dayOfWeekCounts[day] = 0;
-            });
-            
-            data.forEach(newsItem => {
-
-                if (newsItem.fecha) {
-                    try {
-                        // Parsear como fecha LOCAL para evitar el desfase por zona horaria
-                        let newsDate;
-                        if (/^\d{4}-\d{2}-\d{2}$/.test(newsItem.fecha)) {
-                            const [y, m, d] = newsItem.fecha.split('-').map(Number);
-                            newsDate = new Date(y, m - 1, d);
-                        } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(newsItem.fecha)) {
-                            const [d, m, y] = newsItem.fecha.split('/').map(Number);
-                            newsDate = new Date(y, m - 1, d);
-                        } else {
-                            newsDate = new Date(newsItem.fecha);
-                        }
-                        const dayOfWeek = daysOfWeek[newsDate.getDay()];
-                        dayOfWeekCounts[dayOfWeek] = (dayOfWeekCounts[dayOfWeek] || 0) + 1;
-                    } catch (e) { /* Ignorar */ }
-                }
-            });
-
-
-            if (dayOfWeekChart) dayOfWeekChart.destroy();
+            const proyectoCounts = {}, categoriaCounts = {};
+        
             if (dynamicChart) dynamicChart.destroy();
-
-            // Create day of week chart (line)
-            // Ordenar los días de la semana correctamente (de lunes a domingo)
-            const orderedDays = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-            const orderedDayData = orderedDays.map(day => dayOfWeekCounts[day] || 0);
-            
-            dayOfWeekChart = new Chart(dayOfWeekChartCanvas, {
-                type: 'line',
-                data: {
-                    labels: orderedDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
-                    datasets: [{
-                        label: 'Noticias por día',
-                        data: orderedDayData,
-                        borderColor: '#A6802D',
-                        tension: 0.1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
 
             // Update dynamic chart
             updateDynamicChart();
