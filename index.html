@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noticias Sobre los Trenes de México</title>
     
-    <!-- jQuery (requerido por Select2) -->
+    <!-- jQuery (requerido para Select2) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <!-- Tailwind CSS -->
@@ -32,7 +32,7 @@
     <!-- html2pdf para generar reportes en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- Firebase App (el módulo central de Firebase) -->
+    <!-- Firebase App (el módulo principal de Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <!-- Firebase Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -338,18 +338,23 @@
             font-size: 0.65rem;
         }
 
+        .webview-modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .webview-container {
+            width: 90vw;
+            height: 90vh;
+            max-width: 1200px;
+        }
+
         .webview-modal iframe {
             width: 100%;
             height: 100%;
             border: none;
             border-radius: 0.5rem;
-        }
-
-        .webview-container {
-            position: relative;
-            height: 80vh;
-            width: 80vw;
-            max-width: 1000px;
         }
     </style>
     
@@ -555,8 +560,8 @@
                             <canvas id="categoriaChart"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Semana</h3>
-                            <canvas id="weekChart"></canvas>
+                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Día de la Semana</h3>
+                            <canvas id="dayOfWeekChart"></canvas>
                         </div>
                     </div>
                     
@@ -779,14 +784,12 @@
         </div>
     </div>
 
-    <div id="webview-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-6xl mx-4 webview-container">
-            <button id="close-webview-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10">
+    <div id="webview-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center webview-modal">
+        <div class="relative bg-white rounded-lg shadow-xl webview-container">
+            <button id="close-webview-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10 bg-white rounded-full p-1">
                 <i class="fa-solid fa-times-circle fa-lg"></i>
             </button>
-            <div class="w-full h-full">
-                <iframe id="webview-frame" src="about:blank"></iframe>
-            </div>
+            <iframe id="webview-frame" src="about:blank"></iframe>
         </div>
     </div>
 
@@ -854,13 +857,13 @@
         const reportesDataSource = document.getElementById('reportes-data-source');
         const proyectoChartCanvas = document.getElementById('proyectoChart');
         const categoriaChartCanvas = document.getElementById('categoriaChart');
-        const weekChartCanvas = document.getElementById('weekChart');
+        const dayOfWeekChartCanvas = document.getElementById('dayOfWeekChart');
         const dynamicChartCanvas = document.getElementById('dynamicChart');
         const dynamicChartVariable = document.getElementById('dynamic-chart-variable');
         const toggleLabelsBtn = document.getElementById('toggle-labels-btn');
         const dynamicTableBody = document.getElementById('dynamic-table-body');
         const dynamicTableHeader = document.getElementById('dynamic-table-header');
-        let proyectoChart, categoriaChart, weekChart, dynamicChart;
+        let proyectoChart, categoriaChart, dayOfWeekChart, dynamicChart;
         const newsModal = document.getElementById('news-modal');
         const newsForm = document.getElementById('news-form');
         const closeModalBtn = document.getElementById('close-modal-btn');
@@ -900,6 +903,7 @@
         let currentEditingValue = null;
         let pendingAction = null;
         let showChartLabels = true;
+        let activeSelectElement = null;
 
         // =============================================
         // MÓDULO: Utilidades
@@ -1075,76 +1079,68 @@
         // MÓDULO: Gestión de noticias
         // =============================================
         
-        function saveNews(newsData) {
-            newsCollectionRef.add({
-                ...newsData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
+        async function saveNews(newsData) {
+            try {
+                await newsCollectionRef.add({ 
+                    ...newsData, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
                 showAlert("Noticia guardada con éxito!", "success");
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Error al guardar la noticia:", error);
                 showAlert(`Error al guardar: ${error.message}`, "error");
-            });
+            }
         }
 
-        function updateNews(id, updateData, isHistorical) {
+        async function updateNews(id, updateData, isHistorical) {
             if (!id) {
                 console.error("ID no válido para actualización");
                 showAlert("Error interno: ID no válido", "error");
                 return;
             }
             
-            const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
-            
-            collectionRef.doc(id).get()
-            .then((docSnapshot) => {
+            try {
+                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+                const newsDocRef = collectionRef.doc(id);
+                
+                const docSnapshot = await newsDocRef.get();
                 if (!docSnapshot.exists) {
                     showAlert("El registro que intentas actualizar no existe", "error");
                     return;
                 }
                 
-                return collectionRef.doc(id).update({
-                    ...updateData,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            })
-            .then(() => {
+                await newsDocRef.update({ ...updateData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 showAlert("Noticia actualizada con éxito!", "success");
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Error al actualizar la noticia:", error);
                 showAlert(`Error al actualizar: ${error.message}`, "error");
-            });
+            }
         }
 
-        function deleteNews(id, isHistorical) {
+        async function deleteNews(id, isHistorical) {
             if (!id) {
                 console.error("ID no válido para eliminación");
                 showAlert("Error interno: ID no válido", "error");
                 return;
             }
             
-            const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
-            
-            collectionRef.doc(id).get()
-            .then((docSnapshot) => {
+            try {
+                const collectionRef = isHistorical ? historicalNewsCollectionRef : newsCollectionRef;
+                const newsDocRef = collectionRef.doc(id);
+                
+                const docSnapshot = await newsDocRef.get();
                 if (!docSnapshot.exists) {
                     showAlert("El registro que intentas eliminar no existe", "error");
                     return;
                 }
                 
-                return collectionRef.doc(id).delete();
-            })
-            .then(() => {
+                await newsDocRef.delete();
                 showAlert("Noticia eliminada con éxito!", "success");
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Error al eliminar la noticia:", error);
                 showAlert(`Error al eliminar: ${error.message}`, "error");
-            });
+            }
         }
 
         function handleEditClick(button) {
@@ -1200,43 +1196,32 @@
         // MÓDULO: Gestión de datos históricos
         // =============================================
         
-        function deleteAllHistorical() {
+        async function deleteAllHistorical() {
             const batch = db.batch();
             historicalNews.forEach(newsItem => {
                 const ref = historicalNewsCollectionRef.doc(newsItem.id);
                 batch.delete(ref);
             });
-            batch.commit()
-            .then(() => {
-                showAlert("Histórico eliminado correctamente", "success");
-            })
-            .catch((error) => {
-                console.error("Error al eliminar histórico:", error);
-                showAlert(`Error al eliminar histórico: ${error.message}`, "error");
-            });
+            await batch.commit(); 
         }
 
-        function importHistoricalData(data) {
-            const batch = db.batch();
-            
-            data.forEach(item => {
-                const docRef = historicalNewsCollectionRef.doc();
-                batch.set(docRef, { 
-                    ...item, 
-                    importedAt: firebase.firestore.FieldValue.serverTimestamp() 
+        async function importHistoricalData(data) {
+            try {
+                const batch = db.batch();
+                data.forEach(item => {
+                    const docRef = historicalNewsCollectionRef.doc();
+                    batch.set(docRef, { ...item, importedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 });
-            });
-            
-            batch.commit()
-            .then(() => {
+                await batch.commit();
                 showAlert(`Se han importado ${data.length} registros históricos.`, "success");
+                
                 updateDynamicSelectOptions();
                 renderTable(historicalTableBody, historicalNews, true);
-            })
-            .catch((error) => {
+
+            } catch (error) {
                 console.error("Error al importar datos históricos:", error);
                 showAlert(`Error al importar: ${error.message}`, "error");
-            });
+            }
         }
 
         // =============================================
@@ -1313,7 +1298,7 @@
             }
         }
 
-        function findAndReplaceInDatabase(field, oldValue, newValue) {
+        async function findAndReplaceInDatabase(field, oldValue, newValue) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
                 'categorias': 'categoria'
@@ -1322,35 +1307,37 @@
             const dbField = fieldToDbFieldMap[field];
             if (!dbField) return;
             
-            // Actualizar en noticias
-            newsCollectionRef.where(dbField, '==', oldValue).get()
-            .then((querySnapshot) => {
+            try {
+                const newsQuery = newsCollectionRef.where(dbField, '==', oldValue);
+                const newsSnapshot = await newsQuery.get();
+                
                 const batch = db.batch();
-                querySnapshot.forEach((doc) => {
+                newsSnapshot.forEach(doc => {
                     batch.update(doc.ref, { [dbField]: newValue });
                 });
-                return batch.commit();
-            })
-            .then(() => {
-                // Actualizar en histórico
-                return historicalNewsCollectionRef.where(dbField, '==', oldValue).get();
-            })
-            .then((querySnapshot) => {
-                const batch = db.batch();
-                querySnapshot.forEach((doc) => {
+                
+                const historicalQuery = historicalNewsCollectionRef.where(dbField, '==', oldValue);
+                const historicalSnapshot = await historicalQuery.get();
+                
+                historicalSnapshot.forEach(doc => {
                     batch.update(doc.ref, { [dbField]: newValue });
                 });
-                return batch.commit();
-            })
-            .then(() => {
+                
+                await batch.commit();
+                
                 fieldOptions[field] = [...new Set([...fieldOptions[field], newValue])].sort();
                 updateSelectOptions(field, fieldOptions[field]);
-                showAlert("Opción actualizada correctamente en todos los registros.", "success");
-            })
-            .catch((error) => {
+                
+                // Auto-seleccionar la nueva opción en el select activo
+                if (activeSelectElement) {
+                    $(activeSelectElement).val(newValue).trigger('change.select2');
+                }
+                
+                showAlert(`Se actualizaron ${newsSnapshot.size + historicalSnapshot.size} registros.`, "success");
+            } catch (error) {
                 console.error("Error al actualizar registros:", error);
                 showAlert("Error al actualizar registros existentes", "error");
-            });
+            }
         }
 
         function setupAddEditButtons() {
@@ -1381,6 +1368,7 @@
                     } else {
                         // For select elements
                         inputElement = e.currentTarget.parentElement.querySelector('select');
+                        activeSelectElement = inputElement;
                     }
                     
                     const currentValue = inputElement.value;
@@ -1406,10 +1394,10 @@
 
                 closeModal(editOptionModal);
                 
-                requirePassword(() => {
+                requirePassword(async () => {
                     try {
                         if (['proyectos', 'categorias'].includes(currentEditingField)) {
-                            findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
+                            await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
                         } else {
                             // For non-select fields, just update the input value
                             let inputElement;
@@ -1435,6 +1423,7 @@
 
             cancelEditOptionBtn.addEventListener('click', () => {
                 closeModal(editOptionModal);
+                activeSelectElement = null;
             });
         }
 
@@ -1477,7 +1466,7 @@
             openModal(passwordModal);
         }
 
-        function initializeAppWithAuth() {
+        async function initializeAppWithAuth() {
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     userId = user.uid;
@@ -1489,14 +1478,15 @@
                         await auth.signInAnonymously();
                     } catch (error) {
                         console.error("Error en autenticación anónima:", error);
-                        showAlert("Error de autenticación. Recargue la página.", "error");
+                        showAlert("Error de conexión. Algunas funciones pueden no estar disponibles.", "warning");
+                        // Mostrar la app de todos modos en modo offline
+                        showApp();
                     }
                 }
             });
         }
         
         function setupRealtimeListeners() {
-            // Listener para noticias
             newsCollectionRef.onSnapshot((snapshot) => {
                 news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(newsTableBody, news, false);
@@ -1504,7 +1494,6 @@
                 updateDynamicSelectOptions();
             }, (error) => console.error("Error en listener de noticias:", error));
             
-            // Listener para histórico
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
                 historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(historicalTableBody, historicalNews, true);
@@ -1524,17 +1513,15 @@
             else if (source === 'historico') data = historicalNews;
             else data = [...news, ...historicalNews];
             
-            const proyectoCounts = {}, categoriaCounts = {}, weekCounts = {};
+            const proyectoCounts = {}, categoriaCounts = {}, dayOfWeekCounts = {};
             
-            // Initialize week counts for last 8 weeks
-            const weeks = [];
-            for (let i = 7; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i * 7);
-                const weekNumber = getWeekNumber(date);
-                weeks.push(`Semana ${weekNumber}`);
-                weekCounts[`Semana ${weekNumber}`] = 0;
-            }
+            // Días de la semana en español
+            const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+            
+            // Inicializar contadores para días de la semana
+            daysOfWeek.forEach(day => {
+                dayOfWeekCounts[day] = 0;
+            });
             
             data.forEach(newsItem => {
                 proyectoCounts[newsItem.proyecto || 'N/A'] = (proyectoCounts[newsItem.proyecto || 'N/A'] || 0) + 1;
@@ -1543,20 +1530,15 @@
                 if (newsItem.fecha) {
                     try {
                         const newsDate = new Date(newsItem.fecha);
-                        const weekNumber = getWeekNumber(newsDate);
-                        const weekKey = `Semana ${weekNumber}`;
-                        
-                        // Only count if it's within the last 8 weeks
-                        if (weeks.includes(weekKey)) {
-                            weekCounts[weekKey] = (weekCounts[weekKey] || 0) + 1;
-                        }
+                        const dayOfWeek = daysOfWeek[newsDate.getDay()];
+                        dayOfWeekCounts[dayOfWeek] = (dayOfWeekCounts[dayOfWeek] || 0) + 1;
                     } catch (e) { /* Ignorar */ }
                 }
             });
 
             if (proyectoChart) proyectoChart.destroy();
             if (categoriaChart) categoriaChart.destroy();
-            if (weekChart) weekChart.destroy();
+            if (dayOfWeekChart) dayOfWeekChart.destroy();
             if (dynamicChart) dynamicChart.destroy();
 
             // Create proyecto chart (pie)
@@ -1602,14 +1584,18 @@
                 }
             });
 
-            // Create week chart (line)
-            weekChart = new Chart(weekChartCanvas, {
+            // Create day of week chart (line)
+            // Ordenar los días de la semana correctamente (de lunes a domingo)
+            const orderedDays = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+            const orderedDayData = orderedDays.map(day => dayOfWeekCounts[day] || 0);
+            
+            dayOfWeekChart = new Chart(dayOfWeekChartCanvas, {
                 type: 'line',
                 data: {
-                    labels: weeks,
+                    labels: orderedDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
                     datasets: [{
-                        label: 'Noticias por semana',
-                        data: weeks.map(week => weekCounts[week] || 0),
+                        label: 'Noticias por día',
+                        data: orderedDayData,
                         borderColor: '#A6802D',
                         tension: 0.1,
                         fill: false
@@ -1628,12 +1614,6 @@
 
             // Update dynamic chart
             updateDynamicChart();
-        }
-
-        function getWeekNumber(date) {
-            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
         }
 
         function updateDynamicChart() {
@@ -1736,40 +1716,41 @@
         // MÓDULO: Migración de datos
         // =============================================
         
-        function migrateNewsToHistorical() {
-            if (news.length === 0) {
-                showAlert("No hay noticias para migrar.", "warning");
-                return;
-            }
-            
-            const batch = db.batch();
-            const newsCount = news.length;
-            
-            news.forEach(newsItem => {
-                const historicalDocRef = historicalNewsCollectionRef.doc();
-                const { id, ...newsData } = newsItem;
-                batch.set(historicalDocRef, { 
-                    ...newsData,
-                    migratedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    originalId: id
+        async function migrateNewsToHistorical() {
+            try {
+                if (news.length === 0) {
+                    showAlert("No hay noticias para migrar.", "warning");
+                    return;
+                }
+                
+                const batch = db.batch();
+                const newsCount = news.length;
+                
+                news.forEach(newsItem => {
+                    const historicalDocRef = historicalNewsCollectionRef.doc();
+                    const { id, ...newsData } = newsItem;
+                    batch.set(historicalDocRef, { 
+                        ...newsData,
+                        migratedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        originalId: id
+                    });
                 });
-            });
-            
-            news.forEach(newsItem => {
-                const newsDocRef = newsCollectionRef.doc(newsItem.id);
-                batch.delete(newsDocRef);
-            });
-            
-            batch.commit()
-            .then(() => {
+                
+                news.forEach(newsItem => {
+                    const newsDocRef = newsCollectionRef.doc(newsItem.id);
+                    batch.delete(newsDocRef);
+                });
+                
+                await batch.commit();
+                
                 news = [];
                 sortAndRenderTable(newsTableBody, news, false);
+                
                 showAlert(`Se migraron ${newsCount} noticias al histórico.`, "success");
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Error al migrar noticias:", error);
                 showAlert(`Error al migrar: ${error.message}`, "error");
-            });
+            }
         }
 
         // =============================================
@@ -1824,7 +1805,7 @@
             
             closeEditModalBtn.addEventListener('click', () => closeModal(editModal));
             
-            editForm.addEventListener('submit', (e) => {
+            editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!editForm.checkValidity()) {
                     return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
@@ -1834,31 +1815,43 @@
                 const updateData = Object.fromEntries(formData.entries());
                 const id = document.getElementById('edit-id').value;
                 
-                updateNews(id, updateData, currentEditIsHistorical);
+                await updateNews(id, updateData, currentEditIsHistorical);
                 closeModal(editModal);
             });
 
             let newsToDeleteId = null;
             let newsToDeleteIsHistorical = false;
 
-            function handleTableClick(e) {
+            function handleDeleteClick(e) {
+                requirePassword(() => {
+                    newsToDeleteId = e.currentTarget.dataset.id;
+                    newsToDeleteIsHistorical = e.currentTarget.dataset.isHistorical === 'true';
+                    openModal(confirmModal);
+                });
+            }
+
+            newsTableBody.addEventListener('click', e => {
                 const target = e.target.closest('button');
                 if (!target) return;
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
-            }
+            });
 
-            newsTableBody.addEventListener('click', handleTableClick);
-            historicalTableBody.addEventListener('click', handleTableClick);
+            historicalTableBody.addEventListener('click', e => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('edit-btn')) handleEditClick(target);
+                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+            });
 
             cancelDeleteBtn.addEventListener('click', () => {
                 closeModal(confirmModal);
                 newsToDeleteId = null;
             });
             
-            confirmDeleteBtn.addEventListener('click', () => {
+            confirmDeleteBtn.addEventListener('click', async () => {
                 if (newsToDeleteId) {
-                    deleteNews(newsToDeleteId, newsToDeleteIsHistorical);
+                    await deleteNews(newsToDeleteId, newsToDeleteIsHistorical);
                     closeModal(confirmModal);
                 }
             });
@@ -1875,7 +1868,7 @@
             });
 
             importHistoricalBtn.addEventListener('click', () => {
-                requirePassword(() => {
+                requirePassword(async () => {
                     const file = historicalFileInput.files[0];
                     if (!file) {
                         showAlert("Por favor, selecciona un archivo Excel primero.", "warning");
@@ -1883,17 +1876,14 @@
                     }
                     
                     const reader = new FileReader();
-                    reader.onload = (e) => {
+                    reader.onload = async (e) => {
                         try {
                             const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
                             const sheetName = workbook.SheetNames[0];
                             const worksheet = workbook.Sheets[sheetName];
                             const jsonData = XLSX.utils.sheet_to_json(worksheet);
                             
-                            if (jsonData.length === 0) {
-                                showAlert("El archivo no contiene datos válidos.", "warning");
-                                return;
-                            }
+                            if (jsonData.length === 0) return showAlert("El archivo no contiene datos válidos.", "warning");
 
                             const processedData = jsonData.map(row => {
                                 const mapKeys = (obj, keyMap) => Object.keys(obj).reduce((acc, key) => {
@@ -1926,38 +1916,28 @@
                                 };
                             });
 
-                            if (processedData.length === 0) {
-                                showAlert("El archivo Excel está vacío o no es válido.", "warning");
-                                return;
-                            }
+                            if (processedData.length === 0) return showAlert("El archivo Excel está vacío o no es válido.", "warning");
                             
-                            // Ask if user wants to replace existing historical data
+                            let replace = false;
                             if (historicalNews.length > 0) {
                                 openModal(replaceHistoricalModal);
-                                
-                                const replaceHandler = () => {
-                                    deleteAllHistorical();
-                                    importHistoricalData(processedData);
-                                    closeModal(replaceHistoricalModal);
-                                    // Remove event listeners after use
-                                    confirmReplaceBtn.removeEventListener('click', replaceHandler);
-                                    cancelReplaceBtn.removeEventListener('click', cancelHandler);
-                                };
-                                
-                                const cancelHandler = () => {
-                                    importHistoricalData(processedData);
-                                    closeModal(replaceHistoricalModal);
-                                    // Remove event listeners after use
-                                    confirmReplaceBtn.removeEventListener('click', replaceHandler);
-                                    cancelReplaceBtn.removeEventListener('click', cancelHandler);
-                                };
-                                
-                                confirmReplaceBtn.addEventListener('click', replaceHandler);
-                                cancelReplaceBtn.addEventListener('click', cancelHandler);
-                            } else {
-                                importHistoricalData(processedData);
+                                await new Promise(resolve => {
+                                    confirmReplaceBtn.onclick = () => {
+                                        replace = true;
+                                        closeModal(replaceHistoricalModal);
+                                        resolve();
+                                    };
+                                    cancelReplaceBtn.onclick = () => {
+                                        replace = false;
+                                        closeModal(replaceHistoricalModal);
+                                        resolve();
+                                    };
+                                });
+                                if (replace) {
+                                    await deleteAllHistorical();
+                                }
                             }
-                            
+                            await importHistoricalData(processedData);
                             historicalFileInput.value = '';
                             historicalFileName.textContent = 'Seleccionar archivo Excel (.xlsx)';
                             importHistoricalBtn.disabled = true;                        
@@ -1972,10 +1952,7 @@
             });
 
             downloadExcelBtn.addEventListener('click', () => {
-                if (news.length === 0) {
-                    showAlert("No hay datos para descargar.", "warning");
-                    return;
-                }
+                if (news.length === 0) return showAlert("No hay datos para descargar.", "warning");
                 const data = prepareExportData(news);
                 const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
                 const wb = XLSX.utils.book_new();
@@ -1984,10 +1961,7 @@
             });
             
             document.getElementById('download-historical-excel-btn').addEventListener('click', () => {
-                if (historicalNews.length === 0) {
-                    showAlert("No hay datos históricos para descargar.", "warning");
-                    return;
-                }
+                if (historicalNews.length === 0) return showAlert("No hay datos históricos para descargar.", "warning");
                 const data = prepareExportData(historicalNews);
                 const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
                 const wb = XLSX.utils.book_new();
@@ -2006,13 +1980,18 @@
             
             cancelMigrateBtn.addEventListener('click', () => closeModal(migrateModal));
             
-            confirmMigrateBtn.addEventListener('click', () => {
-                migrateNewsToHistorical();
-                closeModal(migrateModal);
+            confirmMigrateBtn.addEventListener('click', async () => {
+                try {
+                    await migrateNewsToHistorical();
+                    closeModal(migrateModal);
+                } catch (error) {
+                    console.error("Error en migración:", error);
+                    showAlert("Error durante la migración: " + error.message, "error");
+                }
             });
 
             // Set current date as default when opening the modal
-            $('#news-modal').on('shown.bs.modal', function () {
+            newsModal.addEventListener('shown', () => {
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('news-date').value = today;
             });
@@ -2041,10 +2020,8 @@
             document.getElementById('news-date').value = today;
         }
 
-        // Iniciar la aplicación cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            initialize();
-        });
+        // Iniciar la aplicación
+        initialize();
 
     </script>
 </body> 
