@@ -552,14 +552,6 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div class="chart-wrapper">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Proyecto</h3>
-                            <canvas id="proyectoChart"></canvas>
-                        </div>
-                        <div class="chart-wrapper">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Categoría</h3>
-                            <canvas id="categoriaChart"></canvas>
-                        </div>
-                        <div class="chart-wrapper">
                             <h3 class="text-xl font-semibold text-slate-800 mb-2">Noticias por Día de la Semana</h3>
                             <canvas id="dayOfWeekChart"></canvas>
                         </div>
@@ -855,15 +847,13 @@
         const historicalFileName = document.getElementById('file-name');
         const importHistoricalBtn = document.getElementById('import-historical-btn');
         const reportesDataSource = document.getElementById('reportes-data-source');
-        const proyectoChartCanvas = document.getElementById('proyectoChart');
-        const categoriaChartCanvas = document.getElementById('categoriaChart');
         const dayOfWeekChartCanvas = document.getElementById('dayOfWeekChart');
         const dynamicChartCanvas = document.getElementById('dynamicChart');
         const dynamicChartVariable = document.getElementById('dynamic-chart-variable');
         const toggleLabelsBtn = document.getElementById('toggle-labels-btn');
         const dynamicTableBody = document.getElementById('dynamic-table-body');
         const dynamicTableHeader = document.getElementById('dynamic-table-header');
-        let proyectoChart, categoriaChart, dayOfWeekChart, dynamicChart;
+        let dayOfWeekChart, dynamicChart;
         const newsModal = document.getElementById('news-modal');
         const newsForm = document.getElementById('news-form');
         const closeModalBtn = document.getElementById('close-modal-btn');
@@ -1527,9 +1517,6 @@
             });
             
             data.forEach(newsItem => {
-                proyectoCounts[newsItem.proyecto || 'N/A'] = (proyectoCounts[newsItem.proyecto || 'N/A'] || 0) + 1;
-                categoriaCounts[newsItem.categoria || 'N/A'] = (categoriaCounts[newsItem.categoria || 'N/A'] || 0) + 1;
-
 
                 if (newsItem.fecha) {
                     try {
@@ -1550,53 +1537,9 @@
                 }
             });
 
-            if (proyectoChart) proyectoChart.destroy();
-            if (categoriaChart) categoriaChart.destroy();
+
             if (dayOfWeekChart) dayOfWeekChart.destroy();
             if (dynamicChart) dynamicChart.destroy();
-
-            // Create proyecto chart (pie)
-            proyectoChart = new Chart(proyectoChartCanvas, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(proyectoCounts),
-                    datasets: [{
-                        data: Object.values(proyectoCounts),
-                        backgroundColor: ['#9C2348', '#1E5B4F', '#A6802D', '#3B82F6', '#8B5CF6']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // Create categoria chart (bar)
-            categoriaChart = new Chart(categoriaChartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(categoriaCounts),
-                    datasets: [{
-                        label: 'Cantidad',
-                        data: Object.values(categoriaCounts),
-                        backgroundColor: '#1E5B4F'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
 
             // Create day of week chart (line)
             // Ordenar los días de la semana correctamente (de lunes a domingo)
