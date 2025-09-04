@@ -937,8 +937,11 @@
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('es-ES');
+                // Tratar la fecha como UTC para evitar problemas de zona horaria.
+                // new Date('2024-01-15') se interpreta como UTC midnight.
+                const [year, month, day] = dateString.split('-').map(Number);
+                const date = new Date(Date.UTC(year, month - 1, day));
+                return date.toLocaleDateString('es-ES', { timeZone: 'UTC' });
             } catch (e) {
                 return dateString;
             }
@@ -1901,8 +1904,14 @@
 
                                 let fecha = mappedRow.fecha;
                                 if (fecha instanceof Date) {
-                                    fecha = fecha.toISOString().split('T')[0];
-                                } else if (!fecha) {
+                                    // Forzar la conversión a YYYY-MM-DD para consistencia
+                                    const year = fecha.getFullYear();
+                                    const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+                                    const day = fecha.getDate().toString().padStart(2, '0');
+                                    fecha = `${year}-${month}-${day}`;
+                                } else if (typeof fecha === 'number') { // Excel serial date number
+                                    fecha = new Date(Math.round((fecha - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+                                } else if (!fecha || typeof fecha !== 'string') {
                                     fecha = '';
                                 }
 
