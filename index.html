@@ -1524,7 +1524,9 @@
             }
         }
 
-        async function findAndReplaceInDatabase(field, oldValue, newValue) {
+
+
+        async function findAndReplaceInDatabase(field, oldValue, newValue, activeFormId, formStateBeforeEdit) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
                 'categorias': 'categoria',
@@ -1553,10 +1555,16 @@
                 
                 await batch.commit();
                 
-                fieldOptions[field] = [...new Set([...fieldOptions[field], newValue])].sort();
+                // 1. Actualizar las opciones globales y redibujar los selects
+                fieldOptions[field] = [...new Set([...fieldOptions[field].filter(opt => opt !== oldValue), newValue])].sort();
                 updateSelectOptions(field, fieldOptions[field]);
                 
-                // Auto-seleccionar la nueva opción en el select activo
+                // 2. Restaurar el estado del formulario
+                if (formStateBeforeEdit) {
+                    restoreFormState(activeFormId, formStateBeforeEdit);
+                }
+
+                // 3. Asegurarse de que el campo editado tenga el nuevo valor seleccionado
                 if (activeSelectElement) {
                     $(activeSelectElement).val(newValue).trigger('change.select2');
                 }
@@ -1566,6 +1574,58 @@
                 console.error("Error al actualizar registros:", error);
                 showAlert("Error al actualizar registros existentes", "error");
             }
+        }
+
+        function getFormState(formId) {
+            const form = document.getElementById(formId);
+            if (!form) return null;
+            const state = {};
+            
+            // Guardar estado de inputs y textareas
+            $(form).find('input, textarea').each(function() {
+                const input = $(this);
+                const inputName = input.attr('name');
+                if (inputName) {
+                    state[inputName] = { value: input.val() };
+                }
+            });
+
+            // Guardar estado de selects (incluyendo tags)
+            $(form).find('select').each(function() {
+                const select = $(this);
+                const selectName = select.attr('name');
+                if (selectName) {
+                    const select2Data = select.select2('data') || [];
+                    state[selectName] = {
+                        value: select.val(),
+                        tags: select2Data.filter(item => item.element === undefined || $(item.element).data('select2-tag') === true)
+                    };
+                }
+            });
+            
+            return state;
+        }
+
+        function restoreFormState(formId, state) {
+            const form = document.getElementById(formId);
+            if (!form || !state) return;
+            
+            Object.entries(state).forEach(([fieldName, fieldState]) => {
+                const element = $(form).find(`[name="${fieldName}"]`);
+                if (element.is('select')) {
+                    // Restaurar tags para selects
+                    if (fieldState.tags) {
+                        fieldState.tags.forEach(tag => {
+                            if (!element.find(`option[value="${tag.id}"]`).length) {
+                                element.append(new Option(tag.text, tag.id));
+                            }
+                        });
+                    }
+                    element.val(fieldState.value).trigger('change.select2');
+                } else if(element.is('input') || element.is('textarea')) {
+                    element.val(fieldState.value);
+                }
+            });
         }
 
         function setupAddEditButtons() {
@@ -1594,11 +1654,9 @@
                     let inputElement;
                     
                     if (field === 'fuente' || field === 'resumen' || field === 'comentario') {
-                        // For text inputs and textareas
                         inputElement = e.currentTarget.parentElement.querySelector('input') || 
                                       e.currentTarget.parentElement.querySelector('textarea');
                     } else {
-                        // For select elements
                         inputElement = e.currentTarget.parentElement.querySelector('select');
                         activeSelectElement = inputElement;
                     }
@@ -1626,12 +1684,17 @@
 
                 closeModal(editOptionModal);
                 
+                const activeFormId = !newsModal.classList.contains('hidden') ? 'news-form' : 
+                                     !editModal.classList.contains('hidden') ? 'edit-form' : null;
+                
+                const formStateBeforeEdit = activeFormId ? getFormState(activeFormId) : null;
+
                 requirePassword(async () => {
                     try {
                         if (['proyectos', 'categorias', 'medios', 'subproyectos'].includes(currentEditingField)) {
-                            await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue);
+                            await findAndReplaceInDatabase(currentEditingField, currentEditingValue, newValue, activeFormId, formStateBeforeEdit);
                         } else {
-                            // For non-select fields, just update the input value
+                            // Lógica para campos de texto (no afecta a otros campos)
                             let inputElement;
                             if (currentEditingField === 'fuente') {
                                 inputElement = document.getElementById('news-source') || document.getElementById('edit-news-source');
@@ -1645,10 +1708,11 @@
                                 inputElement.value = newValue;
                             }
                         }
-                        
                     } catch (dbErr) {
                         console.error('Error al actualizar la base de datos:', dbErr);
                         showAlert("Error al actualizar la opción", "error");
+                    } finally {
+                        activeSelectElement = null; // Limpiar el elemento activo
                     }
                 });
             });
@@ -1658,6 +1722,7 @@
                 activeSelectElement = null;
             });
         }
+
 
         // =============================================
         // MÓDULO: Autenticación y seguridad
