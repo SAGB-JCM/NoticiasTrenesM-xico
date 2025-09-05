@@ -114,6 +114,14 @@
             background: #a8a8a8;
         }
         
+        /* Mejora para encabezados de tabla fijos */
+        .table-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f1f5f9; /* Color de bg-slate-100 para evitar transparencia */
+        }
+
         .sortable-header { cursor: pointer; }
         .sortable-header .sort-icon { display: none; }
         .sortable-header.asc .sort-icon.asc,
