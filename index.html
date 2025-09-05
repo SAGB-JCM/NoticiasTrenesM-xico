@@ -1150,8 +1150,15 @@
                 const filterBy = header.dataset.filterBy;
                 const allData = dataProvider();
                 const uniqueValues = [...new Set(allData.map(item => {
-                    if (filterBy === 'fecha') return formatDate(item[filterBy]);
-                    return item[filterBy] || 'N/A';
+                    let value = item[filterBy] || 'N/A';
+                    // Normalización para campos de texto libre como 'comentario'
+                    if (typeof value === 'string') {
+                        // Para la fecha, usamos el formato específico.
+                        if (filterBy === 'fecha') return formatDate(value);
+                        // Para otros strings, normalizamos a minúsculas y sin espacios extra.
+                        return value.trim();
+                    }
+                    return value;
                 }))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
 
                 const dropdown = document.createElement('div');
