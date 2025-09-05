@@ -1915,10 +1915,10 @@
             let newsToDeleteId = null;
             let newsToDeleteIsHistorical = false;
 
-            function handleDeleteClick(e) {
+            function handleDeleteClick(button) {
                 requirePassword(() => {
-                    newsToDeleteId = e.currentTarget.dataset.id;
-                    newsToDeleteIsHistorical = e.currentTarget.dataset.isHistorical === 'true';
+                    newsToDeleteId = button.dataset.id;
+                    newsToDeleteIsHistorical = button.dataset.isHistorical === 'true';
                     openModal(confirmModal);
                 });
             }
