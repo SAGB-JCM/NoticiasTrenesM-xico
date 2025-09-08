@@ -572,7 +572,7 @@
                             </div>
                             <button id="download-historical-excel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
                                 <i class="fa-solid fa-file-excel"></i>
-                                <span>Descargar Histórico</span>
+                                <span>Descargar Excel</span>
                             </button>
                         </div>
                     </div>
@@ -1136,6 +1136,32 @@
             });
         }
 
+        /**
+         * Obtiene los datos pre-filtrados por todas las columnas excepto la especificada.
+         * Esto es crucial para que los dropdowns de filtro muestren solo opciones relevantes.
+         * @param {function} dataProvider - Función que devuelve el conjunto de datos completo.
+         * @param {string} filterKey - 'main' o 'historical'.
+         * @param {string} excludeColumn - La clave de la columna a excluir del filtrado.
+         * @returns {Array} - Los datos filtrados.
+         */
+        function getPreFilteredData(dataProvider, filterKey, excludeColumn) {
+            const allData = dataProvider();
+            const searchInput = document.getElementById(`filter-input-${filterKey}`);
+            const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+            const columnFilters = activeFilters[filterKey];
+
+            return allData.filter(item => {
+                const matchesSearch = searchText === '' || Object.values(item).some(value => String(value).toLowerCase().includes(searchText));
+                if (!matchesSearch) return false;
+
+                return Object.entries(columnFilters).every(([col, values]) => {
+                    if (col === excludeColumn || values.length === 0) return true;
+                    const itemValue = col === 'fecha' ? formatDate(item[col]) : (item[col] || 'N/A');
+                    return values.includes(itemValue);
+                });
+            });
+        }
+
         function setupColumnFilters(headerId, dataProvider, renderFunc, filterKey) {
             const headerRow = document.getElementById(headerId);
             headerRow.addEventListener('click', e => {
@@ -1148,8 +1174,10 @@
                 }
 
                 const filterBy = header.dataset.filterBy;
-                const allData = dataProvider();
-                const uniqueValues = [...new Set(allData.map(item => {
+                // Usar los datos pre-filtrados para generar las opciones del dropdown.
+                const preFilteredData = getPreFilteredData(dataProvider, filterKey, filterBy);
+
+                const uniqueValues = [...new Set(preFilteredData.map(item => {
                     let value = item[filterBy] || 'N/A';
                     // Normalización para campos de texto libre como 'comentario'
                     if (typeof value === 'string') {
@@ -1159,7 +1187,17 @@
                         return value.trim();
                     }
                     return value;
-                }))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+                }))].sort((a, b) => {
+                    // Lógica de ordenamiento personalizada para fechas en el filtro
+                    if (filterBy === 'fecha') {
+                        try {
+                            const dateA = new Date(a.split('/').reverse().join('-'));
+                            const dateB = new Date(b.split('/').reverse().join('-'));
+                            return dateA - dateB; // Orden ascendente
+                        } catch (err) { return a.localeCompare(b); }
+                    }
+                    return a.localeCompare(b, 'es', { numeric: true });
+                });
 
                 const dropdown = document.createElement('div');
                 dropdown.className = 'filter-dropdown p-2 space-y-1';
@@ -1229,6 +1267,17 @@
         }
 
         function sortAndRenderTable(tableBody, data, isHistorical) {
+            // Ordenar los datos por fecha (más recientes primero)
+            data.sort((a, b) => {
+                try {
+                    const dateA = new Date(a.fecha);
+                    const dateB = new Date(b.fecha);
+                    return dateB - dateA; // Orden descendente
+                } catch (e) {
+                    return 0; // Fallback si alguna fecha no es válida
+                }
+            });
+
             const filterKey = isHistorical ? 'historical' : 'main';
             const filteredData = applyAllFilters(data, filterKey);
             renderTable(tableBody, filteredData, isHistorical);
@@ -2253,11 +2302,14 @@
             });
             
             document.getElementById('download-historical-excel-btn').addEventListener('click', () => {
-                if (historicalNews.length === 0) return showAlert("No hay datos históricos para descargar.", "warning");
-                const data = prepareExportData(historicalNews);
-                const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
+                // Obtener los datos actualmente filtrados en la tabla
+                const filteredData = applyAllFilters(historicalNews, 'historical');
+
+                if (filteredData.length === 0) return showAlert("No hay datos en la tabla para descargar.", "warning");
+                const dataToExport = prepareExportData(filteredData);
+                const ws = XLSX.utils.json_to_sheet(dataToExport, { header: exportHeaders });
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Noticias Históricas");
+                XLSX.utils.book_append_sheet(wb, ws, "Histórico Filtrado");
                 XLSX.writeFile(wb, "noticias_historicas.xlsx");
             });
             
@@ -2373,5 +2425,5 @@
         // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
     </script>
-</body> 
+</body>  
 </html>
