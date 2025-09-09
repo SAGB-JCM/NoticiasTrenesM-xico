@@ -197,6 +197,29 @@
             color: #374151;
         }
 
+        /* --- Reglas para restaurar el tamaño original de Resumen, Comentario y Fuente --- */
+
+        /* 1. Hacer que el contenedor del campo ocupe todo el ancho del grid */
+        .form-field:has(#news-summary),
+        .form-field:has(#news-comment),
+        .form-field:has(#edit-news-summary),
+        .form-field:has(#edit-news-comment) {
+            grid-column: 1 / -1; /* Ocupa todas las columnas del grid */
+        }
+
+        /* 2. Anular el ancho fijo del contenedor interno para los textareas */
+        .form-field:has(textarea) .flex-with-buttons {
+            min-width: 100%;
+            max-width: 100%;
+        }
+
+        /* 3. Ocultar los botones de edición para los campos de texto libre */
+        .form-field:has(textarea) .edit-btn,
+        .form-field:has(#news-source) .edit-btn,
+        .form-field:has(#edit-news-source) .edit-btn {
+            display: none;
+        }
+
         .news-form-container {
             max-height: 75vh;
             overflow-y: auto;
@@ -223,13 +246,21 @@
 
         .flex-with-buttons {
             display: flex;
-            align-items: flex-end;
+            align-items: flex-end; /* Alinea el botón con la base del campo */
+            /* Clave: Establece un tamaño fijo para el contenedor del campo y el botón */
+            min-width: 340px;
+            max-width: 340px;
         }
 
         .flex-with-buttons .select2-container {
             flex-grow: 1;
             margin-bottom: 1px;
-            min-width: 0;
+            min-width: 0; /* Permite que el select se encoja y no se desborde */
+        }
+
+        .flex-with-buttons input,
+        .flex-with-buttons textarea {
+            min-width: 0; /* Permite que el campo se encoja y no se desborde */
         }
 
         .flex-with-buttons button {
@@ -274,11 +305,14 @@
             width: 100% !important;
         }
 
-        .select2-selection__rendered {
+        /* Regla clave para truncar el texto dentro del campo de selección */
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            display: block;
+            padding-left: 8px;
+            padding-right: 20px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: block;
         }
 
         .link-cell {
