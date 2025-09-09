@@ -1179,11 +1179,11 @@
 
                 const uniqueValues = [...new Set(preFilteredData.map(item => {
                     let value = item[filterBy] || 'N/A';
-                    // Normalización para campos de texto libre como 'comentario'
+                    // Normalización para campos de texto (proyecto, resumen, etc.)
                     if (typeof value === 'string') {
                         // Para la fecha, usamos el formato específico.
                         if (filterBy === 'fecha') return formatDate(value);
-                        // Para otros strings, normalizamos a minúsculas y sin espacios extra.
+                        // Para otros strings, normalizamos eliminando espacios al inicio y final.
                         return value.trim();
                     }
                     return value;
@@ -1546,25 +1546,25 @@
             const allData = [...news, ...historicalNews];
             
             // Proyectos - combinar catálogo con datos existentes
-            const historicalProyectos = allData.map(c => c.proyecto).filter(Boolean);
+            const historicalProyectos = allData.map(c => c.proyecto).filter(Boolean).map(p => p.trim());
             const combinedProyectos = [...new Set([...catalogoProyectos, ...historicalProyectos])].sort();
             fieldOptions.proyectos = combinedProyectos;
             updateSelectOptions('proyectos', fieldOptions.proyectos);
         
             // Categorías - combinar catálogo con datos existentes
-            const historicalCategorias = allData.map(c => c.categoria).filter(Boolean);
+            const historicalCategorias = allData.map(c => c.categoria).filter(Boolean).map(c => c.trim());
             const combinedCategorias = [...new Set([...catalogoCategorias, ...historicalCategorias])].sort();
             fieldOptions.categorias = combinedCategorias;
             updateSelectOptions('categorias', fieldOptions.categorias);
 
             // Medios - combinar catálogo con datos existentes
-            const historicalMedios = allData.map(c => c.medio).filter(Boolean);
+            const historicalMedios = allData.map(c => c.medio).filter(Boolean).map(m => m.trim());
             const combinedMedios = [...new Set([...catalogoMedios, ...historicalMedios])].sort();
             fieldOptions.medios = combinedMedios;
             updateSelectOptions('medios', fieldOptions.medios);
 
             // Subproyectos - solo datos existentes
-            const historicalSubproyectos = allData.map(c => c.subproyecto).filter(Boolean);
+            const historicalSubproyectos = allData.map(c => c.subproyecto).filter(Boolean).map(s => s.trim());
             const combinedSubproyectos = [...new Set([...catalogoSubproyectos, ...historicalSubproyectos])].sort();
             fieldOptions.subproyectos = combinedSubproyectos;
             updateSelectOptions('subproyectos', fieldOptions.subproyectos);
