@@ -300,6 +300,15 @@
             background-color: #8a6b22;
         }
 
+        .flex-with-buttons button.paste-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .flex-with-buttons button.paste-btn:hover {
+            background-color: #16463c;
+        }
+        
         .select2-container--default .select2-selection--single {
             height: 38px;
             padding: 5px;
@@ -1143,6 +1152,11 @@
             modal.classList.remove('modal-enter');
             modal.classList.add('modal-leave');
             setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function openModalWithFocus(modal, elementToFocus) {
+            openModal(modal);
+            setTimeout(() => elementToFocus.focus(), 150); // Pequeño delay para la animación
         }
 
         function formatDate(dateString) {
@@ -2137,7 +2151,7 @@
                     currentEditingValue = currentValue;
                     editOptionInput.value = currentValue;
                     editOptionInput.placeholder = `Edite la opción para ${field}`;
-                    openModal(editOptionModal);
+                    openModalWithFocus(editOptionModal, editOptionInput);
                 });
             });
             
@@ -2222,9 +2236,11 @@
             });
         }
 
+
         function requirePassword(action, isAsync = false) {
             pendingAction = action;
-            openModal(passwordModal);
+            openModal(passwordModal); // Se corregirá a openModalWithFocus más adelante
+            openModalWithFocus(passwordModal, passwordInput);
             
             if (isAsync) {
                 return new Promise((resolve, reject) => {
@@ -2479,18 +2495,18 @@
             });
             
             addNewsBtn.addEventListener('click', () => {
-                // Set default date to today
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('news-date').value = today;
-                
                 // Clear form
                 newsForm.reset();
                 $('#news-project, #news-subproject, #news-category, #news-medio').val(null).trigger('change');
 
                 // Limpiar el editor de texto
                 document.getElementById('news-summary').innerHTML = '';
+
+                // Establecer la fecha de hoy DESPUÉS de resetear el formulario
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('news-date').value = today;
                 
-                openModal(newsModal);
+                openModalWithFocus(newsModal, document.getElementById('news-source'));
             });
             
             closeModalBtn.addEventListener('click', () => closeModal(newsModal));
@@ -2581,14 +2597,6 @@
                 document.body.appendChild(fileInput);
                 fileInput.click();
                 document.body.removeChild(fileInput);
-            });
-
-            document.getElementById('news-summary').addEventListener('paste', function(e) {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                const html = (e.clipboardData || window.clipboardData).getData('text/html');
-                const cleanedHTML = normalizeFontSizes(cleanWordHTML(html || text));
-                document.execCommand('insertHTML', false, cleanedHTML);
             });
 
             document.getElementById('edit-news-summary').addEventListener('paste', function(e) {
