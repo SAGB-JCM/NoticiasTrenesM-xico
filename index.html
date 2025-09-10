@@ -567,10 +567,10 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Fuente <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Comentario <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
@@ -624,10 +624,10 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Fuente <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Comentario <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
@@ -760,19 +760,17 @@
                         </div>
                     </div>
                     <div class="form-field">
+                        <label for="news-comment">Título de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-comment-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-field">
                         <label for="news-summary">Resumen de la Noticia</label>
                         <div class="flex-with-buttons">
                             <textarea id="news-summary" name="resumen" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></textarea>
                             <button type="button" id="edit-summary-btn" class="edit-btn">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-field">
-                        <label for="news-comment">Comentario</label>
-                        <div class="flex-with-buttons">
-                            <textarea id="news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
-                            <button type="button" id="edit-comment-btn" class="edit-btn">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
                         </div>
@@ -848,19 +846,17 @@
                         </div>
                     </div>
                     <div class="form-field">
+                        <label for="edit-news-comment">Título de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="edit-news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-comment-edit-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-field">
                         <label for="edit-news-summary">Resumen de la Noticia</label>
                         <div class="flex-with-buttons">
                             <textarea id="edit-news-summary" name="resumen" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></textarea>
                             <button type="button" id="edit-summary-edit-btn" class="edit-btn">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-field">
-                        <label for="edit-news-comment">Comentario</label>
-                        <div class="flex-with-buttons">
-                            <textarea id="edit-news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
-                            <button type="button" id="edit-comment-edit-btn" class="edit-btn">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
                         </div>
@@ -1182,10 +1178,10 @@
                     </td>
                     <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.subproyecto, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.resumen, 50)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
                             <i class="fa-solid fa-file-word"></i>
@@ -1546,7 +1542,8 @@
 
                 <div class="details-section">
                     <h4>Resumen de la Noticia</h4>
-                    <p class="text-gray-800 text-base leading-relaxed">${newsItem.resumen || 'No hay resumen disponible.'}</p>
+                    <p class="text-gray-800 text-base leading-relaxed font-bold mb-2">${newsItem.comentario || 'Sin título.'}</p>
+                    <p class="text-gray-800 text-base leading-relaxed">${newsItem.resumen || 'No hay resumen disponible.'}</p> 
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -1563,11 +1560,6 @@
                 <div class="details-section">
                     <h4>Fuente Original (URL)</h4>
                     ${sourceLink}
-                </div>
-
-                <div class="details-section">
-                    <h4>Comentarios Adicionales</h4>
-                    <p class="text-gray-700 italic">${newsItem.comentario || 'Sin comentarios.'}</p>
                 </div>
             `;
 
@@ -1638,7 +1630,7 @@
                     palabra_clave_5: record.resumen || 'No especificado',
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
-                    palabra_clave_8: record.comentario || 'No especificado',
+                    palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
                 };
 
                 doc.setData(dataForTemplate);
@@ -2255,7 +2247,7 @@
         // =============================================
 
         const exportHeaders = [
-            "No.", "Fecha", "Fuente", "Proyecto", "Subproyecto", "Resumen", "Categoría", "Medio", "Comentario"
+            "No.", "Fecha", "Fuente", "Proyecto", "Subproyecto", "Título", "Resumen", "Categoría", "Medio"
         ];
 
         function prepareExportData(data) {
@@ -2265,10 +2257,10 @@
                 "Fuente": newsItem.fuente || "",
                 "Proyecto": newsItem.proyecto || "", 
                 "Subproyecto": newsItem.subproyecto || "",
+                "Título": newsItem.comentario || "",
                 "Resumen": newsItem.resumen || "",
                 "Categoría": newsItem.categoria || "",
-                "Medio": newsItem.medio || "",
-                "Comentario": newsItem.comentario || ""
+                "Medio": newsItem.medio || ""
             }));
         }
 
@@ -2583,10 +2575,10 @@
                                     fuente: mappedRow.fuente || '',
                                     proyecto: mappedRow.proyecto || '',
                                     subproyecto: mappedRow.subproyecto || '',
+                                    comentario: mappedRow.título || '', // Mapea 'título' a 'comentario'
                                     resumen: mappedRow.resumen || '',
                                     categoria: mappedRow.categoria || '',
-                                    medio: mappedRow.medio || '',
-                                    comentario: mappedRow.comentario || ''
+                                    medio: mappedRow.medio || ''
                                 };
                             });
 
