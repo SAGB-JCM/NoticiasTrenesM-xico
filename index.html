@@ -1697,42 +1697,110 @@
             }
         }
 
-        // =============================================
-        // MÓDULO: Gestión de opciones dinámicas
-        // =============================================
-   
+        // =============================================================
+        // MÓDULO: Catálogos de opciones dinámicas (Actualizado)
+        // =============================================================
+
+        // Catálogo de proyectos ferroviarios
         const catalogoProyectos = [
-            "Tren Maya",
-            "Tren Interurbano México-Toluca",
-            "Tren Transístmico",
-            "Ferrocarril Mexiquense",
-            "Otros proyectos ferroviarios"
+            "PLAN MÉXICO PARA REHABILITAR LINEAS FÉRREAS",
+            "TREN MÉXICO - PACHUCA",
+            "TREN SALTILLO - NUEVO LAREDO",
+            "TREN MÉXICO - QUERÉTARO",
+            "TREN MÉXICO - PACHUCA, TREN MÉXICO QUERÉTARO, QUERÉTARO IRAPUATO",
+            "TREN MAYA",
+            "TREN MÉXICO - QUERÉTARO, TREN QUERÉTARO - IRAPUATO",
+            "TREN QUERÉTARO - IRAPUATO",
+            "TREN HERMOSILLO - NOGALES"
         ];
 
+        // Catálogo de subproyectos, actualizado con las nuevas opciones
         const catalogoSubproyectos = [
-            // Inicialmente vacío, se poblará con los datos existentes
+            "TREN INTERURBANO MÉXICO - TOLUCA",
+            "TRAMO AIFA - PACHUCA",
+            "TRENES DE MÉXICO",
+            "TRAMO MÉXICO - AIFA",
+            "TREN INTEROCEÁNICO",
+            "TRAMO III",
+            "TRAMO XII",
+            "TRAMO MURIS - NOGALES",
+            "TRAMO NUEVO LEÓN - TAMAULIPAS",
+            "TRAMO II",
+            "TREN INTERURBANO GUANAJUATO",
+            "TREN PUEBLA - ATLIXCO",
+            "TREN AIFA - PACHUCA",
+            "TREN MÉXICO - PUEBLA - VERACRUZ",
+            "TREN INTERURBANO MÉXICO - PACHUCA",
+            "TRAMO I",
+            "TREN MÉXICO - QUERÉTARO, TRAMOS QUERÉTARO - IRAPUATO, QUERÉTARO - NUEVO LEÓN",
+            "TREN MÉXICO - PACHUCA, TREN MÉXICO QUERÉTARO, QUERÉTARO IRAPUATO, TREN SALTILLO - NUEVO LAREDO",
+            "TREN INTEROCEÁNICO, TREN MÉXICO - QUERÉTARO"
         ];
 
-
+        // Catálogo de categorías
         const catalogoCategorias = [
-            "Avances de obra",
-            "Inauguraciones",
-            "Eventos y ceremonias",
-            "Impacto social",
-            "Impacto económico",
-            "Impacto ambiental",
-            "Controversias",
-            "Acuerdos y convenios",
-            "Nombramientos y personal",
-            "Tecnología e innovación"
+            "INFORMACIÓN GENERAL DEL PROGRAMA",
+            "AVANCES FÍSICOS",
+            "EJECUCIÓN",
+            "LICITACIÓN",
+            "PRESUPUESTO"
         ];
 
+        // Catálogo de medios de difusión
         const catalogoMedios = [
-            "Mañanera",
-            "Internet",
-            "Blog",
-            "Medios Privados"
+            "AL MOMENTO",
+            "AMBAS MANOS",
+            "ANIMAL POLÍTICO",
+            "CAPITAL COAHUILA",
+            "CARIBE EMPRESARIAL",
+            "DIARIO DE QUERÉTARO",
+            "DIARIO DEL SUR",
+            "DOF",
+            "EFFETA",
+            "EL CEO",
+            "EL CRONISTA",
+            "EL ECONOMISTA",
+            "EL FINANCIERO",
+            "EL NORTE",
+            "EL SALMANTINO",
+            "EL SOL DE MÉXICO",
+            "EL SOL DE SAN JUAN DEL RIO",
+            "EL UNIVERSAL",
+            "EN EL SUBTE",
+            "EXILIO",
+            "EXPANSIÓN",
+            "GREEN PEACE",
+            "HORA CERO",
+            "INFOBAE",
+            "LA RAZÓN DE MÉXICO",
+            "LA VERDAD DE LAS NOTICIAS",
+            "LIDER EMPRESARIAL",
+            "LUZ NOTICIAS",
+            "MEGA NOTICIAS",
+            "MGM NOTICIAS",
+            "MILENIO",
+            "MVS NOTICIAS",
+            "NEWS DAY CARIBE",
+            "NOTICIAS DE QUERÉTARO",
+            "OBRAS EXPANSIÓN",
+            "PLAZA DE ARMAS",
+            "PRESIDENCIA",
+            "PROCESO",
+            "PUENTE LIBRE MX",
+            "QUADRATIN",
+            "REFORMA",
+            "REPORTE ÍNDIGO",
+            "REPORTUR",
+            "S1E",
+            "SDP NOTICIAS",
+            "T21",
+            "TELEDIARIO",
+            "TRAMO MÉXICO - AIFA",
+            "TRANSPORTE MX",
+            "VANGUARDIA"
         ];
+
+
 
         function updateDynamicSelectOptions() {
             const allData = [...news, ...historicalNews];
