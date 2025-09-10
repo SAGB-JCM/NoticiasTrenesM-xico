@@ -1633,15 +1633,17 @@
                 // Usamos PizZip directamente desde el objeto window
                 const zip = new PizZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
-                    modules: [new HTMLModule()], // Cargar el módulo HTML
+                    modules: [HTMLModule], // Cargar el módulo HTML
                     paragraphLoop: true,
                     linebreaks: true
                 });
 
                 // 4. Mapeo de datos (asegurando que no haya valores nulos)
                 const dataForTemplate = {
-                    palabra_clave_1: formatDate(record.fecha) || 'No especificado', // ... (otros campos)
-                    // Usamos {@rawHtml} en la plantilla para el resumen
+                    palabra_clave_1: formatDate(record.fecha) || 'No especificado',
+                    palabra_clave_2: record.fuente || 'No especificado',
+                    palabra_clave_3: record.proyecto || 'No especificado',
+                    palabra_clave_4: record.subproyecto || 'No especificado',
                     rawHtml: record.resumen || 'No hay resumen disponible.',
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
@@ -2772,14 +2774,18 @@
             const editorOptions = {
                 buttonList: [
                     ['undo', 'redo'],
+                    ['font', 'fontSize', 'formatBlock'],
                     ['bold', 'italic', 'underline', 'strike'],
-                    ['removeFormat'],
+                    ['fontColor', 'hiliteColor'],
+                    '/', // Line break
                     ['outdent', 'indent'],
                     ['align', 'list'],
-                    ['link']
+                    ['table', 'link'],
+                    ['removeFormat'],
+                    ['fullScreen', 'codeView']
                 ],
-                height: '150px',
-                resizingBar: false
+                height: '200px',
+                resizingBar: true
             };
 
             try {
