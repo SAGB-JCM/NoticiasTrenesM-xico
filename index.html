@@ -1584,7 +1584,7 @@
             const HTMLModule = {
                 name: "HTMLModule",
                 set: function(options) { this.options = options; },
-                get: function(scope, context) { if (scope === "rawHtml") { return { _type: "html", value: context.wholeScope[context.scopeLindex - 1] }; } },
+                get: function(scope, context) { if (scope === "palabra_clave_5") { return { _type: "html", value: context.scopeList[context.scopeList.length - 1] }; } },
                 render: function(part, scope) { if (part.type === "html") { return { value: part.value }; } }
             };
 
@@ -1644,7 +1644,7 @@
                     palabra_clave_2: record.fuente || 'No especificado',
                     palabra_clave_3: record.proyecto || 'No especificado',
                     palabra_clave_4: record.subproyecto || 'No especificado',
-                    rawHtml: record.resumen || 'No hay resumen disponible.',
+                    palabra_clave_5: record.resumen || 'No hay resumen disponible.',
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
                     palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
@@ -2784,6 +2784,7 @@
                     ['removeFormat'],
                     ['fullScreen', 'codeView']
                 ],
+                theme: 'se-theme-light',
                 height: '200px',
                 resizingBar: true
             };
