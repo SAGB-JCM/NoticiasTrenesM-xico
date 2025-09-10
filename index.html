@@ -32,6 +32,10 @@
     <!-- html2pdf para generar reportes en PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
+    <!-- Librerías para manipulación de .docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.34.1/docxtemplater.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <!-- Firebase App (el módulo principal de Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <!-- Firebase Firestore -->
@@ -640,9 +644,9 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-primary">Reportes</h2>
                         <div class="flex items-center space-x-4">
-                            <button id="generate-report-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                <span>Generar Reporte</span>
+                            <button id="upload-template-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
+                                <i class="fa-solid fa-file-word"></i>
+                                <span>Cargar Plantilla Word</span>
                             </button>
                             <div class="flex items-center space-x-2">
                                 <label for="reportes-data-source" class="block text-sm font-medium text-gray-700">Fuente de datos:</label>
@@ -974,6 +978,8 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        const templateDocRef = db.collection('config').doc('wordTemplate');
+
         // =============================================
         // MÓDULO: Variables globales y estado de la aplicación
         // =============================================
@@ -986,7 +992,7 @@
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
         // Variables de estado de la aplicación
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, generateReportBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent;
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent;
         
         let currentEditIsHistorical = false;
         
@@ -1080,6 +1086,18 @@
                 return new Intl.DateTimeFormat('es-ES', options).format(date);
             } catch (e) { return dateString; }
         }
+
+        function base64ToArrayBuffer(base64) {
+            // Primero, removemos el prefijo "data:application/..." si existe
+            const base64Data = base64.substring(base64.indexOf(',') + 1);
+            const binary_string = window.atob(base64Data);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
         // =============================================
         // MÓDULO: Interfaz de usuario
         // =============================================
@@ -1122,6 +1140,9 @@
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
                     <td class="py-4 px-6 flex space-x-2">
+                        <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
+                            <i class="fa-solid fa-file-word"></i>
+                        </button>
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="edit-btn text-blue-500 hover:text-blue-700">
                             <i class="fa-solid fa-edit"></i>
                         </button>
@@ -1506,6 +1527,98 @@
             openModal(viewDetailsModal);
         }
 
+        // Variable para asegurar que PizZip se cargue solo una vez.
+        let pizZipPromise = null;
+
+        function loadPizZip() {
+            // Si ya estamos cargando o hemos cargado PizZip, devolvemos la promesa existente.
+            if (pizZipPromise) {
+                return pizZipPromise;
+            }
+            // Creamos una nueva promesa para cargar el script.
+            pizZipPromise = new Promise((resolve, reject) => {
+                // Si PizZip ya existe (por alguna razón), lo resolvemos inmediatamente.
+                if (window.PizZip) {
+                    return resolve(window.PizZip);
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.js';
+                script.onload = () => resolve(window.PizZip);
+                script.onerror = () => reject(new Error('No se pudo cargar el script de PizZip.'));
+                document.head.appendChild(script);
+            });
+            return new Promise((resolve, reject) => {
+                pizZipPromise.then(resolve).catch(reject);
+            });
+        }
+
+        /**
+         * Genera un documento .docx a partir de una plantilla en Firebase Storage.
+         * @param {string} newsId - El ID del registro de la noticia.
+         * @param {boolean} isHistorical - Indica si el registro es del histórico.
+         */
+        async function generateDoc(newsId, isHistorical) {
+            showAlert("Generando reporte...", "info");
+            const dataSet = isHistorical ? historicalNews : news;
+            const record = dataSet.find(item => item.id === newsId);
+
+            if (!record) {
+                return showAlert("Error: No se encontró el registro de la noticia.", "error");
+            }
+
+            try {
+                // SOLUCIÓN DEFINITIVA: Cargar PizZip dinámicamente y esperar a que esté listo.
+                const PizZipConstructor = await loadPizZip();
+
+                // 1. Obtener la plantilla desde Firestore
+                const templateDoc = await templateDocRef.get();
+                if (!templateDoc.exists || !templateDoc.data().templateData) {
+                    showAlert("Error: No se encontró la plantilla. Por favor, cárguela en la pestaña de Reportes.", "error");
+                    return;
+                }
+                const base64String = templateDoc.data().templateData;
+
+                // Convertir la plantilla de Base64 a un formato que docxtemplater pueda usar
+                const templateBlob = base64ToArrayBuffer(base64String);
+
+                // 2. Procesar la plantilla con docxtemplater
+                // Instanciamos PizZip y luego cargamos los datos. Es el método más robusto.
+                const zip = new PizZipConstructor(templateBlob);
+                const doc = new docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                });
+
+                // 3. Mapeo de datos (asegurando que no haya valores nulos)
+                const dataForTemplate = {
+                    palabra_clave_1: formatDate(record.fecha) || 'No especificado',
+                    palabra_clave_2: record.fuente || 'No especificado',
+                    palabra_clave_3: record.proyecto || 'No especificado',
+                    palabra_clave_4: record.subproyecto || 'No especificado',
+                    palabra_clave_5: record.resumen || 'No especificado',
+                    palabra_clave_6: record.categoria || 'No especificado',
+                    palabra_clave_7: record.medio || 'No especificado',
+                    palabra_clave_8: record.comentario || 'No especificado',
+                };
+
+                doc.setData(dataForTemplate);
+                doc.render();
+
+                // 4. Generar y descargar el archivo
+                const out = doc.getZip().generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
+
+                const fileName = `Reporte-${(record.proyecto || 'Noticia').replace(/ /g, '_')}.docx`;
+                saveAs(out, fileName);
+                showAlert("¡Reporte generado con éxito!", "success");
+
+            } catch (error) {
+                console.error("Error al generar el documento:", error);
+                showAlert("Error al generar el reporte. Revise la consola para más detalles.", "error");
+            }
+        }
 
         // =============================================
         // MÓDULO: Gestión de datos históricos
@@ -1873,9 +1986,23 @@
             });
         }
 
-        function requirePassword(action) {
+        function requirePassword(action, isAsync = false) {
             pendingAction = action;
             openModal(passwordModal);
+            
+            if (isAsync) {
+                return new Promise((resolve, reject) => {
+                    const originalAction = pendingAction;
+                    pendingAction = async () => {
+                        try {
+                            const result = await originalAction();
+                            resolve(result);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                });
+            }
         }
 
         async function initializeAppWithAuth() {
@@ -2072,6 +2199,26 @@
             }
         }
 
+        function handleRowDoubleClick(e, isHistorical) {
+            const row = e.target.closest('tr');
+            if (!row || e.target.closest('button') || e.target.closest('.link-cell')) {
+                return; // No hacer nada si se hace clic en un botón o en el enlace
+            }
+            const newsId = row.querySelector('.edit-btn')?.dataset.id;
+            if (!newsId) return;
+
+            const data = isHistorical ? historicalNews : news;
+            const newsItem = data.find(item => item.id === newsId);
+            showDetailsModal(newsItem);
+        }
+
+        function handleGenerateDocClick(button) {
+            const newsId = button.dataset.id;
+            const isHistorical = button.dataset.isHistorical === 'true';
+            // Llamada directa a la función de generación de documento, sin contraseña.
+            generateDoc(newsId, isHistorical);
+        }
+
         // =============================================
         // MÓDULO: Configuración de eventos
         // =============================================
@@ -2149,24 +2296,46 @@
                 });
             }
 
-        function handleRowDoubleClick(e, isHistorical) {
-            const row = e.target.closest('tr');
-            if (!row || e.target.closest('button') || e.target.closest('.link-cell')) {
-                return; // No hacer nada si se hace clic en un botón o en el enlace
-            }
-            const newsId = row.querySelector('.edit-btn')?.dataset.id;
-            if (!newsId) return;
-
-            const data = isHistorical ? historicalNews : news;
-            const newsItem = data.find(item => item.id === newsId);
-            showDetailsModal(newsItem);
-        }
-
             newsTableBody.addEventListener('click', e => {
                 const target = e.target.closest('button');
                 if (!target) return;
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+                if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
+            });
+
+            uploadTemplateBtn.addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.docx';
+                fileInput.style.display = 'none';
+
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        requirePassword(async () => {
+                            showAlert("Subiendo plantilla...", "info");
+                            const reader = new FileReader();
+                            reader.onload = async (event) => {
+                                const base64String = event.target.result;
+                                try {
+                                    await templateDocRef.set({ 
+                                        templateData: base64String,
+                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                                    });
+                                    showAlert("¡Plantilla actualizada con éxito!", "success");
+                                } catch (dbError) {
+                                    console.error("Error al guardar plantilla en Firestore:", dbError);
+                                    showAlert("Error al guardar la plantilla.", "error");
+                                }
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                });
+                document.body.appendChild(fileInput);
+                fileInput.click();
+                document.body.removeChild(fileInput);
             });
         newsTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, false));
 
@@ -2175,7 +2344,9 @@
                 if (!target) return;
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+                if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
             });
+
         historicalTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, true));
 
             cancelDeleteBtn.addEventListener('click', () => {
@@ -2446,9 +2617,9 @@
             webviewFrame = document.getElementById('webview-frame');
             closeWebviewBtn = document.getElementById('close-webview-btn');
             migrateModal = document.getElementById('migrate-modal');
-            cancelMigrateBtn = document.getElementById('cancel-migrate-btn');
-            confirmMigrateBtn = document.getElementById('confirm-migrate-btn');
-            generateReportBtn = document.getElementById('generate-report-btn');
+            cancelMigrateBtn = document.getElementById('cancel-migrate-btn'); // Esta línea está duplicada, pero la dejamos por seguridad
+            confirmMigrateBtn = document.getElementById('confirm-migrate-btn'); // Esta línea está duplicada, pero la dejamos por seguridad
+            uploadTemplateBtn = document.getElementById('upload-template-btn');
             viewDetailsModal = document.getElementById('view-details-modal');
             closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
             detailsModalContent = document.getElementById('details-modal-content');
