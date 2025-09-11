@@ -507,6 +507,11 @@
         .formatted-content u {
             text-decoration: underline;
         }
+
+        /* Clase para bloquear el scroll del body cuando un modal está abierto */
+        body.modal-open {
+            overflow: hidden;
+        }
     </style>
     
     <script>
@@ -1107,12 +1112,16 @@
         function openModal(modal) {
             modal.classList.remove('hidden', 'modal-leave');
             modal.classList.add('modal-enter');
+            document.body.classList.add('modal-open');
         }
 
         function closeModal(modal) {
             modal.classList.remove('modal-enter');
             modal.classList.add('modal-leave');
-            setTimeout(() => modal.classList.add('hidden'), 300);
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+            }, 300);
         }
 
         function openModalWithFocus(modal, elementToFocus) {
@@ -2171,7 +2180,12 @@
             const password = passwordInput.value;
             
             if (password === 'admin') {
-                closeModal(passwordModal);
+                // Cierre manual del modal para evitar quitar la clase 'modal-open' del body
+                // durante la transición al siguiente modal (ej. editar).
+                passwordModal.classList.remove('modal-enter');
+                passwordModal.classList.add('modal-leave');
+                setTimeout(() => passwordModal.classList.add('hidden'), 300);
+
                 passwordInput.value = '';
                 if (pendingAction) {
                     pendingAction();
