@@ -2590,16 +2590,14 @@
                 document.body.removeChild(fileInput);
             });
 
-            document.getElementById('edit-news-summary').addEventListener('paste', function(e) {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                const html = (e.clipboardData || window.clipboardData).getData('text/html');
-                const cleanedHTML = normalizeFontSizes(cleanWordHTML(html || text));
-                document.execCommand('insertHTML', false, cleanedHTML);
-            });
-
             document.querySelectorAll('#news-summary, #edit-news-summary').forEach(el => {
-                el.addEventListener('paste', e => e.preventDefault());
+                el.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                    const html = (e.clipboardData || window.clipboardData).getData('text/html');
+                    const cleanedHTML = normalizeFontSizes(cleanWordHTML(html || text));
+                    document.execCommand('insertHTML', false, cleanedHTML);
+                });
             });
 
         newsTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, false));
