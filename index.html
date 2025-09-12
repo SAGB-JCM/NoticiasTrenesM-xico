@@ -963,7 +963,7 @@
         </div>
     </div>
 
-    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[55] flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Verificación de Seguridad</h3>
             <p class="text-slate-600 mb-4">Esta acción requiere autenticación. Por favor, ingrese la contraseña.</p>
@@ -991,6 +991,27 @@
             <div class="flex justify-center space-x-4">
                 <button id="cancel-migrate-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
                 <button id="confirm-migrate-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Migrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="template-upload-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary">Seleccionar Plantilla para Cargar</h3>
+                <button id="close-template-upload-modal-btn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-times-circle fa-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <button data-template-type="medios" class="upload-template-type-btn w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-word"></i><span>Plantilla de Medios (Default)</span></button>
+                <button data-template-type="mananera" class="upload-template-type-btn w-full bg-accent hover:bg-accent-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-word"></i><span>Plantilla de Mañanera</span></button>
+                <button data-template-type="evento" class="upload-template-type-btn w-full bg-accent hover:bg-accent-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-word"></i><span>Plantilla Evento Presidencial</span></button>
+                <button data-template-type="informe" class="upload-template-type-btn w-full bg-accent hover:bg-accent-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-word"></i><span>Plantilla Informe de Gobierno</span></button>
             </div>
         </div>
     </div>
@@ -1077,8 +1098,6 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        const templateDocRef = db.collection('config').doc('wordTemplate');
-
         // =============================================
         // MÓDULO: Variables globales y estado de la aplicación
         // =============================================
@@ -1091,7 +1110,7 @@
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
         // Variables de estado de la aplicación
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent;
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn;
         
         let currentEditIsHistorical = false;
         
@@ -1723,6 +1742,24 @@
             openModal(viewDetailsModal);
         }
 
+        function getTemplateDocRef(medio) {
+            let templateType = 'medios'; // Default
+
+            if (medio === 'Conferencia de prensa matutina') {
+                templateType = 'mananera';
+            } else if (medio === 'Evento Presidencial') {
+                templateType = 'evento';
+            } else if (medio === 'Informe de Gobierno') {
+                templateType = 'informe';
+            }
+
+            return {
+                ref: db.collection('config').doc(`wordTemplate_${templateType}`),
+                type: templateType,
+                defaultRef: db.collection('config').doc('wordTemplate_medios')
+            };
+        }
+
         /**
          * Genera un documento .docx a partir de una plantilla en Firebase Storage.
          * @param {string} newsId - El ID del registro de la noticia.
@@ -1768,10 +1805,19 @@
             }
 
             try {
-                // 2. Obtener la plantilla desde Firestore
-                const templateDoc = await templateDocRef.get();
+                // 2. Obtener la plantilla correcta desde Firestore
+                const { ref: templateDocRef, type: templateType, defaultRef } = getTemplateDocRef(record.medio);
+                let templateDoc = await templateDocRef.get();
+                let usedTemplateType = templateType;
+
+                // Fallback a la plantilla por defecto si la específica no existe
                 if (!templateDoc.exists || !templateDoc.data().templateData) {
-                    return showAlert("No se encontró la plantilla. Por favor, cárguela en la pestaña de Reportes.", "error");
+                    showAlert(`Plantilla para '${record.medio}' no encontrada. Usando plantilla de medios por defecto.`, "warning");
+                    templateDoc = await defaultRef.get();
+                    usedTemplateType = 'medios';
+                    if (!templateDoc.exists || !templateDoc.data().templateData) {
+                        return showAlert("No se encontró la plantilla de medios por defecto. Por favor, cárguela en la pestaña de Reportes.", "error");
+                    }
                 }
                 const base64String = templateDoc.data().templateData;
 
@@ -2595,26 +2641,35 @@
                 if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
             });
 
-            uploadTemplateBtn.addEventListener('click', () => {
+            uploadTemplateBtn.addEventListener('click', () => openModal(templateUploadModal));
+            closeTemplateUploadModalBtn.addEventListener('click', () => closeModal(templateUploadModal));
+
+            document.querySelectorAll('.upload-template-type-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const templateType = e.currentTarget.dataset.templateType;
+                    uploadTemplateFile(templateType);
+                });
+            });
+
+            function uploadTemplateFile(templateType) {
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = '.docx';
                 fileInput.style.display = 'none';
 
-                fileInput.addEventListener('change', (e) => {
+                fileInput.onchange = (e) => {
                     const file = e.target.files[0];
                     if (file) {
                         requirePassword(async () => {
-                            showAlert("Subiendo plantilla...", "info");
+                            showAlert(`Subiendo plantilla para '${templateType}'...`, "info");
                             const reader = new FileReader();
                             reader.onload = async (event) => {
                                 const base64String = event.target.result;
                                 try {
-                                    await templateDocRef.set({ 
-                                        templateData: base64String,
-                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-                                    });
-                                    showAlert("¡Plantilla actualizada con éxito!", "success");
+                                    const docRef = db.collection('config').doc(`wordTemplate_${templateType}`);
+                                    await docRef.set({ templateData: base64String, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                    showAlert(`¡Plantilla para '${templateType}' actualizada con éxito!`, "success");
+                                    closeModal(templateUploadModal); // Cierra el modal de plantillas al terminar
                                 } catch (dbError) {
                                     console.error("Error al guardar plantilla en Firestore:", dbError);
                                     showAlert("Error al guardar la plantilla.", "error");
@@ -2623,11 +2678,11 @@
                             reader.readAsDataURL(file);
                         });
                     }
-                });
+                };
                 document.body.appendChild(fileInput);
                 fileInput.click();
                 document.body.removeChild(fileInput);
-            });
+            }
 
             document.querySelectorAll('#news-summary, #edit-news-summary').forEach(el => {
                 el.addEventListener('paste', function(e) {
@@ -2924,6 +2979,8 @@
             confirmMigrateBtn = document.getElementById('confirm-migrate-btn'); // Esta línea está duplicada, pero la dejamos por seguridad
             uploadTemplateBtn = document.getElementById('upload-template-btn');
             viewDetailsModal = document.getElementById('view-details-modal');
+            templateUploadModal = document.getElementById('template-upload-modal');
+            closeTemplateUploadModalBtn = document.getElementById('close-template-upload-modal-btn');
             closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
             detailsModalContent = document.getElementById('details-modal-content');
 
