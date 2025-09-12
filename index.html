@@ -625,6 +625,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="cita">Cita <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
@@ -670,6 +671,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="cita">Cita <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
@@ -812,6 +814,13 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
+                        <label for="news-cita">Cita de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="news-cita" name="cita" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-cita-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-field full-width">
                         <label for="news-summary">Resumen de la Noticia</label>
                         <div class="flex-with-buttons">
                             <div id="news-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
@@ -895,6 +904,13 @@
                         <div class="flex-with-buttons">
                             <textarea id="edit-news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
                             <button type="button" id="edit-comment-edit-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="edit-news-cita">Cita de la Noticia</label>
+                        <div class="flex-with-buttons">
+                            <textarea id="edit-news-cita" name="cita" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
+                            <button type="button" id="edit-cita-edit-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
                         </div>
                     </div>
                     <div class="form-field full-width">
@@ -1186,6 +1202,22 @@
             } catch (e) { return dateString; }
         }
 
+        function getMonthName(dateString) {
+            if (!dateString) return 'Mes no disponible';
+            try {
+                const [year, month, day] = dateString.split('-').map(Number);
+                const date = new Date(Date.UTC(year, month - 1, day));
+                
+                const monthName = new Intl.DateTimeFormat('es-ES', { 
+                    month: 'long',
+                    timeZone: 'UTC'
+                }).format(date);
+
+                // Capitalizar la primera letra
+                return monthName.charAt(0).toUpperCase() + monthName.slice(1);
+            } catch (e) { return 'Error de mes'; }
+        }
+
         function base64ToArrayBuffer(base64) {
             // Primero, removemos el prefijo "data:application/..." si existe
             const base64Data = base64.substring(base64.indexOf(',') + 1);
@@ -1279,6 +1311,7 @@
                     <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.subproyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>
                     <td class="py-4 px-6">${truncateText(stripHtml(newsItem.resumen), 50)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
@@ -1343,7 +1376,7 @@
          * @returns {Array} - Los datos filtrados.
          */
         function getPreFilteredData(dataProvider, filterKey, excludeColumn) {
-            const allData = dataProvider();
+            const allData = dataProvider() || [];
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
             const searchText = searchInput ? searchInput.value.toLowerCase() : '';
             const columnFilters = activeFilters[filterKey];
@@ -1608,6 +1641,7 @@
                 document.getElementById('edit-news-source').value = newsToEdit.fuente || '';
                 document.getElementById('edit-news-summary').value = newsToEdit.resumen || '';
                 document.getElementById('edit-news-comment').value = newsToEdit.comentario || '';
+                document.getElementById('edit-news-cita').value = newsToEdit.cita || '';
                 document.getElementById('edit-news-summary').innerHTML = newsToEdit.resumen || '';
                 // Set select values
                 $('#edit-news-project').val(newsToEdit.proyecto || '').trigger('change');
@@ -1656,7 +1690,8 @@
 
                 <div class="details-section">
                     <h4>Resumen de la Noticia</h4>
-                    <p class="text-gray-800 text-base leading-relaxed font-bold mb-2">${newsItem.comentario || 'Sin título.'}</p> 
+                    <p class="text-gray-800 text-lg leading-relaxed font-bold mb-2">${newsItem.comentario || 'Sin título.'}</p>
+                    <p class="text-gray-600 text-base italic leading-relaxed mb-4">${newsItem.cita || ''}</p>
                     <div class="formatted-content">${newsItem.resumen || 'No hay resumen disponible.'}</div>
                 </div>
 
@@ -1746,7 +1781,8 @@
 
                 // 4. Mapeo de datos (asegurando que no haya valores nulos)
                 const dataForTemplate = {
-                    palabra_clave_1: formatDate(record.fecha) || 'No especificado',
+                    palabra_clave_0: getMonthName(record.fecha),
+                    palabra_clave_1: formatLongDate(record.fecha),
                     palabra_clave_2: record.fuente || 'No especificado',
                     palabra_clave_3: record.proyecto || 'No especificado',
                     palabra_clave_4: record.subproyecto || 'No especificado',
@@ -1754,6 +1790,7 @@
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
                     palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
+                    palabra_clave_9: record.cita || 'No especificado',
                 };
 
                 doc.setData(dataForTemplate);
@@ -2092,6 +2129,7 @@
                 'edit-category-btn': 'categorias',
                 'edit-medio-btn': 'medios',
                 'edit-source-btn': 'fuente',
+                'edit-cita-btn': 'cita',
                 'edit-summary-btn': 'resumen',
                 'edit-comment-btn': 'comentario',
                 'edit-project-edit-btn': 'proyectos',
@@ -2099,6 +2137,7 @@
                 'edit-category-edit-btn': 'categorias',
                 'edit-source-edit-btn': 'fuente',
                 'edit-summary-edit-btn': 'resumen',
+                'edit-cita-edit-btn': 'cita',
                 'edit-comment-edit-btn': 'comentario',
                 'edit-medio-edit-btn': 'medios'
             };
@@ -2110,9 +2149,10 @@
                 button.addEventListener('click', (e) => {
                     let inputElement;
                     
-                    if (field === 'fuente' || field === 'resumen' || field === 'comentario') {
+                    if (['fuente', 'resumen', 'comentario', 'cita'].includes(field)) {
                         inputElement = e.currentTarget.parentElement.querySelector('input') || 
-                                      e.currentTarget.parentElement.querySelector('textarea');
+                                      e.currentTarget.parentElement.querySelector('textarea') ||
+                                      e.currentTarget.parentElement.querySelector('.contenteditable');
                     } else {
                         inputElement = e.currentTarget.parentElement.querySelector('select');
                         activeSelectElement = inputElement;
@@ -2153,11 +2193,13 @@
                             // Lógica para campos de texto (no afecta a otros campos)
                             let inputElement;
                             if (currentEditingField === 'fuente') {
-                                inputElement = document.getElementById('news-source') || document.getElementById('edit-news-source');
-                            } else if (currentEditingField === 'resumen') {
-                                inputElement = document.getElementById('news-summary') || document.getElementById('edit-news-summary');
+                                inputElement = document.getElementById(activeFormId === 'news-form' ? 'news-source' : 'edit-news-source');
+                            } else if (currentEditingField === 'cita') {
+                                inputElement = document.getElementById(activeFormId === 'news-form' ? 'news-cita' : 'edit-news-cita');
                             } else if (currentEditingField === 'comentario') {
-                                inputElement = document.getElementById('news-comment') || document.getElementById('edit-news-comment');
+                                inputElement = document.getElementById(activeFormId === 'news-form' ? 'news-comment' : 'edit-news-comment');
+                            } else if (currentEditingField === 'resumen') {
+                                inputElement = document.getElementById(activeFormId === 'news-form' ? 'news-summary' : 'edit-news-summary');
                             }
                             
                             if (inputElement) {
@@ -2375,7 +2417,7 @@
         // =============================================
 
         const exportHeaders = [
-            "No.", "Fecha", "Fuente", "Proyecto", "Subproyecto", "Título", "Resumen", "Categoría", "Medio"
+            "No.", "Fecha", "Fuente", "Proyecto", "Subproyecto", "Título", "Cita", "Resumen", "Categoría", "Medio"
         ];
 
         function prepareExportData(data) {
@@ -2386,6 +2428,7 @@
                 "Proyecto": newsItem.proyecto || "", 
                 "Subproyecto": newsItem.subproyecto || "",
                 "Título": newsItem.comentario || "",
+                "Cita": newsItem.cita || "",
                 "Resumen": stripHtml(newsItem.resumen) || "",
                 "Categoría": newsItem.categoria || "",
                 "Medio": newsItem.medio || ""
@@ -2723,7 +2766,8 @@
                                     fuente: mappedRow.fuente || '',
                                     proyecto: mappedRow.proyecto || '',
                                     subproyecto: mappedRow.subproyecto || '',
-                                    comentario: mappedRow.título || '', // Mapea 'título' a 'comentario'
+                                    comentario: mappedRow.título || '',
+                                    cita: mappedRow.cita || '',
                                     resumen: mappedRow.resumen || '',
                                     categoria: mappedRow.categoria || '',
                                     medio: mappedRow.medio || ''
