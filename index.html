@@ -1113,6 +1113,7 @@
         };
         let currentFilterDropdown = null;
         let activeSelectElement = null;
+        let openModalCount = 0; // Contador para modales anidados
 
         // =============================================
         // MÓDULO: Utilidades
@@ -1135,7 +1136,10 @@
         function openModal(modal) {
             modal.classList.remove('hidden', 'modal-leave');
             modal.classList.add('modal-enter');
-            document.body.classList.add('modal-open');
+            if (openModalCount === 0) {
+                document.body.classList.add('modal-open'); // Bloquear scroll solo si es el primer modal
+            }
+            openModalCount++;
         }
 
         function closeModal(modal) {
@@ -1143,7 +1147,11 @@
             modal.classList.add('modal-leave');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                document.body.classList.remove('modal-open');
+                openModalCount--;
+                if (openModalCount <= 0) {
+                    document.body.classList.remove('modal-open'); // Restaurar scroll solo si no quedan modales abiertos
+                    openModalCount = 0; // Resetear por seguridad
+                }
             }, 300);
         }
 
@@ -2111,7 +2119,9 @@
                     if (fieldState.tags) {
                         fieldState.tags.forEach(tag => {
                             if (!element.find(`option[value="${tag.id}"]`).length) {
-                                element.append(new Option(tag.text, tag.id));
+                                const newOption = new Option(tag.text, tag.id);
+                                $(newOption).attr('data-select2-tag', 'true'); // Marcar como etiqueta para la siguiente captura de estado.
+                                element.append(newOption);
                             }
                         });
                     }
@@ -2229,12 +2239,7 @@
             const password = passwordInput.value;
             
             if (password === 'admin') {
-                // Cierre manual del modal para evitar quitar la clase 'modal-open' del body
-                // durante la transición al siguiente modal (ej. editar).
-                passwordModal.classList.remove('modal-enter');
-                passwordModal.classList.add('modal-leave');
-                setTimeout(() => passwordModal.classList.add('hidden'), 300);
-
+                closeModal(passwordModal); // Usar la función closeModal mejorada
                 passwordInput.value = '';
                 if (pendingAction) {
                     pendingAction();
