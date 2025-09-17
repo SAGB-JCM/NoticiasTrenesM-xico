@@ -1708,93 +1708,97 @@
 
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
-
-            // Lógica para mostrar el subproyecto solo si existe y no es un guion.
-            const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') 
-                ? `<p class="date">${newsItem.subproyecto}</p>` 
-                : '';
-
-            // Lógica para mostrar la cita solo si existe.
-            const citaHtml = newsItem.cita 
-                ? `<tr>
-                       <th style="vertical-align: middle;">Cita</th>
-                       <td class="formatted-content"><i>${newsItem.cita}</i></td>
-                   </tr>`
-                : '';
-
+        
             const sourceLink = newsItem.fuente && isValidUrl(newsItem.fuente) 
                 ? `<a href="${newsItem.fuente}" target="_blank" class="text-blue-600 hover:underline break-all">${newsItem.fuente}</a>` 
                 : `<p class="text-gray-700">${newsItem.fuente || 'N/A'}</p>`;
 
-            detailsModalContent.innerHTML = `
-                <div class="details-header">
-                    <h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>
-                    ${subproyectoHtml}
-                    <p class="date">${formatLongDate(newsItem.fecha)}</p>
-                </div>
+            const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
 
-                <div class="details-section">
-                    <h4>Resumen de la Noticia</h4>
-                    <table class="details-table">
-                        <tbody>
-                            <tr>
-                                <th style="vertical-align: middle;">Encabezado</th>
-                                <td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${newsItem.comentario || 'Sin encabezado.'}</td>
-                            </tr>
-                            ${citaHtml}
-                            <tr>
-                                <th>Resumen</th>
-                                <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            if (specialMedios.includes(newsItem.medio)) {
+                // --- NUEVO DISEÑO PARA CASOS ESPECIALES ---
+                let resumenHeader = 'Resumen';
+                if (newsItem.medio === 'Conferencia de prensa matutina') {
+                    resumenHeader = 'Resumen de la Conferencia';
+                } else if (newsItem.medio === 'Evento Presidencial') {
+                    resumenHeader = 'Resumen del Evento';
+                } else if (newsItem.medio === 'Informe de Gobierno') {
+                    resumenHeader = 'Resumen del Informe';
+                }
 
-                <div class="details-section">
-                    <h4>Fecha y Medio</h4>
-                    <table class="details-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha de Publicación</th>
-                                <th>Medio</th>
-                                <th>Categoría de la Noticia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>${formatDate(newsItem.fecha) || 'N/A'}</td>
-                                <td>${newsItem.medio || 'N/A'}</td>
-                                <td>${newsItem.categoria || 'N/A'}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                detailsModalContent.innerHTML = `
+                    <div class="details-header">
+                        <h3 class="project">${newsItem.medio || 'Medio no especificado'}</h3>
+                        <p class="date">${formatLongDate(newsItem.fecha)}</p>
+                    </div>
 
-                <div class="details-section text-center">
-                    <h4>Fuente Original</h4>
-                    ${sourceLink}
-                </div>
-            `;
+                    <div class="details-section">
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">${resumenHeader}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-            openModal(viewDetailsModal);
-        }
+                    <div class="details-section text-center">
+                        <h4>Enlace Original</h4>
+                        ${sourceLink}
+                    </div>
+                `;
+            } else {
+                // --- DISEÑO ORIGINAL PARA NOTICIAS GENERALES ---
+                const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') 
+                    ? `<p class="date">${newsItem.subproyecto}</p>` : '';
+                const citaHtml = newsItem.cita
+                    ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${newsItem.cita}</i></td></tr>` : '';
 
-        function getTemplateDocRef(medio) {
-            let templateType = 'medios'; // Default
+                detailsModalContent.innerHTML = `
+                    <div class="details-header">
+                        <h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>
+                        ${subproyectoHtml}
+                        <p class="date">${formatLongDate(newsItem.fecha)}</p>
+                    </div>
 
-            if (medio === 'Conferencia de prensa matutina') {
-                templateType = 'mananera';
-            } else if (medio === 'Evento Presidencial') {
-                templateType = 'evento';
-            } else if (medio === 'Informe de Gobierno') {
-                templateType = 'informe';
+                    <div class="details-section">
+                        <h4>Resumen de la Noticia</h4>
+                        <table class="details-table">
+                            <tbody>
+                                <tr>
+                                    <th style="vertical-align: middle;">Título</th>
+                                    <td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${newsItem.comentario || 'Sin título.'}</td>
+                                </tr>
+                                ${citaHtml}
+                                <tr>
+                                    <th>Resumen</th>
+                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="details-section">
+                        <h4>Fecha y Medio</h4>
+                        <table class="details-table">
+                            <thead><tr><th>Fecha de Publicación</th><th>Medio</th><th>Categoría</th></tr></thead>
+                            <tbody><tr><td>${formatDate(newsItem.fecha) || 'N/A'}</td><td>${newsItem.medio || 'N/A'}</td><td>${newsItem.categoria || 'N/A'}</td></tr></tbody>
+                        </table>
+                    </div>
+
+                    <div class="details-section text-center">
+                        <h4>Fuente Original</h4>
+                        ${sourceLink}
+                    </div>
+                `;
             }
 
-            return {
-                ref: db.collection('config').doc(`wordTemplate_${templateType}`),
-                type: templateType,
-                defaultRef: db.collection('config').doc('wordTemplate_medios')
-            };
+            openModal(viewDetailsModal);
         }
 
         /**
@@ -1843,7 +1847,19 @@
 
             try {
                 // 2. Obtener la plantilla correcta desde Firestore
-                const { ref: templateDocRef, type: templateType, defaultRef } = getTemplateDocRef(record.medio);
+                let templateType = 'medios'; // Default
+                if (record.medio === 'Conferencia de prensa matutina') {
+                    templateType = 'mananera';
+                } else if (record.medio === 'Evento Presidencial') {
+                    templateType = 'evento';
+                } else if (record.medio === 'Informe de Gobierno') {
+                    templateType = 'informe';
+                }
+
+                const templateDocRef = db.collection('config').doc(`wordTemplate_${templateType}`);
+                const defaultRef = db.collection('config').doc('wordTemplate_medios');
+
+
                 let templateDoc = await templateDocRef.get();
                 let usedTemplateType = templateType;
 
@@ -1954,10 +1970,7 @@
             "TREN MAYA",
             "TREN MÉXICO - QUERÉTARO, TREN QUERÉTARO - IRAPUATO",
             "TREN QUERÉTARO - IRAPUATO",
-            "TREN HERMOSILLO - NOGALES",
-            "Conferencia de prensa matutina",
-            "Evento Presidencial",
-            "Informe de Gobierno"
+            "TREN HERMOSILLO - NOGALES"
         ];
 
         // Catálogo de subproyectos, actualizado con las nuevas opciones
