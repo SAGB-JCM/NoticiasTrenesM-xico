@@ -1400,13 +1400,6 @@
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
 
-            // 1. Eliminar viñetas de texto de Word para evitar duplicados.
-            // Word inserta la viñeta como un span con texto (ej. '·') antes del texto real del item.
-            tempDiv.querySelectorAll('span[style*="mso-list:Ignore"]').forEach(span => {
-                span.remove();
-            });
-
-            // 1. Manejar tablas: envolverlas para control de overflow y aplicar estilos
             tempDiv.querySelectorAll('table').forEach(table => {
                 // Limpiar cualquier clase preexistente para evitar conflictos de ancho
                 table.removeAttribute('class');
@@ -1418,7 +1411,25 @@
                 wrapper.appendChild(table);
             });
 
-            // 2. Limpieza de estilos y atributos en todos los elementos
+            // 2. Limpieza de estilos y atributos, conservando viñetas originales de Word.
+            // La estrategia es mantener los párrafos <p> y los spans de viñeta, pero limpiando sus estilos.
+            tempDiv.querySelectorAll('p[style*="mso-list:"]').forEach(p => {
+                // Al párrafo que es un item de lista, le decimos que no muestre su propia viñeta.
+                // La viñeta real está como texto dentro de un <span>.
+                p.style.display = 'list-item';
+                p.style.listStyleType = 'none';
+            });
+
+            // Reemplazar viñetas específicas para mejorar la estética
+            tempDiv.querySelectorAll('span').forEach(span => {
+                if (span.textContent.includes('§')) {
+                    span.textContent = span.textContent.replace(/§/g, '-');
+                }
+                if (span.textContent.includes('·')) {
+                    span.textContent = span.textContent.replace(/·/g, '•');
+                }
+            });
+
             tempDiv.querySelectorAll('*').forEach(el => {
                 if (el.style && el.style.length > 0) {
                     const isTableCell = el.tagName === 'TD' || el.tagName === 'TH';
@@ -1435,33 +1446,15 @@
                     }
 
                     // Conservar solo estilos de indentación (margin-left, text-indent)
-                    const indent = el.style.marginLeft || el.style.textIndent;
-                    const listStyle = el.getAttribute('style')?.includes('mso-list');
+                    const indent = el.style.marginLeft;
+                    const textIndent = el.style.textIndent;
 
                     // Limpiar todos los estilos en línea
                     el.removeAttribute('style');
 
-                    // Volver a aplicar la indentación si existía
-                    if (indent) {
-                        el.style.marginLeft = indent;
-                    }
-
-                    // Volver a aplicar los estilos de tabla conservados
+                    if (indent) el.style.marginLeft = indent;
+                    if (textIndent) el.style.textIndent = textIndent;
                     Object.assign(el.style, preservedStyles);
-
-                    // Si es un elemento de lista de Word, convertirlo a un <li> y mover la sangría
-                    if (listStyle && el.tagName === 'P') {
-                        const li = document.createElement('li');
-                        // Mover el contenido del párrafo al nuevo <li>
-                        while (el.firstChild) {
-                            li.appendChild(el.firstChild);
-                        }
-                        // Mover los estilos de indentación al <li>
-                        if (el.style.marginLeft) li.style.marginLeft = el.style.marginLeft;
-                        
-                        // Reemplazar el <p> con el <li>
-                        el.parentNode.replaceChild(li, el);
-                    }
                 }
 
                 // Eliminar atributos específicos de Word y otros no deseados
