@@ -484,6 +484,17 @@
             box-shadow: 0 0 0 3px rgba(156, 35, 72, 0.2);
         }
 
+        /* Estilos para tablas DENTRO del editor contenteditable */
+        .contenteditable table {
+            font-size: 0.9em; /* Letra más pequeña para tablas en el editor */
+            border-collapse: collapse;
+        }
+        .contenteditable th, .contenteditable td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            height: auto; /* Asegura que la altura se ajuste al contenido */
+        }
+
         .formatted-content {
             font-size: 1rem;
             line-height: 1.5;
@@ -537,7 +548,6 @@
         }
         .details-table-container table {
             font-size: 0.9em; /* Letra ligeramente más pequeña para tablas */
-            width: 100%;
             border-collapse: collapse;
             border: 1px solid #e5e7eb;
         }
@@ -1398,8 +1408,8 @@
 
             // 1. Manejar tablas: envolverlas para control de overflow y aplicar estilos
             tempDiv.querySelectorAll('table').forEach(table => {
-                // Replicar los estilos de las tablas de detalles
-                table.setAttribute('class', 'details-table');
+                // Limpiar cualquier clase preexistente para evitar conflictos de ancho
+                table.removeAttribute('class');
                 
                 // Envolver la tabla en un div para overflow y estilos
                 const wrapper = document.createElement('div');
@@ -1455,7 +1465,7 @@
                 }
 
                 // Eliminar atributos específicos de Word y otros no deseados
-                const attrsToRemove = ['class', 'id', 'lang', 'dir', 'valign', 'width', 'height', 'border', 'cellspacing', 'cellpadding'];
+                const attrsToRemove = ['class', 'id', 'lang', 'dir', 'valign', 'height', 'border', 'cellspacing', 'cellpadding'];
                 attrsToRemove.forEach(attr => el.removeAttribute(attr));
 
                 // Eliminar todos los atributos que empiecen con 'mso-' o 'o:'
