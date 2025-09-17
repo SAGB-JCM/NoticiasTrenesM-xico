@@ -528,6 +528,19 @@
         body.modal-open {
             overflow: hidden;
         }
+
+        /* Estilos para tablas pegadas desde Word */
+        .details-table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .details-table-container table {
+            font-size: 0.9em; /* Letra ligeramente más pequeña para tablas */
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e5e7eb;
+        }
     </style>
     
     <script>
@@ -1370,53 +1383,93 @@
             return bytes.buffer;
         }
 
-        function cleanWordHTML(html) {
+        function sanitizePastedHtml(html) {
             if (!html) return '';
 
-            // 1. Eliminar comentarios, metadatos y namespaces de Word
-            html = html.replace(/<!--[\s\S]*?-->/gi, '');
-            html = html.replace(/<meta[\s\S]*?>/gi, '');
-            html = html.replace(/<link[\s\S]*?>/gi, '');
-            html = html.replace(/<style[\s\S]*?<\/style>/gi, '');
-            html = html.replace(/<o:p>[\s\S]*?<\/o:p>/gi, '');
-            html = html.replace(/<w:[\s\S]*?<\/w:[\s\S]*?>/gi, ''); // Elimina nodos de Word
-            html = html.replace(/\s*xmlns:?[^=]*="[^"]*"/gi, ''); // Elimina atributos xmlns
-
-            // 2. Reemplazar múltiples <br> por párrafos para mejor estructura
-            html = html.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '</p><p>');
-
-            return html;
-        }
-
-        function normalizeFontSizes(html) {
-            if (!html) return '';
+            // Crear un div temporal para manipular el DOM
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
-            // Recorrer todos los elementos para limpiar estilos
+
+            // 1. Eliminar viñetas de texto de Word para evitar duplicados.
+            // Word inserta la viñeta como un span con texto (ej. '·') antes del texto real del item.
+            tempDiv.querySelectorAll('span[style*="mso-list:Ignore"]').forEach(span => {
+                span.remove();
+            });
+
+            // 1. Manejar tablas: envolverlas para control de overflow y aplicar estilos
+            tempDiv.querySelectorAll('table').forEach(table => {
+                // Replicar los estilos de las tablas de detalles
+                table.setAttribute('class', 'details-table');
+                
+                // Envolver la tabla en un div para overflow y estilos
+                const wrapper = document.createElement('div');
+                wrapper.className = 'details-table-container';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+
+            // 2. Limpieza de estilos y atributos en todos los elementos
             tempDiv.querySelectorAll('*').forEach(el => {
-                if (el.style) {
-                    // Conservar solo el margen izquierdo para la indentación
-                    const marginLeft = el.style.marginLeft;
-                    
+                if (el.style && el.style.length > 0) {
+                    const isTableCell = el.tagName === 'TD' || el.tagName === 'TH';
+                    let preservedStyles = {};
+
+                    // Conservar estilos de borde y fondo para celdas de tabla
+                    if (isTableCell) {
+                        const stylesToKeep = ['backgroundColor', 'border', 'borderColor', 'borderWidth', 'borderStyle'];
+                        stylesToKeep.forEach(styleProp => {
+                            if (el.style[styleProp]) {
+                                preservedStyles[styleProp] = el.style[styleProp];
+                            }
+                        });
+                    }
+
+                    // Conservar solo estilos de indentación (margin-left, text-indent)
+                    const indent = el.style.marginLeft || el.style.textIndent;
+                    const listStyle = el.getAttribute('style')?.includes('mso-list');
+
                     // Limpiar todos los estilos en línea
                     el.removeAttribute('style');
-                    
-                    // Si había un margen, volver a aplicarlo
-                    if (marginLeft) {
-                        el.style.marginLeft = marginLeft;
+
+                    // Volver a aplicar la indentación si existía
+                    if (indent) {
+                        el.style.marginLeft = indent;
+                    }
+
+                    // Volver a aplicar los estilos de tabla conservados
+                    Object.assign(el.style, preservedStyles);
+
+                    // Si es un elemento de lista de Word, convertirlo a un <li> y mover la sangría
+                    if (listStyle && el.tagName === 'P') {
+                        const li = document.createElement('li');
+                        // Mover el contenido del párrafo al nuevo <li>
+                        while (el.firstChild) {
+                            li.appendChild(el.firstChild);
+                        }
+                        // Mover los estilos de indentación al <li>
+                        if (el.style.marginLeft) li.style.marginLeft = el.style.marginLeft;
+                        
+                        // Reemplazar el <p> con el <li>
+                        el.parentNode.replaceChild(li, el);
                     }
                 }
-                // Eliminar otros atributos que no sean de estilo (class, id, etc.)
-                ['class', 'id', 'lang', 'dir'].forEach(attr => el.removeAttribute(attr));
+
+                // Eliminar atributos específicos de Word y otros no deseados
+                const attrsToRemove = ['class', 'id', 'lang', 'dir', 'valign', 'width', 'height', 'border', 'cellspacing', 'cellpadding'];
+                attrsToRemove.forEach(attr => el.removeAttribute(attr));
+
+                // Eliminar todos los atributos que empiecen con 'mso-' o 'o:'
+                for (let i = el.attributes.length - 1; i >= 0; i--) {
+                    const attr = el.attributes[i];
+                    if (attr.name.startsWith('mso-') || attr.name.startsWith('o:')) {
+                        el.removeAttribute(attr.name);
+                    }
+                }
             });
 
             return tempDiv.innerHTML;
         }
-        // =============================================
-        // MÓDULO: Interfaz de usuario
-        // =============================================
-        
+
         function setupTabs() {
             tabsContainer.addEventListener('click', (e) => {
                 if (e.target.matches('.tab-btn')) {
@@ -1431,6 +1484,10 @@
             });
         }
 
+        // =============================================
+        // MÓDULO: Interfaz de usuario
+        // =============================================
+        
         function renderTable(tableBody, data, isHistorical = false) {
             const noDataMessage = isHistorical ? noHistoricalMessage : noNewsMessage;
             tableBody.innerHTML = '';
@@ -3034,8 +3091,8 @@
                 el.addEventListener('paste', function(e) {
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                    const html = (e.clipboardData || window.clipboardData).getData('text/html');
-                    const cleanedHTML = normalizeFontSizes(cleanWordHTML(html || text));
+                    const html = (e.clipboardData || window.clipboardData).getData('text/html') || text;
+                    const cleanedHTML = sanitizePastedHtml(html);
                     document.execCommand('insertHTML', false, cleanedHTML);
                 });
             });
