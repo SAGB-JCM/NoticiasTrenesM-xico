@@ -630,14 +630,14 @@
                                 <tr id="main-table-header">
                                     <th scope="col" class="py-3 px-6">No.</th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fecha">Fecha <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Fuente <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Noticia <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="cita">Cita <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Enlace <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
@@ -676,14 +676,14 @@
                                 <tr id="historical-table-header">
                                     <th scope="col" class="py-3 px-6">No.</th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fecha">Fecha <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Fuente <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="subproyecto">Subproyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Título <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="comentario">Noticia <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="cita">Cita <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="categoria">Categoría <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
+                                    <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Enlace <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
@@ -816,7 +816,7 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
-                        <label for="news-comment">Título de la Noticia</label>
+                        <label for="news-comment">Noticia (Título)</label>
                         <div class="flex-with-buttons">
                             <textarea id="news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
                             <button type="button" id="edit-comment-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
@@ -909,7 +909,7 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
-                        <label for="edit-news-comment">Título de la Noticia</label>
+                        <label for="edit-news-comment">Noticia (Título)</label>
                         <div class="flex-with-buttons">
                             <textarea id="edit-news-comment" name="comentario" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2"></textarea>
                             <button type="button" id="edit-comment-edit-btn" class="edit-btn"><i class="fa-solid fa-pen"></i></button>
@@ -1335,22 +1335,22 @@
             data.forEach((newsItem, index) => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50';
+
+                const linkCell = newsItem.fuente && isValidUrl(newsItem.fuente)
+                    ? `<span class="link-cell text-blue-600 hover:underline cursor-pointer" data-url="${newsItem.fuente}" title="${newsItem.fuente}"><i class="fa-solid fa-link"></i></span>`
+                    : `<span class="text-slate-400" title="No hay link válido"><i class="fa-solid fa-link-slash"></i></span>`;
                 
                 row.innerHTML = `
                     <td class="py-4 px-6">${index + 1}</td>
                     <td class="py-4 px-6">${formatDate(newsItem.fecha)}</td>
-                    <td class="py-4 px-6">
-                        ${newsItem.fuente && isValidUrl(newsItem.fuente) 
-                            ? `<span class="link-cell" data-url="${newsItem.fuente}">${truncateText(newsItem.fuente, 30)}</span>` 
-                            : truncateText(newsItem.fuente, 30)}
-                    </td>
                     <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.subproyecto, 30)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>
                     <td class="py-4 px-6">${truncateText(stripHtml(newsItem.resumen), 50)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
+                    <td class="py-4 px-6 text-center">${linkCell}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
                             <i class="fa-solid fa-file-word"></i>
@@ -1370,7 +1370,7 @@
             // Add event listeners to link cells
             document.querySelectorAll('.link-cell').forEach(link => {
                 link.addEventListener('click', (e) => {
-                    const url = e.target.getAttribute('data-url');
+                    const url = e.currentTarget.getAttribute('data-url');
                     if (url && isValidUrl(url)) {
                         openWebviewModal(url);
                     }
@@ -1579,7 +1579,13 @@
         }
 
         function openWebviewModal(url) {
+            // 1. Limpiar el src anterior para evitar mostrar contenido viejo brevemente.
+            webviewFrame.src = 'about:blank';
+            
+            // 2. Asignar la nueva URL al iframe.
             webviewFrame.src = url;
+            
+            // 3. Abrir el modal. El navegador intentará cargar la URL.
             openModal(webviewModal);
         }
 
@@ -1762,7 +1768,7 @@
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
                         <h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>
-                        ${subproyectoHtml}
+                        ${subproyectoHtml}                        
                         <p class="date">${formatLongDate(newsItem.fecha)}</p>
                     </div>
 
@@ -1771,7 +1777,7 @@
                         <table class="details-table">
                             <tbody>
                                 <tr>
-                                    <th style="vertical-align: middle;">Título</th>
+                                    <th style="vertical-align: middle;">Noticia</th>
                                     <td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${newsItem.comentario || 'Sin título.'}</td>
                                 </tr>
                                 ${citaHtml}
@@ -2523,21 +2529,21 @@
         // =============================================
 
         const exportHeaders = [
-            "No.", "Fecha", "Fuente", "Proyecto", "Subproyecto", "Título", "Cita", "Resumen", "Categoría", "Medio"
+            "No.", "Fecha", "Proyecto", "Subproyecto", "Categoría", "Noticia", "Cita", "Resumen", "Medio", "Enlace"
         ];
 
         function prepareExportData(data) {
             return data.map((newsItem, index) => ({
                 "No.": index + 1, 
                 "Fecha": formatDate(newsItem.fecha), 
-                "Fuente": newsItem.fuente || "",
                 "Proyecto": newsItem.proyecto || "", 
                 "Subproyecto": newsItem.subproyecto || "",
-                "Título": newsItem.comentario || "",
+                "Categoría": newsItem.categoria || "",
+                "Noticia": newsItem.comentario || "",
                 "Cita": newsItem.cita || "",
                 "Resumen": stripHtml(newsItem.resumen) || "",
-                "Categoría": newsItem.categoria || "",
-                "Medio": newsItem.medio || ""
+                "Medio": newsItem.medio || "",
+                "Enlace": newsItem.fuente || ""
             }));
         }
 
@@ -2584,6 +2590,7 @@
 
         function handleRowDoubleClick(e, isHistorical) {
             const row = e.target.closest('tr');
+            // Se previene la acción si se hace clic en un botón o en el span del enlace
             if (!row || e.target.closest('button') || e.target.closest('.link-cell')) {
                 return; // No hacer nada si se hace clic en un botón o en el enlace
             }
@@ -2817,8 +2824,12 @@
 
                                 const keyMapping = { 
                                     'no.': 'no', 
-                                    'fuente de la noticia': 'fuente',
-                                    'resumen de la noticia': 'resumen'
+                                    'enlace': 'fuente', // Busca 'Enlace' primero
+                                    'fuente': 'fuente', // Fallback a 'Fuente'
+                                    'fuente de la noticia': 'fuente', // Fallback adicional
+                                    'resumen de la noticia': 'resumen',
+                                    'noticia': 'comentario', // Busca 'Noticia' primero
+                                    'título': 'comentario' // Fallback a 'Título'
                                 };
                                 const mappedRow = mapKeys(row, keyMapping);
 
@@ -2881,7 +2892,7 @@
                                     fuente: mappedRow.fuente || '',
                                     proyecto: mappedRow.proyecto || '',
                                     subproyecto: mappedRow.subproyecto || '',
-                                    comentario: mappedRow.título || '',
+                                    comentario: mappedRow.comentario || '',
                                     cita: mappedRow.cita || '',
                                     resumen: mappedRow.resumen || '',
                                     categoria: mappedRow.categoria || '',
@@ -2948,11 +2959,6 @@
                 XLSX.writeFile(wb, "noticias_historicas.xlsx");
             });
             
-            closeWebviewBtn.addEventListener('click', () => {
-                webviewFrame.src = 'about:blank';
-                closeModal(webviewModal);
-            });
-            
             migrateNewsBtn.addEventListener('click', () => {
                 requirePassword(() => openModal(migrateModal));
             });
@@ -2967,6 +2973,19 @@
                     console.error("Error en migración:", error);
                     showAlert("Error durante la migración: " + error.message, "error");
                 }
+            });
+
+            // Mejora: Cerrar el modal de webview al hacer clic en el fondo
+            webviewModal.addEventListener('click', (e) => {
+                if (e.target === webviewModal) {
+                    closeModal(webviewModal);
+                }
+            });
+
+            // Limpiar el src al cerrar para detener la carga y liberar recursos
+            closeWebviewBtn.addEventListener('click', () => {
+                webviewFrame.src = 'about:blank';
+                closeModal(webviewModal);
             });
 
             closeDetailsModalBtn.addEventListener('click', () => closeModal(viewDetailsModal));
