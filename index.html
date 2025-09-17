@@ -595,10 +595,14 @@
                         <h3 class="text-xl font-semibold text-slate-800">Gestión de Noticias</h3>
                         <p class="text-slate-500">Registra nuevas noticias sobre los trenes de México.</p>
                     </div>
-                    <div class="flex items-center gap-6">
-                        <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center space-x-3">
+                    <div class="flex items-stretch gap-6">
+                        <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center space-x-3">
                             <i class="fa-solid fa-plus h-6 w-6"></i>
                             <span>Registrar Nueva Noticia</span>
+                        </button>
+                        <button id="add-conference-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center space-x-3">
+                            <i class="fa-solid fa-microphone h-6 w-6"></i>
+                            <span>Registrar Conferencia</span>
                         </button>
                     </div>
                 </section>
@@ -939,6 +943,105 @@
         </div>
     </div>
 
+    <div id="conference-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
+            <button id="close-conference-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-primary mb-6">Registrar Nueva Conferencia</h3>
+            <div class="news-form-container">
+                <form id="conference-form" class="space-y-6" novalidate>
+                    <div class="form-grid grid-cols-1 sm:grid-cols-2">
+                        <div class="form-field">
+                            <label for="conference-date">Fecha de la Conferencia/Evento/Informe</label>
+                            <input type="date" id="conference-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="conference-medio">Medio</label>
+                            <select id="conference-medio" name="medio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></select>
+                        </div>
+                    </div>
+                    <div class="form-field sm:col-span-2 full-width">
+                        <label for="conference-source">Enlace(s) (URL)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="conference-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                            <button type="button" id="manage-links-conference-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
+                        <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
+                    </div>
+                    <div class="flex items-center justify-end pt-4">
+                        <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Conferencia</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-conference-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
+        <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
+            <button id="close-edit-conference-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times-circle fa-lg"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-primary mb-6">Editar Conferencia</h3>
+            <div class="news-form-container">
+                <form id="edit-conference-form" class="space-y-6" novalidate>
+                    <input type="hidden" id="edit-conference-id">
+                    <div class="form-grid grid-cols-1 sm:grid-cols-2">
+                        <div class="form-field">
+                            <label for="edit-conference-date">Fecha de la Conferencia/Evento/Informe</label>
+                            <input type="date" id="edit-conference-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="edit-conference-medio">Medio</label>
+                            <select id="edit-conference-medio" name="medio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></select>
+                        </div>
+                    </div>
+                    <div class="form-field sm:col-span-2 full-width">
+                        <label for="edit-conference-source">Enlace(s) (URL)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="edit-conference-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                            <button type="button" id="manage-links-edit-conference-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="edit-conference-summary" id="edit-conference-summary-label">Resumen de la Conferencia</label>
+                        <div id="edit-conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
+                    </div>
+                    <div class="flex items-center justify-end pt-4">
+                        <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="multi-link-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-[51] flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-4">
+            <h3 class="text-xl font-bold text-primary mb-4">Gestionar Enlaces</h3>
+            <div class="space-y-4">
+                <div class="flex space-x-2">
+                    <input type="url" id="new-link-input" placeholder="Pegue un nuevo enlace aquí" class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    <button id="add-link-btn" class="bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg">Añadir</button>
+                </div>
+                <div id="link-list-container" class="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2 bg-gray-50">
+                    <!-- Los enlaces se añadirán aquí dinámicamente -->
+                    <p id="no-links-message" class="text-gray-500 text-center">No hay enlaces añadidos.</p>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button id="cancel-links-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="save-links-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Guardar Enlaces</button>
+            </div>
+        </div>
+    </div>
+
     <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-slate-800 mb-4">Confirmar Eliminación</h3>
@@ -1119,7 +1222,7 @@
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
         // Variables de estado de la aplicación
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn;
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn;
         
         let currentEditIsHistorical = false;
         
@@ -1142,6 +1245,7 @@
         let currentFilterDropdown = null;
         let activeSelectElement = null;
         let openModalCount = 0; // Contador para modales anidados
+        let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
 
         // =============================================
         // MÓDULO: Utilidades
@@ -1332,9 +1436,22 @@
             tableBody.innerHTML = '';
             noDataMessage.classList.toggle('hidden', data.length > 0);
 
+            const linkSeparator = ';';
+
             data.forEach((newsItem, index) => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50';
+
+                const links = (newsItem.fuente || '').split(linkSeparator).map(link => link.trim()).filter(link => link);
+                let linkCellContent = `<span class="text-slate-400" title="No hay link válido"><i class="fa-solid fa-link-slash"></i></span>`;
+
+                if (links.length > 0) {
+                    linkCellContent = links.map(link => 
+                        isValidUrl(link) 
+                            ? `<span class="link-cell text-blue-600 hover:underline cursor-pointer" data-url="${link}" title="${link}"><i class="fa-solid fa-link"></i></span>`
+                            : ''
+                    ).join('<span class="mx-1"></span>'); // Añade un pequeño espacio entre iconos
+                }
 
                 const linkCell = newsItem.fuente && isValidUrl(newsItem.fuente)
                     ? `<span class="link-cell text-blue-600 hover:underline cursor-pointer" data-url="${newsItem.fuente}" title="${newsItem.fuente}"><i class="fa-solid fa-link"></i></span>`
@@ -1350,7 +1467,7 @@
                     <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>
                     <td class="py-4 px-6">${truncateText(stripHtml(newsItem.resumen), 50)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
-                    <td class="py-4 px-6 text-center">${linkCell}</td>
+                    <td class="py-4 px-6 text-center">${linkCellContent}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
                             <i class="fa-solid fa-file-word"></i>
@@ -1661,12 +1778,10 @@
             requirePassword(() => {
                 const newsId = button.getAttribute('data-id');
                 const isHistorical = button.getAttribute('data-is-historical') === 'true';
-
                 if (!newsId) {
                     console.error("ID de noticia no encontrado para edición");
                     return;
                 }
-
                 currentEditIsHistorical = isHistorical;
                 const allData = isHistorical ? historicalNews : news;
                 const newsToEdit = allData.find(item => item.id === newsId);
@@ -1676,25 +1791,39 @@
                     return;
                 }
 
-                document.getElementById('edit-id').value = newsId;
+                // Decidir qué modal abrir
+                if (specialMedios.includes(newsToEdit.medio)) {
+                    // Abrir modal de edición de conferencia
+                    document.getElementById('edit-conference-id').value = newsId;
+                    document.getElementById('edit-conference-date').value = newsToEdit.fecha || '';
+                    document.getElementById('edit-conference-source').value = newsToEdit.fuente || '';
+                    
+                    const medioSelect = document.getElementById('edit-conference-medio');
+                    medioSelect.value = newsToEdit.medio || '';
+                    
+                    const summaryLabel = document.getElementById('edit-conference-summary-label');
+                    updateConferenceSummaryLabel(newsToEdit.medio, summaryLabel);
 
-                // Set form values
-                document.getElementById('edit-news-date').value = newsToEdit.fecha || ''; // ... (resto de campos)
-                document.getElementById('edit-news-source').value = newsToEdit.fuente || '';
-                document.getElementById('edit-news-summary').value = newsToEdit.resumen || '';
-                document.getElementById('edit-news-comment').value = newsToEdit.comentario || '';
-                document.getElementById('edit-news-cita').value = newsToEdit.cita || '';
-                document.getElementById('edit-news-summary').innerHTML = newsToEdit.resumen || '';
-                // Set select values
-                $('#edit-news-project').val(newsToEdit.proyecto || '').trigger('change');
-                $('#edit-news-subproject').val(newsToEdit.subproyecto || '').trigger('change');
-                $('#edit-news-category').val(newsToEdit.categoria || '').trigger('change');
-                $('#edit-news-medio').val(newsToEdit.medio || '').trigger('change');
+                    document.getElementById('edit-conference-summary').innerHTML = newsToEdit.resumen || '';
 
-                // Cargar contenido HTML en el editor de edición
-                // if (editNewsSummaryEditor) editNewsSummaryEditor.setContents(newsToEdit.resumen || '');
+                    openModal(editConferenceModal);
+                } else {
+                    // Abrir modal de edición normal
+                    document.getElementById('edit-id').value = newsId;
+                    document.getElementById('edit-news-date').value = newsToEdit.fecha || '';
+                    document.getElementById('edit-news-source').value = newsToEdit.fuente || '';
+                    document.getElementById('edit-news-comment').value = newsToEdit.comentario || '';
+                    document.getElementById('edit-news-cita').value = newsToEdit.cita || '';
+                    document.getElementById('edit-news-summary').innerHTML = newsToEdit.resumen || '';
+                    
+                    // Set select values
+                    $('#edit-news-project').val(newsToEdit.proyecto || '').trigger('change');
+                    $('#edit-news-subproject').val(newsToEdit.subproyecto || '').trigger('change');
+                    $('#edit-news-category').val(newsToEdit.categoria || '').trigger('change');
+                    $('#edit-news-medio').val(newsToEdit.medio || '').trigger('change');
 
-                openModal(editModal);
+                    openModal(editModal);
+                }
             });
         }
 
@@ -1715,11 +1844,17 @@
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
         
-            const sourceLink = newsItem.fuente && isValidUrl(newsItem.fuente) 
-                ? `<a href="${newsItem.fuente}" target="_blank" class="text-blue-600 hover:underline break-all">${newsItem.fuente}</a>` 
-                : `<p class="text-gray-700">${newsItem.fuente || 'N/A'}</p>`;
+            const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
+            let sourceLink = '<p class="text-gray-700">N/A</p>';
+            if (links.length > 0) {
+                sourceLink = links.map(link => {
+                    if (isValidUrl(link)) {
+                        return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
+                    }
+                    return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                }).join('');
+            }
 
-            const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
 
             if (specialMedios.includes(newsItem.medio)) {
                 // --- NUEVO DISEÑO PARA CASOS ESPECIALES ---
@@ -2067,6 +2202,8 @@
             "Evento Presidencial",
             "Informe de Gobierno"
         ];
+
+        const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
 
 
 
@@ -2524,6 +2661,24 @@
             });
         }
 
+        function updateConferenceSummaryLabel(medio, labelElement) {
+            let labelText = 'Resumen';
+            if (medio === 'Conferencia de prensa matutina') {
+                labelText = 'Resumen de la Conferencia';
+            } else if (medio === 'Evento Presidencial') {
+                labelText = 'Resumen del Evento';
+            } else if (medio === 'Informe de Gobierno') {
+                labelText = 'Resumen del Informe';
+            }
+            labelElement.textContent = labelText;
+        }
+
+        function populateConferenceMedioSelect(selectElementId) {
+            const select = document.getElementById(selectElementId);
+            select.innerHTML = specialMedios.map(medio => `<option value="${medio}">${medio}</option>`).join('');
+        }
+
+
         // =============================================
         // MÓDULO: Exportación/Importación
         // =============================================
@@ -2647,6 +2802,38 @@
                 openModalWithFocus(newsModal, document.getElementById('news-source'));
             });
             
+            addConferenceBtn.addEventListener('click', () => {
+                conferenceForm.reset();
+                document.getElementById('conference-summary').innerHTML = '';
+                
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('conference-date').value = today;
+
+                populateConferenceMedioSelect('conference-medio');
+                // Actualizar la etiqueta del resumen basado en la opción por defecto
+                const defaultMedio = document.getElementById('conference-medio').value;
+                const summaryLabel = document.getElementById('conference-summary-label');
+                updateConferenceSummaryLabel(defaultMedio, summaryLabel);
+
+                openModalWithFocus(conferenceModal, document.getElementById('conference-date'));
+            });
+
+            closeConferenceModalBtn.addEventListener('click', () => closeModal(conferenceModal));
+
+            conferenceForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!conferenceForm.checkValidity()) {
+                    return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
+                }
+                const formData = new FormData(conferenceForm);
+                const conferenceData = Object.fromEntries(formData.entries());
+                conferenceData.resumen = document.getElementById('conference-summary').innerHTML;
+                // Añadir campos vacíos para mantener la estructura de datos
+                conferenceData.proyecto = conferenceData.subproyecto = conferenceData.categoria = conferenceData.comentario = conferenceData.cita = '';
+                saveNews(conferenceData);
+                closeModal(conferenceModal);
+            });
+
             closeModalBtn.addEventListener('click', () => closeModal(newsModal));
             
             newsForm.addEventListener('submit', (e) => {
@@ -2666,6 +2853,22 @@
             });
             
             closeEditModalBtn.addEventListener('click', () => closeModal(editModal));
+            closeEditConferenceModalBtn.addEventListener('click', () => closeModal(editConferenceModal));
+
+            editConferenceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!editConferenceForm.checkValidity()) {
+                    return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
+                }
+                const formData = new FormData(editConferenceForm);
+                const updateData = Object.fromEntries(formData.entries());
+                const id = document.getElementById('edit-conference-id').value;
+                updateData.resumen = document.getElementById('edit-conference-summary').innerHTML;
+                // Asegurarse de que los otros campos no se sobrescriban con 'undefined'
+                updateData.proyecto = updateData.subproyecto = updateData.categoria = updateData.comentario = updateData.cita = '';
+                await updateNews(id, updateData, currentEditIsHistorical);
+                closeModal(editConferenceModal);
+            });
             
             editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -2713,6 +2916,87 @@
                 });
             });
 
+            document.getElementById('conference-medio').addEventListener('change', (e) => {
+                const summaryLabel = document.getElementById('conference-summary-label');
+                updateConferenceSummaryLabel(e.target.value, summaryLabel);
+            });
+
+            document.getElementById('edit-conference-medio').addEventListener('change', (e) => {
+                const summaryLabel = document.getElementById('edit-conference-summary-label');
+                updateConferenceSummaryLabel(e.target.value, summaryLabel);
+            });
+
+            // --- Event Listeners para el modal de Múltiples Enlaces ---
+
+            function openMultiLinkEditor(targetInput) {
+                currentLinkTargetInput = targetInput;
+                const existingLinks = (targetInput.value || '').split(';').map(link => link.trim()).filter(link => link);
+                renderLinkList(existingLinks);
+                openModal(multiLinkModal);
+                newLinkInput.focus();
+            }
+
+            document.getElementById('manage-links-conference-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('conference-source'));
+            });
+
+            document.getElementById('manage-links-edit-conference-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('edit-conference-source'));
+            });
+
+            function renderLinkList(links) {
+                linkListContainer.innerHTML = '';
+                noLinksMessage.classList.toggle('hidden', links.length > 0);
+                links.forEach((link, index) => {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = 'flex items-center justify-between bg-white p-2 rounded shadow-sm';
+                    linkElement.innerHTML = `
+                        <span class="text-sm text-gray-800 truncate" title="${link}">${link}</span>
+                        <button data-index="${index}" class="remove-link-btn text-red-500 hover:text-red-700 p-1 rounded-full">
+                            <i class="fa-solid fa-trash-alt"></i>
+                        </button>
+                    `;
+                    linkListContainer.appendChild(linkElement);
+                });
+            }
+
+            addLinkBtn.addEventListener('click', () => {
+                const newLink = newLinkInput.value.trim();
+                if (newLink && isValidUrl(newLink)) {
+                    const currentLinks = Array.from(linkListContainer.querySelectorAll('.truncate')).map(span => span.textContent);
+                    currentLinks.push(newLink);
+                    renderLinkList(currentLinks);
+                    newLinkInput.value = '';
+                } else {
+                    showAlert('Por favor, ingrese un URL válido.', 'warning');
+                }
+            });
+
+            newLinkInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addLinkBtn.click();
+                }
+            });
+
+            linkListContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.remove-link-btn')) {
+                    const button = e.target.closest('.remove-link-btn');
+                    const indexToRemove = parseInt(button.dataset.index, 10);
+                    let currentLinks = Array.from(linkListContainer.querySelectorAll('.truncate')).map(span => span.textContent);
+                    currentLinks.splice(indexToRemove, 1);
+                    renderLinkList(currentLinks);
+                }
+            });
+
+            saveLinksBtn.addEventListener('click', () => {
+                const links = Array.from(linkListContainer.querySelectorAll('.truncate')).map(span => span.textContent);
+                currentLinkTargetInput.value = links.join('; ');
+                closeModal(multiLinkModal);
+            });
+
+            cancelLinksBtn.addEventListener('click', () => closeModal(multiLinkModal));
+
             function uploadTemplateFile(templateType) {
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
@@ -2746,7 +3030,7 @@
                 document.body.removeChild(fileInput);
             }
 
-            document.querySelectorAll('#news-summary, #edit-news-summary').forEach(el => {
+            document.querySelectorAll('#news-summary, #edit-news-summary, #conference-summary, #edit-conference-summary').forEach(el => {
                 el.addEventListener('paste', function(e) {
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
@@ -3064,6 +3348,21 @@
             closeTemplateUploadModalBtn = document.getElementById('close-template-upload-modal-btn');
             closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
             detailsModalContent = document.getElementById('details-modal-content');
+            addConferenceBtn = document.getElementById('add-conference-btn');
+            conferenceModal = document.getElementById('conference-modal');
+            conferenceForm = document.getElementById('conference-form');
+            closeConferenceModalBtn = document.getElementById('close-conference-modal-btn');
+            editConferenceModal = document.getElementById('edit-conference-modal');
+            editConferenceForm = document.getElementById('edit-conference-form');
+            closeEditConferenceModalBtn = document.getElementById('close-edit-conference-modal-btn');
+            multiLinkModal = document.getElementById('multi-link-modal');
+            newLinkInput = document.getElementById('new-link-input');
+            addLinkBtn = document.getElementById('add-link-btn');
+            linkListContainer = document.getElementById('link-list-container');
+            noLinksMessage = document.getElementById('no-links-message');
+            cancelLinksBtn = document.getElementById('cancel-links-btn');
+            saveLinksBtn = document.getElementById('save-links-btn');
+
 
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
@@ -3078,6 +3377,9 @@
                      width: '100%'
                  });
              });
+            
+            // Poblar el select de medio en el modal de edición de conferencia
+            populateConferenceMedioSelect('edit-conference-medio');
 
             // Mejora de UX: Auto-foco en el buscador de Select2 al abrirlo.
             $(document).on('select2:open', () => {
