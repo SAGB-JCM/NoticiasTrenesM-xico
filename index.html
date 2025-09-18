@@ -2383,8 +2383,30 @@
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
 
-                const fileName = `Reporte-${(record.proyecto || 'Noticia').replace(/ /g, '_')}.docx`;
-                saveAs(out, fileName);
+                // Lógica mejorada para generar el nombre del archivo
+                let baseName = 'Reporte';
+                const safeDate = record.fecha || new Date().toISOString().split('T')[0];
+
+                // Función para limpiar strings para nombres de archivo
+                const sanitize = (str) => {
+                    if (!str) return '';
+                    const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
+                    const b = 'aaaaaaaaaacccddeeeeeeeegghiiiiiilmnnnnoooooooooprrsssssttuuuuuuuuuwxyyzzz------'
+                    const p = new RegExp(a.split('').join('|'), 'g')
+
+                    return str.toString().toLowerCase()
+                        .replace(p, c => b.charAt(a.indexOf(c))) // Reemplazar caracteres especiales
+                        .replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '_').replace(/__+/g, '_').replace(/^-+|-+$/g, ''); // Limpiar y reemplazar
+                };
+
+                if (specialMedios.includes(record.medio)) {
+                    // Para conferencias: [Tipo de Conferencia]_[Fecha].docx
+                    baseName = `${sanitize(record.medio)}_${safeDate}`;
+                } else {
+                    // Para noticias: Noticia_[Medio]_[Fecha].docx
+                    baseName = `Noticia_${sanitize(record.medio)}_${safeDate}`;
+                }
+                saveAs(out, `${baseName}.docx`);
                 showAlert("¡Reporte generado con éxito!", "success");
 
             } catch (error) {
