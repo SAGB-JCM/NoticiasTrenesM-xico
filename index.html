@@ -1490,59 +1490,74 @@
             tempDiv.innerHTML = html;
             let resultXml = '';
 
-            // Helper para convertir unidades CSS a Twips (1/1440 de pulgada)
-            function cssToTwips(value) {
-                if (typeof value !== 'string') return 0;
-                const val = parseFloat(value);
-                if (isNaN(val)) return 0;
+            // --- INICIO: Funciones de ayuda ---
+            const utils = {
+                cssToTwips(value) {
+                    if (typeof value !== 'string') return 0;
+                    const val = parseFloat(value);
+                    if (isNaN(val)) return 0;
+                    if (value.endsWith('pt')) return Math.round(val * 20);
+                    if (value.endsWith('px')) return Math.round(val * 15);
+                    if (value.endsWith('in')) return Math.round(val * 1440);
+                    if (value.endsWith('cm')) return Math.round(val * 567);
+                    return Math.round(val * 15);
+                },
+                rgbToHex(rgb) {
+                    if (!rgb || !rgb.includes('rgb')) return null;
+                    const match = rgb.match(/(\d+),\s*(\d+),\s*(\d+)/);
+                    if (!match) return null;
+                    return [1, 2, 3].map(i => parseInt(match[i], 10).toString(16).padStart(2, '0')).join('').toUpperCase();
+                }
+            };
+            // --- FIN: Funciones de ayuda ---
 
-                if (value.endsWith('pt')) return Math.round(val * 20);
-                if (value.endsWith('px')) return Math.round(val * 15); // Aproximación común
-                if (value.endsWith('in')) return Math.round(val * 1440);
-                if (value.endsWith('cm')) return Math.round(val * 567);
-                // Asumir px si no hay unidad
-                return Math.round(val * 15);
-            }
-
-            function processNode(node) {
+            function processNode(node, options = {}) {
                 let xml = '';
                 if (node.nodeType === 3 && node.textContent.trim() === '') return '';
 
                 switch (node.nodeName) {
                     case '#text':
-                        xml += `<w:r><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        const rPrText = options.inTable ? '<w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>' : '<w:rPr/>';
+                        xml += `<w:r>${rPrText}<w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'P':
                         let pPr = '';
                         const marginLeft = node.style.marginLeft || node.style.paddingLeft;
                         const textIndent = node.style.textIndent;
-
                         if (marginLeft || textIndent) {
-                            const ind = `<w:ind ${marginLeft ? `w:left="${cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(cssToTwips(textIndent))}"` : ''} />`;
+                            const ind = `<w:ind ${marginLeft ? `w:left="${utils.cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(utils.cssToTwips(textIndent))}"` : ''} />`;
                             pPr = `<w:pPr>${ind}</w:pPr>`;
                         }
-                        
                         xml += `<w:p>${pPr}`;
-                        node.childNodes.forEach(child => xml += processNode(child));
+                        node.childNodes.forEach(child => xml += processNode(child, options));
                         xml += '</w:p>';
                         break;
                     case 'STRONG':
                     case 'B':
-                        xml += `<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        const rPrBold = options.inTable ? '<w:b/><w:sz w:val="18"/><w:szCs w:val="18"/>' : '<w:b/>';
+                        xml += `<w:r><w:rPr>${rPrBold}</w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'EM':
                     case 'I':
-                        xml += `<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        const rPrItalic = options.inTable ? '<w:i/><w:sz w:val="18"/><w:szCs w:val="18"/>' : '<w:i/>';
+                        xml += `<w:r><w:rPr>${rPrItalic}</w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'U':
-                        xml += `<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        const rPrUnderline = options.inTable ? '<w:u w:val="single"/><w:sz w:val="18"/><w:szCs w:val="18"/>' : '<w:u w:val="single"/>';
+                        xml += `<w:r><w:rPr>${rPrUnderline}</w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'UL':
                     case 'OL':
                         Array.from(node.children).forEach(li => {
                             if (li.nodeName === 'LI') {
-                                xml += '<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>';
-                                li.childNodes.forEach(child => xml += processNode(child));
+                                const pPrList = `
+                                    <w:pPr>
+                                        <w:pStyle w:val="ListParagraph"/>
+                                        <w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>
+                                        <w:ind w:left="360" w:hanging="360"/>
+                                    </w:pPr>`;
+                                xml += `<w:p>${pPrList}`;
+                                li.childNodes.forEach(child => xml += processNode(child, options));
                                 xml += '</w:p>';
                             }
                         });
@@ -1553,65 +1568,115 @@
                     case 'A':
                         const href = node.getAttribute('href') || '';
                         const linkText = node.textContent || href;
-                        xml += `<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t xml:space="preserve">${escapeXml(linkText)}</w:t></w:r>`;
+                        const rPrLink = options.inTable ? '<w:rStyle w:val="Hyperlink"/><w:sz w:val="18"/><w:szCs w:val="18"/>' : '<w:rStyle w:val="Hyperlink"/>';
+                        xml += `<w:r><w:rPr>${rPrLink}</w:rPr><w:t xml:space="preserve">${escapeXml(linkText)}</w:t></w:r>`;
                         break;
-                    
-                    // --- INICIO: Lógica para Tablas ---
+
                     case 'TABLE':
-                        // Propiedades de la tabla: bordes y layout
                         const tblPr = `
                             <w:tblPr>
                                 <w:tblStyle w:val="TableGrid"/>
-                                <w:tblW w:w="0" w:type="auto"/>
+                                <w:tblW w:w="0" w:type="autofit"/>
+                                <w:tblBorders>
+                                    <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                    <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                    <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                    <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                    <w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                    <w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+                                </w:tblBorders>
+                                <w:tblLayout w:type="fixed"/>
                                 <w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
                             </w:tblPr>`;
-                        
-                        // Grid de la tabla (columnas)
                         const cols = Array.from(node.querySelectorAll('tr'))[0]?.children.length || 1;
                         const tblGrid = `<w:tblGrid>${'<w:gridCol/>'.repeat(cols)}</w:tblGrid>`;
-
                         xml += `<w:tbl>${tblPr}${tblGrid}`;
-                        node.childNodes.forEach(child => { // Itera sobre <tbody>, <thead>, <tr>
-                            if (child.nodeName === 'TBODY' || child.nodeName === 'THEAD' || child.nodeName === 'TFOOT') {
-                                child.childNodes.forEach(tr => xml += processNode(tr));
-                            } else if (child.nodeName === 'TR') {
-                                xml += processNode(child);
+                        
+                        const rows = Array.from(node.querySelectorAll('tr'));
+                        const rowSpanTracker = {};
+
+                        rows.forEach((tr, rowIndex) => {
+                            xml += '<w:tr><w:trPr><w:trHeight w:hRule="auto"/></w:trPr>';
+                            let colIndex = 0;
+                            Array.from(tr.children).forEach(td => {
+                                while (rowSpanTracker[colIndex]) {
+                                    xml += '<w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc>';
+                                    rowSpanTracker[colIndex]--;
+                                    colIndex++;
+                                }
+                                xml += processNode(td, { inTable: true });
+                                const colspan = parseInt(td.getAttribute('colspan'), 10) || 1;
+                                const rowspan = parseInt(td.getAttribute('rowspan'), 10) || 1;
+                                if (rowspan > 1) {
+                                    for (let i = 0; i < colspan; i++) {
+                                        rowSpanTracker[colIndex + i] = rowspan - 1;
+                                    }
+                                }
+                                colIndex += colspan;
+                            });
+                            while (colIndex < cols) {
+                                if (rowSpanTracker[colIndex]) {
+                                    xml += '<w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc>';
+                                    rowSpanTracker[colIndex]--;
+                                }
+                                colIndex++;
                             }
+                            xml += '</w:tr>';
                         });
                         xml += '</w:tbl>';
                         break;
 
-                    case 'TR':
-                        xml += '<w:tr>';
-                        node.childNodes.forEach(child => xml += processNode(child));
-                        xml += '</w:tr>';
+                    case 'TR': // Handled inside TABLE case
                         break;
 
                     case 'TH':
                     case 'TD':
-                        const tcPr = `
+                        const bgColor = node.style.backgroundColor;
+                        const hexColor = utils.rgbToHex(bgColor);
+                        const shading = hexColor ? `<w:shd w:val="clear" w:color="auto" w:fill="${hexColor}"/>` : '';
+                        const colspanVal = node.getAttribute('colspan');
+                        const gridSpan = colspanVal ? `<w:gridSpan w:val="${colspanVal}"/>` : '';
+                        const rowspanVal = node.getAttribute('rowspan');
+                        const vMerge = rowspanVal ? '<w:vMerge w:val="restart"/>' : '';
+
+                        let tcPr = `
                             <w:tcPr>
                                 <w:tcW w:w="0" w:type="auto"/>
                                 <w:vAlign w:val="center"/>
+                                ${gridSpan}
+                                ${vMerge}
+                                ${shading}
                             </w:tcPr>`;
 
                         xml += `<w:tc>${tcPr}`;
-                        // Para TH, envolvemos el contenido en negrita
-                        if (node.nodeName === 'TH') {
-                            xml += `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r></w:p>`;
+                        
+                        // Si la celda está vacía, Word necesita un párrafo vacío para renderizar bordes.
+                        if (node.innerHTML.trim() === '') {
+                            xml += '<w:p/>';
                         } else {
-                            node.childNodes.forEach(child => xml += processNode(child));
+                            // Procesar el contenido de la celda de forma recursiva.
+                            // Si el contenido no está en un <p>, lo envolvemos en uno.
+                            const hasP = Array.from(node.childNodes).some(n => n.nodeName === 'P');
+                            if (!hasP) {
+                                xml += '<w:p>';
+                                node.childNodes.forEach(child => xml += processNode(child, options));
+                                xml += '</w:p>';
+                            } else {
+                                node.childNodes.forEach(child => xml += processNode(child, options));
+                            }
                         }
                         xml += '</w:tc>';
                         break;
-                    // --- FIN: Lógica para Tablas ---
 
                     case 'DIV':
                     case 'SPAN':
-                        node.childNodes.forEach(child => xml += processNode(child));
+                        node.childNodes.forEach(child => xml += processNode(child, options));
                         break;
                     default:
-                        node.childNodes.forEach(child => xml += processNode(child));
+                        // Para nodos no reconocidos, procesa sus hijos para no perder texto.
+                        if (node.childNodes) {
+                            node.childNodes.forEach(child => xml += processNode(child, options));
+                        }
                         break;
                 }
                 return xml;
@@ -1623,6 +1688,7 @@
 
             return resultXml;
         }
+
 
         function setupTabs() {
             tabsContainer.addEventListener('click', (e) => {
