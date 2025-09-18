@@ -1348,6 +1348,13 @@
             return doc.body.textContent || "";
         }
 
+        function isHtml(str) {
+            if (typeof str !== 'string') return false;
+            // Una expresión regular simple para detectar la presencia de etiquetas HTML.
+            const htmlRegex = /<[a-z][\s\S]*>/i;
+            return htmlRegex.test(str);
+        }
+
         function formatLongDate(dateString) {
             if (!dateString) return 'Fecha no disponible';
             try {
@@ -2299,14 +2306,27 @@
                     linebreaks: true
                 });
 
-                // 4. Mapeo de datos (asegurando que no haya valores nulos)
+                // 4. Preparar el contenido del resumen (palabra_clave_5) con lógica condicional
+                const resumenOriginal = record.resumen || 'No hay resumen disponible.';
+                const isSummaryHtml = isHtml(resumenOriginal);
+                const isSpecialReport = specialMedios.includes(record.medio);
+                let resumenParaPlantilla;
+
+                if (isSpecialReport) {
+                    // Para conferencias/eventos, siempre procesar a OpenXML para mantener formato.
+                    resumenParaPlantilla = htmlToOpenXml(isSummaryHtml ? resumenOriginal : `<p>${resumenOriginal.replace(/\n/g, '</p><p>')}</p>`);
+                } else {
+                    // Para noticias normales, usar texto plano. Si es HTML, limpiarlo.
+                    resumenParaPlantilla = isSummaryHtml ? stripHtml(resumenOriginal) : resumenOriginal;
+                }
+
                 const dataForTemplate = {
                     palabra_clave_0: getMonthName(record.fecha),
                     palabra_clave_1: formatLongDate(record.fecha),
                     palabra_clave_2: (record.fuente || 'No especificado').split(';').map(link => link.trim()).filter(Boolean).join('\n'),
                     palabra_clave_3: record.proyecto || 'No especificado',
-                    palabra_clave_4: record.subproyecto || 'No especificado',
-                    palabra_clave_5: htmlToOpenXml(record.resumen || '<p>No hay resumen disponible.</p>'),
+                    palabra_clave_4: record.subproyecto || 'No especificado',                    
+                    palabra_clave_5: resumenParaPlantilla,
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
                     palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
