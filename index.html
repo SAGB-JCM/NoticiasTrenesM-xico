@@ -1342,10 +1342,24 @@
             }
         }
 
-        function stripHtml(html) {
+        function htmlToPlainText(html) {
             if (!html) return '';
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            return doc.body.textContent || "";
+            
+            // Crear un div temporal para no afectar el DOM principal
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Reemplazar <br> con saltos de línea
+            tempDiv.querySelectorAll('br').forEach(br => br.parentNode.replaceChild(document.createTextNode('\n'), br));
+
+            // Añadir saltos de línea después de los bloques de elementos
+            tempDiv.querySelectorAll('p, div, li, h1, h2, h3, h4, h5, h6').forEach(block => {
+                block.appendChild(document.createTextNode('\n'));
+            });
+
+            // Obtener el texto, que ahora incluye los saltos de línea
+            // .trim() al final para eliminar cualquier salto de línea extra al inicio o al final.
+            return tempDiv.textContent.trim() || "";
         }
 
         function isHtml(str) {
@@ -1700,6 +1714,16 @@
             return resultXml;
         }
 
+        function plainTextToOpenXml(text) {
+            if (!text) return '';
+            const lines = text.split('\n');
+            return lines.map(line => {
+                // Envuelve cada línea en un párrafo de Word.
+                // xml:space="preserve" es crucial para mantener los espacios/sangrías al inicio.
+                const textRun = `<w:r><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r>`;
+                return `<w:p><w:pPr><w:jc w:val="both"/></w:pPr>${textRun}</w:p>`;
+            }).join('');
+        }
 
         function setupTabs() {
             tabsContainer.addEventListener('click', (e) => {
@@ -1752,8 +1776,8 @@
                     <td class="py-4 px-6">${truncateText(newsItem.subproyecto, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(stripHtml(newsItem.resumen), 50)}</td>
+                    <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>                    
+                    <td class="py-4 px-6">${truncateText(htmlToPlainText(newsItem.resumen), 50)}</td>
                     <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
                     <td class="py-4 px-6 text-center">${linkCellContent}</td>
                     <td class="py-4 px-6 flex space-x-2">
@@ -2303,7 +2327,7 @@
                 const zip = new PizZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
                     paragraphLoop: true,
-                    linebreaks: true
+                    linebreaks: true // Reactivamos esta opción, es la forma correcta para texto plano.
                 });
 
                 // 4. Preparar el contenido del resumen (palabra_clave_5) con lógica condicional
@@ -2317,7 +2341,7 @@
                     resumenParaPlantilla = htmlToOpenXml(isSummaryHtml ? resumenOriginal : `<p>${resumenOriginal.replace(/\n/g, '</p><p>')}</p>`);
                 } else {
                     // Para noticias normales, usar texto plano. Si es HTML, limpiarlo.
-                    resumenParaPlantilla = isSummaryHtml ? stripHtml(resumenOriginal) : resumenOriginal;
+                    resumenParaPlantilla = isSummaryHtml ? htmlToPlainText(resumenOriginal) : resumenOriginal;
                 }
 
                 const dataForTemplate = {
@@ -2334,7 +2358,7 @@
                 };
 
                 doc.setData(dataForTemplate);
-                doc.render();
+                doc.render(); // render() ahora se llama después de setData()
 
                 // 5. Generar y descargar el archivo
                 const out = doc.getZip().generate({
@@ -2987,8 +3011,8 @@
                 "Subproyecto": newsItem.subproyecto || "",
                 "Categoría": newsItem.categoria || "",
                 "Noticia": newsItem.comentario || "",
-                "Cita": newsItem.cita || "",
-                "Resumen": stripHtml(newsItem.resumen) || "",
+                "Cita": newsItem.cita || "",                
+                "Resumen": htmlToPlainText(newsItem.resumen) || "",
                 "Medio": newsItem.medio || "",
                 "Enlace": newsItem.fuente || ""
             }));
