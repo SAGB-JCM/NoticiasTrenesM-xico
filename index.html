@@ -1458,8 +1458,14 @@
 
                     // Conservar estilos de borde y fondo para celdas de tabla
                     if (isTableCell) {
-                        const stylesToKeep = ['backgroundColor', 'border', 'borderColor', 'borderWidth', 'borderStyle'];
+                        // Forzar la altura automática y un tamaño de fuente más pequeño para las celdas.
+                        el.style.height = 'auto';
+                        el.style.fontSize = '0.8em';
+
+                        // Añadimos height y fontSize a la lista de estilos a conservar.
+                        const stylesToKeep = ['backgroundColor', 'border', 'borderColor', 'borderWidth', 'borderStyle', 'height', 'fontSize'];
                         stylesToKeep.forEach(styleProp => {
+                            // el.style.height = null; // Asegurar que la altura sea automática
                             if (el.style[styleProp]) {
                                 preservedStyles[styleProp] = el.style[styleProp];
                             }
@@ -2155,17 +2161,6 @@
 
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
-        
-            const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
-            let sourceLink = '<p class="text-gray-700">N/A</p>';
-            if (links.length > 0) {
-                sourceLink = links.map(link => {
-                    if (isValidUrl(link)) {
-                        return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
-                    }
-                    return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
-                }).join('');
-            }
 
 
             if (specialMedios.includes(newsItem.medio)) {
@@ -2177,6 +2172,17 @@
                     resumenHeader = 'Resumen del Evento';
                 } else if (newsItem.medio === 'Informe de Gobierno') {
                     resumenHeader = 'Resumen del Informe';
+                }
+
+                const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
+                let sourceLink = '<p class="text-gray-700">N/A</p>';
+                if (links.length > 0) {
+                    sourceLink = links.map(link => {
+                        if (isValidUrl(link)) {
+                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
+                        }
+                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                    }).join('');
                 }
 
                 detailsModalContent.innerHTML = `
@@ -2211,6 +2217,17 @@
                     ? `<p class="date">${newsItem.subproyecto}</p>` : '';
                 const citaHtml = newsItem.cita
                     ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${newsItem.cita}</i></td></tr>` : '';
+                
+                const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
+                let sourceLink = '<p class="text-gray-700">N/A</p>';
+                if (links.length > 0) {
+                    sourceLink = links.map(link => {
+                        if (isValidUrl(link)) {
+                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
+                        }
+                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                    }).join('');
+                }
 
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
