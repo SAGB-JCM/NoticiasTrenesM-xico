@@ -1473,6 +1473,157 @@
             return tempDiv.innerHTML;
         }
 
+        function escapeXml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[<>&'"]/g, c => ({
+                '<': '&lt;',
+                '>': '&gt;',
+                '&': '&amp;',
+                '\'': '&apos;',
+                '"': '&quot;'
+            }[c]));
+        }
+
+        function htmlToOpenXml(html) {
+            if (!html) return '';
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            let resultXml = '';
+
+            // Helper para convertir unidades CSS a Twips (1/1440 de pulgada)
+            function cssToTwips(value) {
+                if (typeof value !== 'string') return 0;
+                const val = parseFloat(value);
+                if (isNaN(val)) return 0;
+
+                if (value.endsWith('pt')) return Math.round(val * 20);
+                if (value.endsWith('px')) return Math.round(val * 15); // Aproximación común
+                if (value.endsWith('in')) return Math.round(val * 1440);
+                if (value.endsWith('cm')) return Math.round(val * 567);
+                // Asumir px si no hay unidad
+                return Math.round(val * 15);
+            }
+
+            function processNode(node) {
+                let xml = '';
+                if (node.nodeType === 3 && node.textContent.trim() === '') return '';
+
+                switch (node.nodeName) {
+                    case '#text':
+                        xml += `<w:r><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        break;
+                    case 'P':
+                        let pPr = '';
+                        const marginLeft = node.style.marginLeft || node.style.paddingLeft;
+                        const textIndent = node.style.textIndent;
+
+                        if (marginLeft || textIndent) {
+                            const ind = `<w:ind ${marginLeft ? `w:left="${cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(cssToTwips(textIndent))}"` : ''} />`;
+                            pPr = `<w:pPr>${ind}</w:pPr>`;
+                        }
+                        
+                        xml += `<w:p>${pPr}`;
+                        node.childNodes.forEach(child => xml += processNode(child));
+                        xml += '</w:p>';
+                        break;
+                    case 'STRONG':
+                    case 'B':
+                        xml += `<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        break;
+                    case 'EM':
+                    case 'I':
+                        xml += `<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        break;
+                    case 'U':
+                        xml += `<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
+                        break;
+                    case 'UL':
+                    case 'OL':
+                        Array.from(node.children).forEach(li => {
+                            if (li.nodeName === 'LI') {
+                                xml += '<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>';
+                                li.childNodes.forEach(child => xml += processNode(child));
+                                xml += '</w:p>';
+                            }
+                        });
+                        break;
+                    case 'BR':
+                        xml += '<w:r><w:br/></w:r>';
+                        break;
+                    case 'A':
+                        const href = node.getAttribute('href') || '';
+                        const linkText = node.textContent || href;
+                        xml += `<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t xml:space="preserve">${escapeXml(linkText)}</w:t></w:r>`;
+                        break;
+                    
+                    // --- INICIO: Lógica para Tablas ---
+                    case 'TABLE':
+                        // Propiedades de la tabla: bordes y layout
+                        const tblPr = `
+                            <w:tblPr>
+                                <w:tblStyle w:val="TableGrid"/>
+                                <w:tblW w:w="0" w:type="auto"/>
+                                <w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
+                            </w:tblPr>`;
+                        
+                        // Grid de la tabla (columnas)
+                        const cols = Array.from(node.querySelectorAll('tr'))[0]?.children.length || 1;
+                        const tblGrid = `<w:tblGrid>${'<w:gridCol/>'.repeat(cols)}</w:tblGrid>`;
+
+                        xml += `<w:tbl>${tblPr}${tblGrid}`;
+                        node.childNodes.forEach(child => { // Itera sobre <tbody>, <thead>, <tr>
+                            if (child.nodeName === 'TBODY' || child.nodeName === 'THEAD' || child.nodeName === 'TFOOT') {
+                                child.childNodes.forEach(tr => xml += processNode(tr));
+                            } else if (child.nodeName === 'TR') {
+                                xml += processNode(child);
+                            }
+                        });
+                        xml += '</w:tbl>';
+                        break;
+
+                    case 'TR':
+                        xml += '<w:tr>';
+                        node.childNodes.forEach(child => xml += processNode(child));
+                        xml += '</w:tr>';
+                        break;
+
+                    case 'TH':
+                    case 'TD':
+                        const tcPr = `
+                            <w:tcPr>
+                                <w:tcW w:w="0" w:type="auto"/>
+                                <w:vAlign w:val="center"/>
+                            </w:tcPr>`;
+
+                        xml += `<w:tc>${tcPr}`;
+                        // Para TH, envolvemos el contenido en negrita
+                        if (node.nodeName === 'TH') {
+                            xml += `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r></w:p>`;
+                        } else {
+                            node.childNodes.forEach(child => xml += processNode(child));
+                        }
+                        xml += '</w:tc>';
+                        break;
+                    // --- FIN: Lógica para Tablas ---
+
+                    case 'DIV':
+                    case 'SPAN':
+                        node.childNodes.forEach(child => xml += processNode(child));
+                        break;
+                    default:
+                        node.childNodes.forEach(child => xml += processNode(child));
+                        break;
+                }
+                return xml;
+            }
+
+            tempDiv.childNodes.forEach(node => {
+                resultXml += processNode(node);
+            });
+
+            return resultXml;
+        }
+
         function setupTabs() {
             tabsContainer.addEventListener('click', (e) => {
                 if (e.target.matches('.tab-btn')) {
@@ -2008,14 +2159,6 @@
          * @param {boolean} isHistorical - Indica si el registro es del histórico.
          */
         async function generateDoc(newsId, isHistorical) {
-            // Módulo para manejar HTML en docxtemplater
-            const HTMLModule = {
-                name: "HTMLModule",
-                set: function(options) { this.options = options; },
-                get: function(scope, context) { if (scope.startsWith('@')) { return { _type: "html", value: context.scopeList[context.scopeList.length - 1] }; } },
-                render: function(part, scope) { if (part.type === "html") { return { value: part.value }; } }
-            };
-
             // 1. Verificar que las librerías necesarias estén cargadas y cargar fallbacks si es necesario
             let missingLibs = checkRequiredLibraries();
             if (missingLibs.includes('PizZip') || missingLibs.includes('docxtemplater')) {
@@ -2082,7 +2225,6 @@
                 // Usamos PizZip directamente desde el objeto window
                 const zip = new PizZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
-                    modules: [HTMLModule], // Cargar el módulo HTML
                     paragraphLoop: true,
                     linebreaks: true
                 });
@@ -2091,10 +2233,10 @@
                 const dataForTemplate = {
                     palabra_clave_0: getMonthName(record.fecha),
                     palabra_clave_1: formatLongDate(record.fecha),
-                    palabra_clave_2: record.fuente || 'No especificado',
+                    palabra_clave_2: (record.fuente || 'No especificado').split(';').map(link => link.trim()).filter(Boolean).join('\n'),
                     palabra_clave_3: record.proyecto || 'No especificado',
                     palabra_clave_4: record.subproyecto || 'No especificado',
-                    palabra_clave_5: record.resumen || 'No hay resumen disponible.',
+                    palabra_clave_5: htmlToOpenXml(record.resumen || '<p>No hay resumen disponible.</p>'),
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
                     palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
