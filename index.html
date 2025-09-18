@@ -1521,14 +1521,17 @@
                         xml += `<w:r>${rPrText}<w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'P':
-                        let pPr = '';
+                        let pPrContent = '';
                         const marginLeft = node.style.marginLeft || node.style.paddingLeft;
                         const textIndent = node.style.textIndent;
+                        
+                        // 1. Añadir justificación de texto.
+                        pPrContent += '<w:jc w:val="both"/>';
+
                         if (marginLeft || textIndent) {
-                            const ind = `<w:ind ${marginLeft ? `w:left="${utils.cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(utils.cssToTwips(textIndent))}"` : ''} />`;
-                            pPr = `<w:pPr>${ind}</w:pPr>`;
+                            pPrContent += `<w:ind ${marginLeft ? `w:left="${utils.cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(utils.cssToTwips(textIndent))}"` : ''} />`;
                         }
-                        xml += `<w:p>${pPr}`;
+                        xml += `<w:p><w:pPr>${pPrContent}</w:pPr>`;
                         node.childNodes.forEach(child => xml += processNode(child, options));
                         xml += '</w:p>';
                         break;
