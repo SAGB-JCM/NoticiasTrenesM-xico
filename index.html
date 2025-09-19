@@ -1538,6 +1538,26 @@
             };
             // --- FIN: Funciones de ayuda ---
 
+            // --- INICIO: Funciones de ayuda para la lógica de espaciado ---
+            const isParagraph = (node) => node && node.nodeName === 'P';
+            const isListItemNode = (node) => {
+                if (!isParagraph(node)) return false;
+                // Reutiliza la lógica de detección de viñetas de la versión anterior
+                const marginLeft = node.style.marginLeft || '';
+                const firstChild = node.firstElementChild;
+                if (marginLeft && firstChild && firstChild.tagName === 'SPAN') {
+                    const bulletText = firstChild.textContent.trim();
+                    return bulletText.match(/^[•o–§·-]$/);
+                }
+                return false;
+            };
+            const getNextMeaningfulSibling = (node) => {
+                let next = node.nextSibling;
+                while (next && (next.nodeType === 3 && next.textContent.trim() === '')) { next = next.nextSibling; }
+                return next;
+            };
+            // --- FIN: Funciones de ayuda para la lógica de espaciado ---
+
             function processNode(node, options = {}) {
                 let xml = '';
                 if (node.nodeType === 3 && node.textContent.trim() === '') return '';
@@ -1549,6 +1569,7 @@
                         break;
                     case 'P':
                         const marginLeft = node.style.marginLeft || '';
+                        const nextSibling = getNextMeaningfulSibling(node);
                         const firstChild = node.firstElementChild;
                         let isListItem = false;
                         let listLevel = 0;
@@ -1576,6 +1597,13 @@
 
                         let pPrContent = '';
 
+                        // Lógica de espaciado inteligente
+                        const currentIsListItem = isListItemNode(node);
+                        const nextIsListItem = isListItemNode(nextSibling);
+                        const addSpacing = !options.inTable && (!currentIsListItem || !nextIsListItem);
+                        const spacingXml = addSpacing ? '<w:spacing w:after="200"/>' : '';
+
+
                         if (isListItem) {
                             // Eliminar el span de la viñeta para que no se duplique en el DOCX.
                             firstChild.remove();
@@ -1587,10 +1615,11 @@
                                     <w:ilvl w:val="${listLevel}"/>
                                     <w:numId w:val="1"/>
                                 </w:numPr>
-                                <w:jc w:val="both"/>`;
+                                <w:jc w:val="both"/>
+                                ${spacingXml}`;
                         } else {
                             // Es un párrafo normal, solo justificamos
-                            pPrContent = '<w:jc w:val="both"/>';
+                            pPrContent = `<w:jc w:val="both"/>${spacingXml}`;
                         }
 
                         xml += `<w:p><w:pPr>${pPrContent}</w:pPr>`;
