@@ -1553,22 +1553,23 @@
                         let isListItem = false;
                         let listLevel = 0;
 
-                        // Condición final y robusta: combina estructura, carácter de viñeta y sangría.
+                        // Condición final y definitiva: requiere la estructura completa para ser una viñeta.
                         if (marginLeft && firstChild && firstChild.tagName === 'SPAN') {
                             const bulletText = firstChild.textContent.trim();
-                            // Mapa de caracteres a nivel. 'o' es para la bolita vacía.
-                            const bulletToLevelMap = { '•': 0, 'o': 1, '–': 2, '·': 0, '§': 2, '-': 2 };
+                            const bulletToLevelMap = { '•': 0, 'o': 1, '–': 2, '·': 0, '§': 2, '-': 2 }; // Mapa de precisión
 
-                            if (bulletToLevelMap.hasOwnProperty(bulletText)) { // Prioridad 1: El carácter manda.
-                                isListItem = true;
-                                listLevel = bulletToLevelMap[bulletText];
-                            } else {
-                                // Prioridad 2 (Fallback): Si el carácter no está en el mapa, usar la sangría.
+                            // Solo si el span contiene un caracter de viñeta, procedemos.
+                            if (bulletText.match(/^[•o–§·-]$/)) {
                                 const indentValue = parseFloat(marginLeft);
                                 if (indentValue > 0) {
                                     isListItem = true;
-                                    // Nivel basado en la sangría (36pt por nivel)
-                                    listLevel = Math.max(0, Math.round(indentValue / 36) - 1);
+                                    // Prioridad 1: Usar el mapa de caracteres para máxima precisión.
+                                    if (bulletToLevelMap.hasOwnProperty(bulletText)) {
+                                        listLevel = bulletToLevelMap[bulletText];
+                                    } else {
+                                        // Prioridad 2 (Fallback): Calcular por sangría si el caracter es desconocido.
+                                        listLevel = Math.max(0, Math.round(indentValue / 36) - 1);
+                                    }
                                 }
                             }
                         }
