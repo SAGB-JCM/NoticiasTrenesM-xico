@@ -1548,22 +1548,38 @@
                         xml += `<w:r>${rPrText}<w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'P':
-                        const pText = node.textContent.trimStart(); // Usamos trimStart para conservar espacios internos
-                        const bulletChars = {'•': 0, '◦': 1, '–': 2}; // Mapa de viñeta a nivel
-                        const firstChar = pText.charAt(0);
+                        const marginLeft = node.style.marginLeft || '';
+                        const firstChild = node.firstElementChild;
                         let isListItem = false;
                         let listLevel = 0;
 
-                        // Verificamos si el primer carácter es una de nuestras viñetas definidas
-                        if (bulletChars.hasOwnProperty(firstChar)) {
-                            isListItem = true;
-                            listLevel = bulletChars[firstChar];
+                        // Condición final y robusta: combina estructura, carácter de viñeta y sangría.
+                        if (marginLeft && firstChild && firstChild.tagName === 'SPAN') {
+                            const bulletText = firstChild.textContent.trim();
+                            // Mapa de caracteres a nivel. 'o' es para la bolita vacía.
+                            const bulletToLevelMap = { '•': 0, 'o': 1, '–': 2, '·': 0, '§': 2, '-': 2 };
+
+                            if (bulletToLevelMap.hasOwnProperty(bulletText)) { // Prioridad 1: El carácter manda.
+                                isListItem = true;
+                                listLevel = bulletToLevelMap[bulletText];
+                            } else {
+                                // Prioridad 2 (Fallback): Si el carácter no está en el mapa, usar la sangría.
+                                const indentValue = parseFloat(marginLeft);
+                                if (indentValue > 0) {
+                                    isListItem = true;
+                                    // Nivel basado en la sangría (36pt por nivel)
+                                    listLevel = Math.max(0, Math.round(indentValue / 36) - 1);
+                                }
+                            }
                         }
 
                         let pPrContent = '';
 
                         if (isListItem) {
-                            // Es un elemento de lista, configuramos la viñeta
+                            // Eliminar el span de la viñeta para que no se duplique en el DOCX.
+                            firstChild.remove();
+
+                            // Generar el XML para una viñeta real de Word.
                             pPrContent = `
                                 <w:pStyle w:val="ListParagraph"/>
                                 <w:numPr>
@@ -1571,8 +1587,6 @@
                                     <w:numId w:val="1"/>
                                 </w:numPr>
                                 <w:jc w:val="both"/>`;
-                            // Eliminar el carácter de viñeta del texto para que no se duplique
-                            node.textContent = pText.substring(1).trimStart();
                         } else {
                             // Es un párrafo normal, solo justificamos
                             pPrContent = '<w:jc w:val="both"/>';
