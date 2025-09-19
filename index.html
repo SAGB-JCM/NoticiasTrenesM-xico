@@ -1548,16 +1548,36 @@
                         xml += `<w:r>${rPrText}<w:t xml:space="preserve">${escapeXml(node.textContent)}</w:t></w:r>`;
                         break;
                     case 'P':
-                        let pPrContent = '';
-                        const marginLeft = node.style.marginLeft || node.style.paddingLeft;
-                        const textIndent = node.style.textIndent;
-                        
-                        // 1. Añadir justificación de texto.
-                        pPrContent += '<w:jc w:val="both"/>';
+                        const pText = node.textContent.trimStart(); // Usamos trimStart para conservar espacios internos
+                        const bulletChars = {'•': 0, '◦': 1, '–': 2}; // Mapa de viñeta a nivel
+                        const firstChar = pText.charAt(0);
+                        let isListItem = false;
+                        let listLevel = 0;
 
-                        if (marginLeft || textIndent) {
-                            pPrContent += `<w:ind ${marginLeft ? `w:left="${utils.cssToTwips(marginLeft)}"` : ''} ${textIndent ? `w:hanging="${Math.abs(utils.cssToTwips(textIndent))}"` : ''} />`;
+                        // Verificamos si el primer carácter es una de nuestras viñetas definidas
+                        if (bulletChars.hasOwnProperty(firstChar)) {
+                            isListItem = true;
+                            listLevel = bulletChars[firstChar];
                         }
+
+                        let pPrContent = '';
+
+                        if (isListItem) {
+                            // Es un elemento de lista, configuramos la viñeta
+                            pPrContent = `
+                                <w:pStyle w:val="ListParagraph"/>
+                                <w:numPr>
+                                    <w:ilvl w:val="${listLevel}"/>
+                                    <w:numId w:val="1"/>
+                                </w:numPr>
+                                <w:jc w:val="both"/>`;
+                            // Eliminar el carácter de viñeta del texto para que no se duplique
+                            node.textContent = pText.substring(1).trimStart();
+                        } else {
+                            // Es un párrafo normal, solo justificamos
+                            pPrContent = '<w:jc w:val="both"/>';
+                        }
+
                         xml += `<w:p><w:pPr>${pPrContent}</w:pPr>`;
                         node.childNodes.forEach(child => xml += processNode(child, options));
                         xml += '</w:p>';
