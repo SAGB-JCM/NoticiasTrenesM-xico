@@ -994,6 +994,12 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
+                        <label for="conference-docx">Subir Documento (docx)</label>
+                        <input type="file" id="conference-docx" name="conferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
+                        <p class="mt-1 text-sm text-gray-500" id="conference-docx-label">Cargue un archivo .docx para usarlo como reporte individual. Si no se carga nada, se usará la plantilla.</p>
+                    </div>
+
+                    <div class="form-field full-width">
                         <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
                         <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
@@ -1032,6 +1038,11 @@
                                 <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="edit-conference-docx">Subir Documento (docx)</label>
+                        <input type="file" id="edit-conference-docx" name="editConferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
+                        <p class="mt-1 text-sm text-gray-500" id="edit-conference-docx-label">Cargue un archivo .docx para usarlo como reporte individual. Si no se carga nada, se usará la plantilla.</p>
                     </div>
                     <div class="form-field full-width">
                         <label for="edit-conference-summary" id="edit-conference-summary-label">Resumen de la Conferencia</label>
@@ -1809,6 +1820,23 @@
             });
         }
 
+        async function processFile(fileInput) {
+            const file = fileInput.files[0];
+
+            return new Promise((resolve, reject) => {
+                if (file) {
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                        resolve(event.target.result.split(',')[1]);
+                    };
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                } else {
+                    resolve(null);
+                }
+            });
+        }
         // =============================================
         // MÓDULO: Interfaz de usuario
         // =============================================
@@ -2372,7 +2400,7 @@
             }
 
             try {
-                // 2. Obtener la plantilla correcta desde Firestore
+                // 2. Check if there's a conference docx attached
                 let templateType = 'medios'; // Default
                 if (record.medio === 'Conferencia de prensa matutina') {
                     templateType = 'mananera';
@@ -2382,6 +2410,21 @@
                     templateType = 'informe';
                 }
 
+                if(record.conferenceDocx){
+                    //Download docx, stop report creation.
+                    const byteCharacters = atob(record.conferenceDocx);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    saveAs(blob, `Reporte_Conferencia_${record.fecha}.docx`);
+                    showAlert("¡Reporte generado con éxito!", "success");
+                    return;
+                }
+
+                // 3. Obtener la plantilla correcta desde Firestore
                 const templateDocRef = db.collection('config').doc(`wordTemplate_${templateType}`);
                 const defaultRef = db.collection('config').doc('wordTemplate_medios');
 
@@ -3154,16 +3197,23 @@
 
             closeConferenceModalBtn.addEventListener('click', () => closeModal(conferenceModal));
 
-            conferenceForm.addEventListener('submit', (e) => {
+            conferenceForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!conferenceForm.checkValidity()) {
                     return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
                 }
-                const formData = new FormData(conferenceForm);
-                const conferenceData = Object.fromEntries(formData.entries());
-                conferenceData.resumen = document.getElementById('conference-summary').innerHTML;
-                // Añadir campos vacíos para mantener la estructura de datos
-                conferenceData.proyecto = conferenceData.subproyecto = conferenceData.categoria = conferenceData.comentario = conferenceData.cita = '';
+                
+                // Construir el objeto de datos manualmente para evitar el objeto File
+                const conferenceData = {
+                    fecha: document.getElementById('conference-date').value,
+                    medio: document.getElementById('conference-medio').value,
+                    fuente: document.getElementById('conference-source').value,
+                    resumen: document.getElementById('conference-summary').innerHTML,
+                    conferenceDocx: await processFile(document.getElementById('conference-docx')),
+                    // Añadir campos vacíos para mantener la estructura de datos consistente
+                    proyecto: '', subproyecto: '', categoria: '', comentario: '', cita: ''
+                };
+
                 saveNews(conferenceData);
                 closeModal(conferenceModal);
             });
@@ -3194,12 +3244,20 @@
                 if (!editConferenceForm.checkValidity()) {
                     return showAlert("Por favor, complete todos los campos obligatorios.", "warning");
                 }
-                const formData = new FormData(editConferenceForm);
-                const updateData = Object.fromEntries(formData.entries());
+
                 const id = document.getElementById('edit-conference-id').value;
-                updateData.resumen = document.getElementById('edit-conference-summary').innerHTML;
-                // Asegurarse de que los otros campos no se sobrescriban con 'undefined'
-                updateData.proyecto = updateData.subproyecto = updateData.categoria = updateData.comentario = updateData.cita = '';
+                
+                // Construir el objeto de datos manualmente para evitar el objeto File
+                const updateData = {
+                    fecha: document.getElementById('edit-conference-date').value,
+                    medio: document.getElementById('edit-conference-medio').value,
+                    fuente: document.getElementById('edit-conference-source').value,
+                    resumen: document.getElementById('edit-conference-summary').innerHTML,
+                    conferenceDocx: await processFile(document.getElementById('edit-conference-docx')),
+                    // Añadir campos vacíos para mantener la estructura de datos consistente
+                    proyecto: '', subproyecto: '', categoria: '', comentario: '', cita: ''
+                };
+
                 await updateNews(id, updateData, currentEditIsHistorical);
                 closeModal(editConferenceModal);
             });
