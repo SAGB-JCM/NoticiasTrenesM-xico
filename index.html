@@ -33,13 +33,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- Librerías para manipulación de .docx -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    <!-- JSZip es dependencia tanto de docxtemplater como de docx-preview. Debe cargarse primero. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.34.1/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <!-- SunEditor (Rich Text Editor) -->
     <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+
+    <!-- docx-preview para previsualización de alta fidelidad de .docx -->
+    <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.20/dist/docx-preview.min.js"></script>
 
     <!-- Firebase App (el módulo principal de Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -345,8 +349,8 @@
         }
 
         .wide-modal .relative {
-            max-width: 76rem !important;
-        }
+            max-width: 90rem !important; /* Aumentado para dar más espacio al visor */
+         }
 
         .chart-wrapper {
             position: relative;
@@ -438,6 +442,15 @@
             padding: 2rem;
             background-color: #f9fafb;
         }
+        /* Contenedor principal del modal de detalles, ahora usa flexbox */
+        #view-details-modal .relative {
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh; /* Ocupar casi toda la altura de la pantalla */
+        }
+       #view-details-modal .relative{
+        margin: 0;
+       }
         .details-header {
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 1rem;
@@ -550,6 +563,50 @@
             font-size: 0.9em; /* Letra ligeramente más pequeña para tablas */
             border-collapse: collapse;
             border: 1px solid #e5e7eb;
+        }
+
+        /* Estilos para el contenedor de la vista previa del documento */
+        #document-preview-container {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background-color: #e8e8e8; /* Fondo gris para el área de visualización */
+            overflow: hidden; /* CLAVE: Ocultamos cualquier desbordamiento del contenedor principal */
+            position: relative; /* Para posicionar los controles de zoom */
+            flex-grow: 1; /* CLAVE: Hace que el visor ocupe todo el espacio vertical disponible */
+            display: flex; /* Para centrar el spinner inicial */
+            align-items: flex-start; /* Alinea el wrapper arriba */
+            justify-content: center;
+        }
+        /* El contenedor que la librería crea */
+        #document-preview-container .docx-wrapper {
+             background-color: #e8e8e8 !important; /* Asegurar el fondo gris */
+            overflow: auto; /* CLAVE: Esta es la ÚNICA barra de scroll que debe existir */
+            cursor: grab; /* Indica que se puede arrastrar */
+            width: 100%; /* Ocupa todo el ancho del contenedor */
+            height: 100%; /* Ocupa toda la altura del contenedor */
+        }
+        #document-preview-container .docx-wrapper:active { cursor: grabbing; }
+        /* La "hoja" del documento */
+        #document-preview-container .docx {
+            transform-origin: top left; /* CLAVE: El zoom se origina en la esquina para un scroll predecible */
+            transition: transform 0.2s ease-in-out;
+        }
+        /* Contenedor intermedio para gestionar el zoom sin conflictos con el scroll */
+        #document-preview-container .zoom-container {
+            /* Este contenedor ya no necesita estilos especiales, JS lo controla */
+        }
+        .zoom-controls {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 30; /* Por encima del contenido del docx */
+            background-color: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 9999px;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
     </style>
     
@@ -1191,7 +1248,7 @@
             }
 
             const libraries = {
-                'PizZip': typeof window.PizZip,
+                'JSZip': typeof window.JSZip,
                 'docxtemplater': typeof window.docxtemplater,
                 'saveAs': typeof window.saveAs,
                 'XLSX': typeof window.XLSX,
@@ -1220,7 +1277,7 @@
 
         function loadFallbackLibraries(missingLibs) {
             const fallbacks = {
-                'PizZip': 'https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js',
+                'JSZip': 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
                 'docxtemplater': 'https://cdn.jsdelivr.net/npm/docxtemplater@3.34.1/build/docxtemplater.min.js'
             };
             return Promise.all(missingLibs.filter(lib => fallbacks[lib]).map(lib => loadScript(fallbacks[lib])));
@@ -2253,56 +2310,54 @@
 
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
+            detailsModalContent.innerHTML = '<div class="text-center p-8"><div class="spinner"></div><p class="mt-2">Cargando detalles...</p></div>';
 
 
             if (specialMedios.includes(newsItem.medio)) {
-                // --- NUEVO DISEÑO PARA CASOS ESPECIALES ---
-                let resumenHeader = 'Resumen';
+                // --- REFACTORIZACIÓN: Modal específico para Conferencias/Eventos ---
+                let modalTitle = 'Detalle del Reporte';
                 if (newsItem.medio === 'Conferencia de prensa matutina') {
-                    resumenHeader = 'Resumen de la Conferencia';
+                    modalTitle = 'Detalle de la Conferencia';
                 } else if (newsItem.medio === 'Evento Presidencial') {
-                    resumenHeader = 'Resumen del Evento';
+                    modalTitle = 'Detalle del Evento';
                 } else if (newsItem.medio === 'Informe de Gobierno') {
-                    resumenHeader = 'Resumen del Informe';
+                    modalTitle = 'Detalle del Informe';
                 }
 
                 const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
-                let sourceLink = '<p class="text-gray-700">N/A</p>';
+                let sourceLink = '<p class="text-gray-500 text-sm">No hay enlaces disponibles.</p>';
                 if (links.length > 0) {
-                    sourceLink = links.map(link => {
-                        if (isValidUrl(link)) {
-                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
-                        }
-                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
-                    }).join('');
+                    sourceLink = links.map(link => 
+                        `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block text-sm"><i class="fa-solid fa-link fa-xs mr-2"></i>${link}</a>`
+                    ).join('');
                 }
 
+                // Estructura HTML limpia y refactorizada
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
-                        <h3 class="project">${newsItem.medio || 'Medio no especificado'}</h3>
+                        <h3 class="project">${modalTitle}</h3>
                         <p class="date">${formatLongDate(newsItem.fecha)}</p>
                     </div>
 
-                    <div class="details-section">
-                        <table class="details-table">
-                            <thead>
-                                <tr>
-                                    <th style="text-align: center;">${resumenHeader}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="document-preview-container" class="document-preview-container my-4">
+                        <div class="text-center p-4"><div class="spinner inline-block"></div><p class="mt-2 text-sm text-slate-500">Generando vista previa del documento...</p></div>
+                    </div>
+                    <div class="zoom-controls hidden">
+                        <button id="zoom-out-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Alejar"><i class="fa-solid fa-search-minus"></i></button>
+                        <button id="zoom-in-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Acercar"><i class="fa-solid fa-search-plus"></i></button>
+                        <button id="zoom-fit-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Ajustar"><i class="fa-solid fa-expand-arrows-alt"></i></button>
+                        <button id="zoom-reset-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Restaurar zoom (100%)"><i class="fa-solid fa-sync-alt"></i></button>
+                        <span id="zoom-level-display" class="text-sm font-mono text-white w-16 text-center self-center px-2">100%</span>
                     </div>
 
-                    <div class="details-section text-center">
-                        <h4>Enlace Original</h4>
-                        ${sourceLink}
+                    <div class="details-section mt-4 pt-4 border-t">
+                        <h4 class="text-center text-base font-semibold text-slate-600 mb-2">Enlace(s) de Referencia</h4>
+                        <div class="text-center">${sourceLink}</div>
                     </div>
                 `;
+
+                // Llamar a la nueva función para renderizar la vista previa
+                renderDocxPreview(newsItem, document.getElementById('document-preview-container'));
             } else {
                 // --- DISEÑO ORIGINAL PARA NOTICIAS GENERALES ---
                 const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') 
@@ -2363,12 +2418,176 @@
             openModal(viewDetailsModal);
         }
 
+        async function renderDocxPreview(record, container) {
+            try {
+                let docxBlob;
+
+                if (record.conferenceDocx) {
+                    // Prioridad 1: Usar el documento .docx subido
+                    const docxArrayBuffer = base64ToArrayBuffer(record.conferenceDocx);
+                    docxBlob = new Blob([docxArrayBuffer]);
+                } else {
+                    // Prioridad 2: Generar el documento desde la plantilla
+                    docxBlob = await generateDoc(record.id, currentEditIsHistorical, true); // true para devolver blob
+                    if (!docxBlob) {
+                        container.innerHTML = `<div class="text-center p-4 text-red-500">No se pudo generar el documento para la vista previa. Verifique que la plantilla exista.</div>`;
+                        return;
+                    }
+                }
+
+                // Mostrar los controles de zoom (estaban ocultos)
+                const zoomControls = document.querySelector('.zoom-controls');
+                if (zoomControls) zoomControls.classList.remove('hidden');
+                
+                // --- SOLUCIÓN AL PROBLEMA DE SCROLL/ZOOM ---
+                // 1. Limpiar el contenedor principal.
+                container.innerHTML = ''; // Limpiar solo el spinner
+                // 2. Crear un contenedor intermedio para el zoom. Este es el truco.
+                const zoomContainer = document.createElement('div');
+                // 3. Crear el div donde se renderizará el documento.
+                const docxRenderElement = document.createElement('div');
+                zoomContainer.appendChild(docxRenderElement);
+                container.appendChild(zoomContainer);
+                
+                // Mostrar los controles de zoom (estaban ocultos)
+
+                // Usar docx-preview para renderizar el Blob con alta fidelidad
+                await docx.renderAsync(docxBlob, docxRenderElement);
+
+                // Una vez renderizado, configurar los controles de zoom
+                setupZoomControls(container);
+                
+            } catch (error) {
+                console.error("Error al generar la vista previa del DOCX:", error);
+                container.innerHTML = `<div class="text-center p-4 text-red-500">Ocurrió un error al procesar la vista previa: ${error.message}</div>`;
+            }
+        }
+
+        function setupZoomControls(previewContainer) {
+           const zoomInBtn = document.getElementById('zoom-in-btn');
+           const zoomOutBtn = document.getElementById('zoom-out-btn');
+           const zoomFitBtn = document.getElementById('zoom-fit-btn');
+           const zoomResetBtn = document.getElementById('zoom-reset-btn');
+           const zoomDisplay = document.getElementById('zoom-level-display');
+           // Apuntar a los elementos correctos generados por la librería dentro del contenedor
+           const docxWrapper = previewContainer; // El contenedor principal ahora es el wrapper
+           const zoomContainer = previewContainer.querySelector('.zoom-container');
+           const docxElement = previewContainer.querySelector('.docx');
+
+           if (!docxElement || !zoomInBtn || !docxWrapper || !zoomContainer) return;
+
+
+           zoomDisplay.textContent = `${Math.round(currentScale * 100)}%`;
+
+           let currentScale = 1.0; // Iniciar siempre a escala 100%
+           let originalDocWidth = docxElement.offsetWidth;
+           let originalDocHeight = docxElement.offsetHeight;
+
+           const applyZoom = () => {
+               
+               // El contenedor de zoom ahora solo necesita tener el tamaño escalado
+               // para que el padre (.docx-wrapper) calcule el scroll correctamente.
+               if (zoomContainer) {
+                   zoomContainer.style.width = `${originalDocWidth * currentScale}px`;
+                   zoomContainer.style.height = `${originalDocHeight * currentScale}px`;
+               }
+           };
+
+           zoomInBtn.onclick = () => {
+               // Aumentar el zoom en pasos más grandes para una mejor experiencia
+               currentScale = Math.min(3.0, currentScale + 0.15); // Límite de 300%
+               applyZoom();
+           };
+
+           zoomOutBtn.onclick = () => {
+               currentScale = Math.max(0.2, currentScale - 0.15); // No permitir zoom menor a 20%
+               applyZoom();
+           };
+
+           zoomResetBtn.onclick = () => {
+               currentScale = 1.0;
+               applyZoom();
+           };
+
+           zoomFitBtn.onclick = () => {
+               // Lógica de ajuste precisa
+               // Usar el espacio total disponible, sin restar padding arbitrario
+               const containerWidth = docxWrapper.clientWidth;
+               const containerHeight = docxWrapper.clientHeight;
+
+               if (originalDocWidth > 0 && originalDocHeight > 0) {
+                    // Dejar un pequeño margen visual (ej. 95% del espacio)
+                    const scaleX = (containerWidth * 0.95) / originalDocWidth;
+                    const scaleY = (containerHeight * 0.95) / originalDocHeight;
+                    currentScale = Math.min(scaleX, scaleY);
+                    applyZoom();
+
+                    // Centrar el documento ajustando el scroll inicial
+                    const contentWidth = originalDocWidth * currentScale;
+                    const contentHeight = originalDocHeight * currentScale;
+                    
+                    docxWrapper.scrollLeft = (contentWidth - containerWidth) / 2;
+                    docxWrapper.scrollTop = (contentHeight - containerHeight) / 2;
+               }
+           };
+
+           // Mejora: Pan-on-drag (Arrastrar para mover)
+           let isPanning = false;
+           let startX, startY, scrollLeft, scrollTop;
+
+           docxWrapper.addEventListener('mousedown', (e) => {
+               // Prevenir arrastre de texto o imágenes
+               e.preventDefault();
+               isPanning = true;
+               docxWrapper.classList.add('grabbing');
+               startX = e.pageX - docxWrapper.offsetLeft;
+               startY = e.pageY - docxWrapper.offsetTop;
+               scrollLeft = docxWrapper.scrollLeft;
+               scrollTop = docxWrapper.scrollTop;
+           });
+
+           const stopPanning = () => {
+               isPanning = false;
+               docxWrapper.classList.remove('grabbing');
+           };
+
+           docxWrapper.addEventListener('mouseleave', stopPanning);
+           docxWrapper.addEventListener('mouseup', stopPanning);
+
+           docxWrapper.addEventListener('mousemove', (e) => {
+               if (!isPanning) return;
+               e.preventDefault();
+               const x = e.pageX - docxWrapper.offsetLeft;
+               const y = e.pageY - docxWrapper.offsetTop;
+               const walkX = (x - startX);
+               const walkY = (y - startY);
+               docxWrapper.scrollLeft = scrollLeft - walkX;
+               docxWrapper.scrollTop = scrollTop - walkY;
+           });
+
+           // Al iniciar, ajustar y centrar automáticamente el documento.
+           zoomFitBtn.onclick();
+
+       };
+
+        function base64ToArrayBuffer(base64) {
+            // Esta función no necesita el prefijo "data:...", ya que lo guardamos crudo.
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
         /**
          * Genera un documento .docx a partir de una plantilla en Firebase Storage.
          * @param {string} newsId - El ID del registro de la noticia.
          * @param {boolean} isHistorical - Indica si el registro es del histórico.
+         * @param {boolean} [returnBlob=false] - Si es true, devuelve el Blob en lugar de descargarlo.
          */
-        async function generateDoc(newsId, isHistorical) {
+        async function generateDoc(newsId, isHistorical, returnBlob = false) {
             // 1. Verificar que las librerías necesarias estén cargadas y cargar fallbacks si es necesario
             let missingLibs = checkRequiredLibraries();
             if (missingLibs.includes('PizZip') || missingLibs.includes('docxtemplater')) {
@@ -2391,7 +2610,9 @@
                  return showAlert("Error: La librería FileSaver.js no se cargó correctamente.", "error");
             }
 
-            showAlert("Generando reporte...", "info");
+            if (!returnBlob) {
+                showAlert("Generando reporte...", "info");
+            }
             const dataSet = isHistorical ? historicalNews : news;
             const record = dataSet.find(item => item.id === newsId);
 
@@ -2410,7 +2631,7 @@
                     templateType = 'informe';
                 }
 
-                if(record.conferenceDocx){
+                if(record.conferenceDocx && !returnBlob){
                     //Download docx, stop report creation.
                     const byteCharacters = atob(record.conferenceDocx);
                     const byteNumbers = new Array(byteCharacters.length);
@@ -2421,8 +2642,8 @@
                     const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
                     saveAs(blob, `Reporte_Conferencia_${record.fecha}.docx`);
                     showAlert("¡Reporte generado con éxito!", "success");
-                    return;
-                }
+                    return; // Solo retorna si no se necesita el blob
+                 }
 
                 // 3. Obtener la plantilla correcta desde Firestore
                 const templateDocRef = db.collection('config').doc(`wordTemplate_${templateType}`);
@@ -2438,17 +2659,20 @@
                     templateDoc = await defaultRef.get();
                     usedTemplateType = 'medios';
                     if (!templateDoc.exists || !templateDoc.data().templateData) {
-                        return showAlert("No se encontró la plantilla de medios por defecto. Por favor, cárguela en la pestaña de Reportes.", "error");
+                        if (!returnBlob) showAlert("No se encontró la plantilla de medios por defecto. Por favor, cárguela en la pestaña de Reportes.", "error");
+                        return null; // Devuelve null si no hay plantilla
                     }
                 }
                 const base64String = templateDoc.data().templateData;
 
                 // Convertir la plantilla de Base64 a un formato que docxtemplater pueda usar
-                const templateBlob = base64ToArrayBuffer(base64String);
+                // El base64 de la plantilla SÍ tiene prefijo, a diferencia del que subimos.
+                const templateData = base64String.substring(base64String.indexOf(',') + 1);
+                const templateBlob = base64ToArrayBuffer(templateData);
 
                 // 3. Procesar la plantilla con docxtemplater
                 // Usamos PizZip directamente desde el objeto window
-                const zip = new PizZip(templateBlob);
+                const zip = new JSZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
                     paragraphLoop: true,
                     linebreaks: true // Reactivamos esta opción, es la forma correcta para texto plano.
@@ -2489,6 +2713,11 @@
                     type: "blob",
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
+
+                // Si la función fue llamada para obtener el blob, lo retornamos
+                if (returnBlob) {
+                    return out;
+                }
 
                 // Lógica mejorada para generar el nombre del archivo
                 let baseName = 'Reporte';
@@ -3142,6 +3371,55 @@
         }
 
         // =============================================
+        // MÓDULO: Verificación de dependencias
+        // =============================================
+        
+        function checkRequiredLibraries() {
+            const libraries = {
+                'JSZip': typeof window.JSZip,
+                'docxtemplater': typeof window.docxtemplater,
+                'saveAs': typeof window.saveAs,
+                'XLSX': typeof window.XLSX,
+                'firebase': typeof firebase,
+                'Chart': typeof Chart,
+                '$': typeof window.$,
+                'select2': typeof $.fn.select2,
+                'docx': typeof window.docx
+            };
+            
+            const missing = Object.entries(libraries)
+                .filter(([lib, type]) => type === 'undefined')
+                .map(([lib]) => lib);
+            
+            return missing;
+        }
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        function loadFallbackLibraries(missingLibs) {
+            const fallbacks = {
+                'JSZip': 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+                'docxtemplater': 'https://cdn.jsdelivr.net/npm/docxtemplater@3.34.1/build/docxtemplater.min.js'
+            };
+            return Promise.all(missingLibs.filter(lib => fallbacks[lib]).map(lib => loadScript(fallbacks[lib])));
+        }
+
+        function handleGenerateDocClick(button) {
+            const newsId = button.dataset.id;
+            const isHistorical = button.dataset.isHistorical === 'true';
+            // Llamada directa a la función de generación de documento, sin contraseña.
+            generateDoc(newsId, isHistorical);
+        }
+
+        // =============================================
         // MÓDULO: Configuración de eventos
         // =============================================
         
@@ -3754,7 +4032,6 @@
             noLinksMessage = document.getElementById('no-links-message');
             cancelLinksBtn = document.getElementById('cancel-links-btn');
             saveLinksBtn = document.getElementById('save-links-btn');
-
 
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
