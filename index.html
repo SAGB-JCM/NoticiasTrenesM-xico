@@ -570,8 +570,8 @@
             border: 1px solid #d1d5db;
             border-radius: 0.375rem;
             background-color: #e8e8e8; /* Fondo gris para el área de visualización */
-            overflow: hidden; /* CLAVE: Ocultamos cualquier desbordamiento del contenedor principal */
-            position: relative; /* Para posicionar los controles de zoom */
+            overflow: hidden; /* CLAVE: Ocultar cualquier desbordamiento del contenedor principal */
+            position: relative; /* Para posicionar elementos si fuera necesario en el futuro */
             flex-grow: 1; /* CLAVE: Hace que el visor ocupe todo el espacio vertical disponible */
             display: flex; /* Para centrar el spinner inicial */
             align-items: flex-start; /* Alinea el wrapper arriba */
@@ -588,25 +588,9 @@
         #document-preview-container .docx-wrapper:active { cursor: grabbing; }
         /* La "hoja" del documento */
         #document-preview-container .docx {
-            transform-origin: top left; /* CLAVE: El zoom se origina en la esquina para un scroll predecible */
-            transition: transform 0.2s ease-in-out;
-        }
-        /* Contenedor intermedio para gestionar el zoom sin conflictos con el scroll */
-        #document-preview-container .zoom-container {
-            /* Este contenedor ya no necesita estilos especiales, JS lo controla */
-        }
-        .zoom-controls {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            z-index: 30; /* Por encima del contenido del docx */
-            background-color: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(4px);
-            border-radius: 9999px;
-            padding: 5px;
-            display: flex;
-            gap: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            margin: 0 auto; /* Centra la hoja horizontalmente y elimina los márgenes verticales */
+            padding: 0; /* Elimina cualquier padding interno */
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Sombra sutil para la hoja */
         }
     </style>
     
@@ -2342,18 +2326,6 @@
                     <div id="document-preview-container" class="document-preview-container my-4">
                         <div class="text-center p-4"><div class="spinner inline-block"></div><p class="mt-2 text-sm text-slate-500">Generando vista previa del documento...</p></div>
                     </div>
-                    <div class="zoom-controls hidden">
-                        <button id="zoom-out-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Alejar"><i class="fa-solid fa-search-minus"></i></button>
-                        <button id="zoom-in-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Acercar"><i class="fa-solid fa-search-plus"></i></button>
-                        <button id="zoom-fit-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Ajustar"><i class="fa-solid fa-expand-arrows-alt"></i></button>
-                        <button id="zoom-reset-btn" class="text-white hover:bg-slate-500 font-bold h-8 w-8 rounded-full transition-colors" title="Restaurar zoom (100%)"><i class="fa-solid fa-sync-alt"></i></button>
-                        <span id="zoom-level-display" class="text-sm font-mono text-white w-16 text-center self-center px-2">100%</span>
-                    </div>
-
-                    <div class="details-section mt-4 pt-4 border-t">
-                        <h4 class="text-center text-base font-semibold text-slate-600 mb-2">Enlace(s) de Referencia</h4>
-                        <div class="text-center">${sourceLink}</div>
-                    </div>
                 `;
 
                 // Llamar a la nueva función para renderizar la vista previa
@@ -2421,154 +2393,83 @@
         async function renderDocxPreview(record, container) {
             try {
                 let docxBlob;
-
+        
                 if (record.conferenceDocx) {
-                    // Prioridad 1: Usar el documento .docx subido
+                    // Prioridad 1: usar el .docx subido (base64 -> ArrayBuffer -> Blob)
                     const docxArrayBuffer = base64ToArrayBuffer(record.conferenceDocx);
                     docxBlob = new Blob([docxArrayBuffer]);
                 } else {
-                    // Prioridad 2: Generar el documento desde la plantilla
-                    docxBlob = await generateDoc(record.id, currentEditIsHistorical, true); // true para devolver blob
+                    // Prioridad 2: generar el documento desde la plantilla
+                    docxBlob = await generateDoc(record.id, currentEditIsHistorical, true); // true -> devuelve Blob para la vista previa
                     if (!docxBlob) {
                         container.innerHTML = `<div class="text-center p-4 text-red-500">No se pudo generar el documento para la vista previa. Verifique que la plantilla exista.</div>`;
                         return;
                     }
                 }
-
-                // Mostrar los controles de zoom (estaban ocultos)
-                const zoomControls = document.querySelector('.zoom-controls');
-                if (zoomControls) zoomControls.classList.remove('hidden');
-                
-                // --- SOLUCIÓN AL PROBLEMA DE SCROLL/ZOOM ---
-                // 1. Limpiar el contenedor principal.
-                container.innerHTML = ''; // Limpiar solo el spinner
-                // 2. Crear un contenedor intermedio para el zoom. Este es el truco.
-                const zoomContainer = document.createElement('div');
-                // 3. Crear el div donde se renderizará el documento.
+        
+                // Limpiar el contenedor del spinner
+                container.innerHTML = '';
+        
+                // Crear el div donde la librería renderizará el documento.
+                // La librería creará un .docx-wrapper dentro de este.
                 const docxRenderElement = document.createElement('div');
-                zoomContainer.appendChild(docxRenderElement);
-                container.appendChild(zoomContainer);
-                
-                // Mostrar los controles de zoom (estaban ocultos)
-
-                // Usar docx-preview para renderizar el Blob con alta fidelidad
+                container.appendChild(docxRenderElement);
+        
+                // Renderizar con docx-preview (o la librería que uses)
                 await docx.renderAsync(docxBlob, docxRenderElement);
+        
+                // --- MEJORA: Hacer que los links del documento se abran en una nueva pestaña ---
+                const docxContent = container.querySelector('.docx');
+                if (docxContent) {
+                    const links = docxContent.querySelectorAll('a');
+                    links.forEach(link => link.setAttribute('target', '_blank'));
+                }
 
-                // Una vez renderizado, configurar los controles de zoom
-                setupZoomControls(container);
-                
+                // --- Lógica de Paneo (Arrastrar para mover) ---
+                // Una vez renderizado, buscamos el .docx-wrapper que la librería creó.
+                const docxWrapper = container.querySelector('.docx-wrapper');
+                if (!docxWrapper) return;
+        
+                let isPanning = false;
+                let startX, startY, scrollLeft, scrollTop;
+        
+                const startPanning = (e) => {
+                    // Prevenir arrastre de texto o imágenes
+                    e.preventDefault();
+                    isPanning = true;
+                    docxWrapper.style.cursor = 'grabbing';
+                    startX = e.pageX - docxWrapper.offsetLeft;
+                    startY = e.pageY - docxWrapper.offsetTop;
+                    scrollLeft = docxWrapper.scrollLeft;
+                    scrollTop = docxWrapper.scrollTop;
+                };
+        
+                const stopPanning = () => {
+                    isPanning = false;
+                    docxWrapper.style.cursor = 'grab';
+                };
+        
+                const doPanning = (e) => {
+                    if (!isPanning) return;
+                    e.preventDefault();
+                    const x = e.pageX - docxWrapper.offsetLeft;
+                    const y = e.pageY - docxWrapper.offsetTop;
+                    const walkX = (x - startX);
+                    const walkY = (y - startY);
+                    docxWrapper.scrollLeft = scrollLeft - walkX;
+                    docxWrapper.scrollTop = scrollTop - walkY;
+                };
+        
+                docxWrapper.addEventListener('mousedown', startPanning);
+                docxWrapper.addEventListener('mouseup', stopPanning);
+                docxWrapper.addEventListener('mouseleave', stopPanning);
+                docxWrapper.addEventListener('mousemove', doPanning);
+        
             } catch (error) {
                 console.error("Error al generar la vista previa del DOCX:", error);
                 container.innerHTML = `<div class="text-center p-4 text-red-500">Ocurrió un error al procesar la vista previa: ${error.message}</div>`;
             }
         }
-
-        function setupZoomControls(previewContainer) {
-           const zoomInBtn = document.getElementById('zoom-in-btn');
-           const zoomOutBtn = document.getElementById('zoom-out-btn');
-           const zoomFitBtn = document.getElementById('zoom-fit-btn');
-           const zoomResetBtn = document.getElementById('zoom-reset-btn');
-           const zoomDisplay = document.getElementById('zoom-level-display');
-           // Apuntar a los elementos correctos generados por la librería dentro del contenedor
-           const docxWrapper = previewContainer; // El contenedor principal ahora es el wrapper
-           const zoomContainer = previewContainer.querySelector('.zoom-container');
-           const docxElement = previewContainer.querySelector('.docx');
-
-           if (!docxElement || !zoomInBtn || !docxWrapper || !zoomContainer) return;
-
-
-           zoomDisplay.textContent = `${Math.round(currentScale * 100)}%`;
-
-           let currentScale = 1.0; // Iniciar siempre a escala 100%
-           let originalDocWidth = docxElement.offsetWidth;
-           let originalDocHeight = docxElement.offsetHeight;
-
-           const applyZoom = () => {
-               
-               // El contenedor de zoom ahora solo necesita tener el tamaño escalado
-               // para que el padre (.docx-wrapper) calcule el scroll correctamente.
-               if (zoomContainer) {
-                   zoomContainer.style.width = `${originalDocWidth * currentScale}px`;
-                   zoomContainer.style.height = `${originalDocHeight * currentScale}px`;
-               }
-           };
-
-           zoomInBtn.onclick = () => {
-               // Aumentar el zoom en pasos más grandes para una mejor experiencia
-               currentScale = Math.min(3.0, currentScale + 0.15); // Límite de 300%
-               applyZoom();
-           };
-
-           zoomOutBtn.onclick = () => {
-               currentScale = Math.max(0.2, currentScale - 0.15); // No permitir zoom menor a 20%
-               applyZoom();
-           };
-
-           zoomResetBtn.onclick = () => {
-               currentScale = 1.0;
-               applyZoom();
-           };
-
-           zoomFitBtn.onclick = () => {
-               // Lógica de ajuste precisa
-               // Usar el espacio total disponible, sin restar padding arbitrario
-               const containerWidth = docxWrapper.clientWidth;
-               const containerHeight = docxWrapper.clientHeight;
-
-               if (originalDocWidth > 0 && originalDocHeight > 0) {
-                    // Dejar un pequeño margen visual (ej. 95% del espacio)
-                    const scaleX = (containerWidth * 0.95) / originalDocWidth;
-                    const scaleY = (containerHeight * 0.95) / originalDocHeight;
-                    currentScale = Math.min(scaleX, scaleY);
-                    applyZoom();
-
-                    // Centrar el documento ajustando el scroll inicial
-                    const contentWidth = originalDocWidth * currentScale;
-                    const contentHeight = originalDocHeight * currentScale;
-                    
-                    docxWrapper.scrollLeft = (contentWidth - containerWidth) / 2;
-                    docxWrapper.scrollTop = (contentHeight - containerHeight) / 2;
-               }
-           };
-
-           // Mejora: Pan-on-drag (Arrastrar para mover)
-           let isPanning = false;
-           let startX, startY, scrollLeft, scrollTop;
-
-           docxWrapper.addEventListener('mousedown', (e) => {
-               // Prevenir arrastre de texto o imágenes
-               e.preventDefault();
-               isPanning = true;
-               docxWrapper.classList.add('grabbing');
-               startX = e.pageX - docxWrapper.offsetLeft;
-               startY = e.pageY - docxWrapper.offsetTop;
-               scrollLeft = docxWrapper.scrollLeft;
-               scrollTop = docxWrapper.scrollTop;
-           });
-
-           const stopPanning = () => {
-               isPanning = false;
-               docxWrapper.classList.remove('grabbing');
-           };
-
-           docxWrapper.addEventListener('mouseleave', stopPanning);
-           docxWrapper.addEventListener('mouseup', stopPanning);
-
-           docxWrapper.addEventListener('mousemove', (e) => {
-               if (!isPanning) return;
-               e.preventDefault();
-               const x = e.pageX - docxWrapper.offsetLeft;
-               const y = e.pageY - docxWrapper.offsetTop;
-               const walkX = (x - startX);
-               const walkY = (y - startY);
-               docxWrapper.scrollLeft = scrollLeft - walkX;
-               docxWrapper.scrollTop = scrollTop - walkY;
-           });
-
-           // Al iniciar, ajustar y centrar automáticamente el documento.
-           zoomFitBtn.onclick();
-
-       };
 
         function base64ToArrayBuffer(base64) {
             // Esta función no necesita el prefijo "data:...", ya que lo guardamos crudo.
@@ -2625,6 +2526,7 @@
                 let templateType = 'medios'; // Default
                 if (record.medio === 'Conferencia de prensa matutina') {
                     templateType = 'mananera';
+
                 } else if (record.medio === 'Evento Presidencial') {
                     templateType = 'evento';
                 } else if (record.medio === 'Informe de Gobierno') {
@@ -2637,7 +2539,7 @@
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
+                 }
                     const byteArray = new Uint8Array(byteNumbers);
                     const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
                     saveAs(blob, `Reporte_Conferencia_${record.fecha}.docx`);
@@ -2648,7 +2550,6 @@
                 // 3. Obtener la plantilla correcta desde Firestore
                 const templateDocRef = db.collection('config').doc(`wordTemplate_${templateType}`);
                 const defaultRef = db.collection('config').doc('wordTemplate_medios');
-
 
                 let templateDoc = await templateDocRef.get();
                 let usedTemplateType = templateType;
@@ -3386,6 +3287,7 @@
                 'select2': typeof $.fn.select2,
                 'docx': typeof window.docx
             };
+
             
             const missing = Object.entries(libraries)
                 .filter(([lib, type]) => type === 'undefined')
@@ -3426,7 +3328,7 @@
         function setupEventListeners() {
             setupTabs();
             setupColumnFilters('main-table-header', () => news, renderTable, 'main');
-            setupColumnFilters('historical-table-header', () => historicalNews, renderTable, 'historical');
+
             setupFiltering('filter-input-main', () => news, renderTable, false);
             setupFiltering('filter-input-historical', () => historicalNews, renderTable, true);
             setupAddEditButtons();
@@ -4051,8 +3953,8 @@
             populateConferenceMedioSelect('edit-conference-medio');
 
             // Mejora de UX: Auto-foco en el buscador de Select2 al abrirlo.
+
             $(document).on('select2:open', () => {
-                // Usamos un pequeño timeout para asegurar que el campo de búsqueda ya es visible.
                 setTimeout(() => document.querySelector('.select2-search__field').focus(), 50);
             });
             
@@ -4064,6 +3966,6 @@
         // Iniciar la aplicación
         // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
-    </script>
-</body> 
+   </script>
+</body>
 </html>
