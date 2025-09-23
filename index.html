@@ -2600,12 +2600,12 @@
                     palabra_clave_1: formatLongDate(record.fecha),
                     palabra_clave_2: (record.fuente || 'No especificado').split(';').map(link => link.trim()).filter(Boolean).join('\n'),
                     palabra_clave_3: record.proyecto || 'No especificado',
-                    palabra_clave_4: record.subproyecto || 'No especificado',                    
+                    palabra_clave_4: record.subproyecto || '',                    
                     palabra_clave_5: resumenParaPlantilla,
                     palabra_clave_6: record.categoria || 'No especificado',
                     palabra_clave_7: record.medio || 'No especificado',
                     palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
-                    palabra_clave_9: record.cita || 'No especificado',
+                    palabra_clave_9: record.cita || '',
                 };
 
                 doc.setData(dataForTemplate);
