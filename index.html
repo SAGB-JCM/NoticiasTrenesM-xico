@@ -33,17 +33,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- Librerías para manipulación de .docx -->
-    <!-- JSZip es dependencia tanto de docxtemplater como de docx-preview. Debe cargarse primero. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.34.1/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <!-- SunEditor (Rich Text Editor) -->
     <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
-
-    <!-- docx-preview para previsualización de alta fidelidad de .docx -->
-    <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.1.20/dist/docx-preview.min.js"></script>
 
     <!-- Firebase App (el módulo principal de Firebase) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -349,8 +345,8 @@
         }
 
         .wide-modal .relative {
-            max-width: 90rem !important; /* Aumentado para dar más espacio al visor */
-         }
+            max-width: 76rem !important;
+        }
 
         .chart-wrapper {
             position: relative;
@@ -442,15 +438,6 @@
             padding: 2rem;
             background-color: #f9fafb;
         }
-        /* Contenedor principal del modal de detalles, ahora usa flexbox */
-        #view-details-modal .relative {
-            display: flex;
-            flex-direction: column;
-            max-height: 90vh; /* Ocupar casi toda la altura de la pantalla */
-        }
-       #view-details-modal .relative{
-        margin: 0;
-       }
         .details-header {
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 1rem;
@@ -563,34 +550,6 @@
             font-size: 0.9em; /* Letra ligeramente más pequeña para tablas */
             border-collapse: collapse;
             border: 1px solid #e5e7eb;
-        }
-
-        /* Estilos para el contenedor de la vista previa del documento */
-        #document-preview-container {
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            background-color: #e8e8e8; /* Fondo gris para el área de visualización */
-            overflow: hidden; /* CLAVE: Ocultar cualquier desbordamiento del contenedor principal */
-            position: relative; /* Para posicionar elementos si fuera necesario en el futuro */
-            flex-grow: 1; /* CLAVE: Hace que el visor ocupe todo el espacio vertical disponible */
-            display: flex; /* Para centrar el spinner inicial */
-            align-items: flex-start; /* Alinea el wrapper arriba */
-            justify-content: center;
-        }
-        /* El contenedor que la librería crea */
-        #document-preview-container .docx-wrapper {
-             background-color: #e8e8e8 !important; /* Asegurar el fondo gris */
-            overflow: auto; /* CLAVE: Esta es la ÚNICA barra de scroll que debe existir */
-            cursor: grab; /* Indica que se puede arrastrar */
-            width: 100%; /* Ocupa todo el ancho del contenedor */
-            height: 100%; /* Ocupa toda la altura del contenedor */
-        }
-        #document-preview-container .docx-wrapper:active { cursor: grabbing; }
-        /* La "hoja" del documento */
-        #document-preview-container .docx {
-            margin: 0 auto; /* Centra la hoja horizontalmente y elimina los márgenes verticales */
-            padding: 0; /* Elimina cualquier padding interno */
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Sombra sutil para la hoja */
         }
     </style>
     
@@ -1035,13 +994,14 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
-                        <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
-                        <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
-                    </div>
-                    <div class="form-field full-width">
                         <label for="conference-docx">Subir Documento (docx)</label>
                         <input type="file" id="conference-docx" name="conferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
                         <p class="mt-1 text-sm text-gray-500" id="conference-docx-label">Cargue un archivo .docx para usarlo como reporte individual. Si no se carga nada, se usará la plantilla.</p>
+                    </div>
+
+                    <div class="form-field full-width">
+                        <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
+                        <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
                     <div class="flex items-center justify-end pt-4">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Conferencia</button>
@@ -1080,13 +1040,13 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
-                        <label for="edit-conference-summary" id="edit-conference-summary-label">Resumen de la Conferencia</label>
-                        <div id="edit-conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
-                    </div>
-                    <div class="form-field full-width">
                         <label for="edit-conference-docx">Subir Documento (docx)</label>
                         <input type="file" id="edit-conference-docx" name="editConferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
                         <p class="mt-1 text-sm text-gray-500" id="edit-conference-docx-label">Cargue un archivo .docx para usarlo como reporte individual. Si no se carga nada, se usará la plantilla.</p>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="edit-conference-summary" id="edit-conference-summary-label">Resumen de la Conferencia</label>
+                        <div id="edit-conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
                     <div class="flex items-center justify-end pt-4">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Cambios</button>
@@ -1231,7 +1191,7 @@
             }
 
             const libraries = {
-                'JSZip': typeof window.JSZip,
+                'PizZip': typeof window.PizZip,
                 'docxtemplater': typeof window.docxtemplater,
                 'saveAs': typeof window.saveAs,
                 'XLSX': typeof window.XLSX,
@@ -1260,7 +1220,7 @@
 
         function loadFallbackLibraries(missingLibs) {
             const fallbacks = {
-                'JSZip': 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+                'PizZip': 'https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js',
                 'docxtemplater': 'https://cdn.jsdelivr.net/npm/docxtemplater@3.34.1/build/docxtemplater.min.js'
             };
             return Promise.all(missingLibs.filter(lib => fallbacks[lib]).map(lib => loadScript(fallbacks[lib])));
@@ -2293,42 +2253,56 @@
 
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
-            detailsModalContent.innerHTML = '<div class="text-center p-8"><div class="spinner"></div><p class="mt-2">Cargando detalles...</p></div>';
 
 
             if (specialMedios.includes(newsItem.medio)) {
-                // --- REFACTORIZACIÓN: Modal específico para Conferencias/Eventos ---
-                let modalTitle = 'Detalle del Reporte';
+                // --- NUEVO DISEÑO PARA CASOS ESPECIALES ---
+                let resumenHeader = 'Resumen';
                 if (newsItem.medio === 'Conferencia de prensa matutina') {
-                    modalTitle = 'Detalle de la Conferencia';
+                    resumenHeader = 'Resumen de la Conferencia';
                 } else if (newsItem.medio === 'Evento Presidencial') {
-                    modalTitle = 'Detalle del Evento';
+                    resumenHeader = 'Resumen del Evento';
                 } else if (newsItem.medio === 'Informe de Gobierno') {
-                    modalTitle = 'Detalle del Informe';
+                    resumenHeader = 'Resumen del Informe';
                 }
 
                 const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
-                let sourceLink = '<p class="text-gray-500 text-sm">No hay enlaces disponibles.</p>';
+                let sourceLink = '<p class="text-gray-700">N/A</p>';
                 if (links.length > 0) {
-                    sourceLink = links.map(link => 
-                        `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block text-sm"><i class="fa-solid fa-link fa-xs mr-2"></i>${link}</a>`
-                    ).join('');
+                    sourceLink = links.map(link => {
+                        if (isValidUrl(link)) {
+                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
+                        }
+                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                    }).join('');
                 }
 
-                // Estructura HTML limpia y refactorizada
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
-                        <h3 class="project">${modalTitle}</h3>
+                        <h3 class="project">${newsItem.medio || 'Medio no especificado'}</h3>
                         <p class="date">${formatLongDate(newsItem.fecha)}</p>
                     </div>
 
-                    <div id="document-preview-container" class="document-preview-container my-4">
-                        <div class="text-center p-4"><div class="spinner inline-block"></div><p class="mt-2 text-sm text-slate-500">Generando vista previa del documento...</p></div>
+                    <div class="details-section">
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">${resumenHeader}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="details-section text-center">
+                        <h4>Enlace Original</h4>
+                        ${sourceLink}
                     </div>
                 `;
-
-                // Llamar a la nueva función para renderizar la vista previa
-                renderDocxPreview(newsItem, document.getElementById('document-preview-container'));
             } else {
                 // --- DISEÑO ORIGINAL PARA NOTICIAS GENERALES ---
                 const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') 
@@ -2389,108 +2363,12 @@
             openModal(viewDetailsModal);
         }
 
-        async function renderDocxPreview(record, container) {
-            try {
-                let docxBlob;
-        
-                if (record.conferenceDocx) {
-                    // Prioridad 1: usar el .docx subido (base64 -> ArrayBuffer -> Blob)
-                    const docxArrayBuffer = base64ToArrayBuffer(record.conferenceDocx);
-                    docxBlob = new Blob([docxArrayBuffer]);
-                } else {
-                    // Prioridad 2: generar el documento desde la plantilla
-                    docxBlob = await generateDoc(record.id, currentEditIsHistorical, true); // true -> devuelve Blob para la vista previa
-                    if (!docxBlob) {
-                        container.innerHTML = `<div class="text-center p-4 text-red-500">No se pudo generar el documento para la vista previa. Verifique que la plantilla exista.</div>`;
-                        return;
-                    }
-                }
-        
-                // Limpiar el contenedor del spinner
-                container.innerHTML = '';
-        
-                // Crear el div donde la librería renderizará el documento.
-                // La librería creará un .docx-wrapper dentro de este.
-                const docxRenderElement = document.createElement('div');
-                container.appendChild(docxRenderElement);
-        
-                // Renderizar con docx-preview (o la librería que uses)
-                await docx.renderAsync(docxBlob, docxRenderElement);
-
-
-
-
-                // --- MEJORA: Hacer que los links del documento se abran en una nueva pestaña ---
-                const docxContent = container.querySelector('.docx');
-                if (docxContent) {
-                    const links = docxContent.querySelectorAll('a');
-                    links.forEach(link => link.setAttribute('target', '_blank'));
-                }
-
-                // --- Lógica de Paneo (Arrastrar para mover) ---
-                // Una vez renderizado, buscamos el .docx-wrapper que la librería creó.
-                const docxWrapper = container.querySelector('.docx-wrapper');
-                if (!docxWrapper) return;
-        
-                let isPanning = false;
-                let startX, startY, scrollLeft, scrollTop;
-        
-                const startPanning = (e) => {
-                    // Prevenir arrastre de texto o imágenes
-                    e.preventDefault();
-                    isPanning = true;
-                    docxWrapper.style.cursor = 'grabbing';
-                    startX = e.pageX - docxWrapper.offsetLeft;
-                    startY = e.pageY - docxWrapper.offsetTop;
-                    scrollLeft = docxWrapper.scrollLeft;
-                    scrollTop = docxWrapper.scrollTop;
-                };
-        
-                const stopPanning = () => {
-                    isPanning = false;
-                    docxWrapper.style.cursor = 'grab';
-                };
-        
-                const doPanning = (e) => {
-                    if (!isPanning) return;
-                    e.preventDefault();
-                    const x = e.pageX - docxWrapper.offsetLeft;
-                    const y = e.pageY - docxWrapper.offsetTop;
-                    const walkX = (x - startX);
-                    const walkY = (y - startY);
-                    docxWrapper.scrollLeft = scrollLeft - walkX;
-                    docxWrapper.scrollTop = scrollTop - walkY;
-                };
-        
-                docxWrapper.addEventListener('mousedown', startPanning);
-                docxWrapper.addEventListener('mouseup', stopPanning);
-                docxWrapper.addEventListener('mouseleave', stopPanning);
-                docxWrapper.addEventListener('mousemove', doPanning);
-        
-            } catch (error) {
-                console.error("Error al generar la vista previa del DOCX:", error);
-                container.innerHTML = `<div class="text-center p-4 text-red-500">Ocurrió un error al procesar la vista previa: ${error.message}</div>`;
-            }
-        }
-
-        function base64ToArrayBuffer(base64) {
-            // Esta función no necesita el prefijo "data:...", ya que lo guardamos crudo.
-            const binary_string = window.atob(base64);
-            const len = binary_string.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binary_string.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-
         /**
          * Genera un documento .docx a partir de una plantilla en Firebase Storage.
          * @param {string} newsId - El ID del registro de la noticia.
          * @param {boolean} isHistorical - Indica si el registro es del histórico.
-         * @param {boolean} [returnBlob=false] - Si es true, devuelve el Blob en lugar de descargarlo.
          */
-        async function generateDoc(newsId, isHistorical, returnBlob = false) {
+        async function generateDoc(newsId, isHistorical) {
             // 1. Verificar que las librerías necesarias estén cargadas y cargar fallbacks si es necesario
             let missingLibs = checkRequiredLibraries();
             if (missingLibs.includes('PizZip') || missingLibs.includes('docxtemplater')) {
@@ -2513,9 +2391,7 @@
                  return showAlert("Error: La librería FileSaver.js no se cargó correctamente.", "error");
             }
 
-            if (!returnBlob) {
-                showAlert("Generando reporte...", "info");
-            }
+            showAlert("Generando reporte...", "info");
             const dataSet = isHistorical ? historicalNews : news;
             const record = dataSet.find(item => item.id === newsId);
 
@@ -2528,30 +2404,30 @@
                 let templateType = 'medios'; // Default
                 if (record.medio === 'Conferencia de prensa matutina') {
                     templateType = 'mananera';
-
                 } else if (record.medio === 'Evento Presidencial') {
                     templateType = 'evento';
                 } else if (record.medio === 'Informe de Gobierno') {
                     templateType = 'informe';
                 }
 
-                if(record.conferenceDocx && !returnBlob){
+                if(record.conferenceDocx){
                     //Download docx, stop report creation.
                     const byteCharacters = atob(record.conferenceDocx);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
-                 }
+                    }
                     const byteArray = new Uint8Array(byteNumbers);
                     const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
                     saveAs(blob, `Reporte_Conferencia_${record.fecha}.docx`);
                     showAlert("¡Reporte generado con éxito!", "success");
-                    return; // Solo retorna si no se necesita el blob
-                 }
+                    return;
+                }
 
                 // 3. Obtener la plantilla correcta desde Firestore
                 const templateDocRef = db.collection('config').doc(`wordTemplate_${templateType}`);
                 const defaultRef = db.collection('config').doc('wordTemplate_medios');
+
 
                 let templateDoc = await templateDocRef.get();
                 let usedTemplateType = templateType;
@@ -2562,27 +2438,27 @@
                     templateDoc = await defaultRef.get();
                     usedTemplateType = 'medios';
                     if (!templateDoc.exists || !templateDoc.data().templateData) {
-                        if (!returnBlob) showAlert("No se encontró la plantilla de medios por defecto. Por favor, cárguela en la pestaña de Reportes.", "error");
-                        return null; // Devuelve null si no hay plantilla
+                        return showAlert("No se encontró la plantilla de medios por defecto. Por favor, cárguela en la pestaña de Reportes.", "error");
                     }
                 }
                 const base64String = templateDoc.data().templateData;
 
                 // Convertir la plantilla de Base64 a un formato que docxtemplater pueda usar
-                // El base64 de la plantilla SÍ tiene prefijo, a diferencia del que subimos.
-                const templateData = base64String.substring(base64String.indexOf(',') + 1);
-                const templateBlob = base64ToArrayBuffer(templateData);
+                const templateBlob = base64ToArrayBuffer(base64String);
 
                 // 3. Procesar la plantilla con docxtemplater
                 // Usamos PizZip directamente desde el objeto window
-                const zip = new JSZip(templateBlob);
+                const zip = new PizZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
                     paragraphLoop: true,
                     linebreaks: true // Reactivamos esta opción, es la forma correcta para texto plano.
                 });
 
                 // 4. Preparar el contenido del resumen (palabra_clave_5) con lógica condicional
-                const resumenOriginal = record.resumen || 'No hay resumen disponible.';
+                let resumenOriginal = record.resumen || 'No hay resumen disponible.';
+                // Limpieza de fragmentos de MS Office y &nbsp;
+                resumenOriginal = resumenOriginal.replace(/<!--\[if !supportLists\]-->|<!--\[endif\]-->|<!--StartFragment-->|<!--EndFragment-->|&nbsp;/g, ' ').trim();
+
                 const isSummaryHtml = isHtml(resumenOriginal);
                 const isSpecialReport = specialMedios.includes(record.medio);
                 let resumenParaPlantilla;
@@ -2616,11 +2492,6 @@
                     type: "blob",
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
-
-                // Si la función fue llamada para obtener el blob, lo retornamos
-                if (returnBlob) {
-                    return out;
-                }
 
                 // Lógica mejorada para generar el nombre del archivo
                 let baseName = 'Reporte';
@@ -3274,63 +3145,13 @@
         }
 
         // =============================================
-        // MÓDULO: Verificación de dependencias
-        // =============================================
-        
-        function checkRequiredLibraries() {
-            const libraries = {
-                'JSZip': typeof window.JSZip,
-                'docxtemplater': typeof window.docxtemplater,
-                'saveAs': typeof window.saveAs,
-                'XLSX': typeof window.XLSX,
-                'firebase': typeof firebase,
-                'Chart': typeof Chart,
-                '$': typeof window.$,
-                'select2': typeof $.fn.select2,
-                'docx': typeof window.docx
-            };
-
-            
-            const missing = Object.entries(libraries)
-                .filter(([lib, type]) => type === 'undefined')
-                .map(([lib]) => lib);
-            
-            return missing;
-        }
-        
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-                document.head.appendChild(script);
-            });
-        }
-
-        function loadFallbackLibraries(missingLibs) {
-            const fallbacks = {
-                'JSZip': 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-                'docxtemplater': 'https://cdn.jsdelivr.net/npm/docxtemplater@3.34.1/build/docxtemplater.min.js'
-            };
-            return Promise.all(missingLibs.filter(lib => fallbacks[lib]).map(lib => loadScript(fallbacks[lib])));
-        }
-
-        function handleGenerateDocClick(button) {
-            const newsId = button.dataset.id;
-            const isHistorical = button.dataset.isHistorical === 'true';
-            // Llamada directa a la función de generación de documento, sin contraseña.
-            generateDoc(newsId, isHistorical);
-        }
-
-        // =============================================
         // MÓDULO: Configuración de eventos
         // =============================================
         
         function setupEventListeners() {
             setupTabs();
             setupColumnFilters('main-table-header', () => news, renderTable, 'main');
-
+            setupColumnFilters('historical-table-header', () => historicalNews, renderTable, 'historical');
             setupFiltering('filter-input-main', () => news, renderTable, false);
             setupFiltering('filter-input-historical', () => historicalNews, renderTable, true);
             setupAddEditButtons();
@@ -3937,6 +3758,7 @@
             cancelLinksBtn = document.getElementById('cancel-links-btn');
             saveLinksBtn = document.getElementById('save-links-btn');
 
+
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
             setupEventListeners();
@@ -3955,8 +3777,8 @@
             populateConferenceMedioSelect('edit-conference-medio');
 
             // Mejora de UX: Auto-foco en el buscador de Select2 al abrirlo.
-
             $(document).on('select2:open', () => {
+                // Usamos un pequeño timeout para asegurar que el campo de búsqueda ya es visible.
                 setTimeout(() => document.querySelector('.select2-search__field').focus(), 50);
             });
             
@@ -3968,6 +3790,6 @@
         // Iniciar la aplicación
         // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
-   </script>
-</body>
+    </script>
+</body> 
 </html>
