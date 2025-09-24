@@ -631,23 +631,33 @@
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
             <main id="tab-content-noticias" class="tab-content">
-                <section class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="text-center md:text-left">
-                        <h3 class="text-xl font-semibold text-slate-800">Gestión de Noticias</h3>
-                        <p class="text-slate-500">Registra nuevas noticias sobre los trenes de México.</p>
+                <section id="news-dashboard-medios" class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-primary">Radar de Medios</h2>
                     </div>
-                    <div class="flex items-stretch gap-6">
-                        <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center space-x-3">
-                            <i class="fa-solid fa-plus h-6 w-6"></i>
-                            <span>Registrar Nueva Noticia</span>
-                        </button>
-                        <button id="add-conference-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out flex items-center justify-center space-x-3">
-                            <i class="fa-solid fa-microphone h-6 w-6"></i>
-                            <span>Registrar Conferencia</span>
-                        </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Total Noticias -->
+                        <div id="news-medio-indicator-total" data-medio="__NOTICIAS_ONLY__" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
+                            <div class="bg-primary/10 p-2 rounded-full"><i class="fa-solid fa-newspaper text-primary text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Noticias</p><p id="news-medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
+                        </div>
+                        <!-- Conferencia Matutina -->
+                        <div id="news-medio-indicator-mananera" data-medio="Conferencia de prensa matutina" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200 current-week-highlight" title="Hacer clic para filtrar">
+                            <div class="bg-accent/10 p-2 rounded-full"><i class="fa-solid fa-microphone-lines text-accent text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Conferencia Matutina</p><p id="news-medio-count-mananera" class="text-2xl font-bold text-accent">0</p></div>
+                        </div>
+                        <!-- Evento Presidencial -->
+                        <div id="news-medio-indicator-evento" data-medio="Evento Presidencial" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
+                            <div class="bg-secondary/10 p-2 rounded-full"><i class="fa-solid fa-users-rays text-secondary text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Evento Presidencial</p><p id="news-medio-count-evento" class="text-2xl font-bold text-secondary">0</p></div>
+                        </div>
+                        <!-- Informe de Gobierno -->
+                        <div id="news-medio-indicator-informe" data-medio="Informe de Gobierno" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
+                            <div class="bg-slate-500/10 p-2 rounded-full"><i class="fa-solid fa-landmark-flag text-slate-500 text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Informe de Gobierno</p><p id="news-medio-count-informe" class="text-2xl font-bold text-slate-600">0</p></div>
+                        </div>
                     </div>
                 </section>
-                
                 <section id="news-log">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Registro de Noticias</h2>
@@ -659,6 +669,14 @@
                                     <i class="fa-solid fa-times-circle"></i>
                                 </button>
                             </div>
+                            <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Nueva Noticia</span>
+                            </button>
+                            <button id="add-conference-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                                <i class="fa-solid fa-microphone"></i>
+                                <span>Nueva Conferencia</span>
+                            </button>
                             <button id="download-excel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Descargar Excel</span>
@@ -1041,14 +1059,13 @@
                         </div>
                     </div>
                     <div class="form-field full-width">
+                        <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
+                        <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
+                    </div>
+                    <div class="form-field full-width">
                         <label for="conference-docx">Subir Documento (docx)</label>
                         <input type="file" id="conference-docx" name="conferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
                         <p class="mt-1 text-sm text-gray-500" id="conference-docx-label">Cargue un archivo .docx para usarlo como reporte individual. Si no se carga nada, se usará la plantilla.</p>
-                    </div>
-
-                    <div class="form-field full-width">
-                        <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
-                        <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
                     <div class="flex items-center justify-end pt-4">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Conferencia</button>
@@ -1327,6 +1344,7 @@
         let currentFilterDropdown = null;
         let activeSelectElement = null;
         let openModalCount = 0; // Contador para modales anidados
+        let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
 
@@ -1597,6 +1615,38 @@
             document.getElementById('medio-count-mananera').textContent = counts.mananera;
             document.getElementById('medio-count-evento').textContent = counts.evento;
             document.getElementById('medio-count-informe').textContent = counts.informe;
+        }
+
+        /**
+         * Actualiza el dashboard de medios basándose en los datos de Noticias.
+         */
+        function updateNewsMediosDashboard() {
+            const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
+            const counts = {
+                noticias: 0,
+                mananera: 0,
+                evento: 0,
+                informe: 0
+            };
+
+            news.forEach(newsItem => {
+                if (newsItem.medio === specialMedios[0]) counts.mananera++;
+                else if (newsItem.medio === specialMedios[1]) counts.evento++;
+                else if (newsItem.medio === specialMedios[2]) counts.informe++;
+                else {
+                    counts.noticias++;
+                }
+            });
+
+            const totalElement = document.getElementById('news-medio-count-total');
+            const mananeraElement = document.getElementById('news-medio-count-mananera');
+            const eventoElement = document.getElementById('news-medio-count-evento');
+            const informeElement = document.getElementById('news-medio-count-informe');
+
+            if (totalElement) totalElement.textContent = counts.noticias;
+            if (mananeraElement) mananeraElement.textContent = counts.mananera;
+            if (eventoElement) eventoElement.textContent = counts.evento;
+            if (informeElement) informeElement.textContent = counts.informe;
         }
 
         function escapeXml(str) {
@@ -2006,6 +2056,16 @@
             const columnFilters = activeFilters[filterKey];
 
             return data.filter(item => {
+                // AÑADE ESTE BLOQUE AL INICIO DE LA FUNCIÓN DE FILTRADO
+                if (filterKey === 'main' && activeNewsMedioFilter) {
+                    const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
+                    if (activeNewsMedioFilter === '__NOTICIAS_ONLY__') {
+                        if (specialMedios.includes(item.medio)) return false;
+                    } else if (item.medio !== activeNewsMedioFilter) {
+                        return false;
+                    }
+                }
+
                 // 0. Check medio dashboard filter (only for historical table)
                 if (filterKey === 'historical' && activeMedioDashboardFilter) {                    
                     const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
@@ -2646,6 +2706,64 @@
             }
         }
 
+        function setupNewsMediosDashboardFilter() {
+            const indicators = document.querySelectorAll('#news-dashboard-medios .indicator-card');
+
+            indicators.forEach(element => {
+                element.addEventListener('click', () => {
+                    const medioFilter = element.dataset.medio;
+                    const isDeactivating = activeNewsMedioFilter === medioFilter;
+
+                    // Limpiar visualmente todos los indicadores de la pestaña de noticias
+                    document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
+
+                    if (isDeactivating) {
+                        activeNewsMedioFilter = null;
+                    } else {
+                        activeNewsMedioFilter = medioFilter;
+                        element.classList.add('active-filter');
+                    }
+
+                    // Re-renderizar la tabla de noticias con el filtro aplicado
+                    sortAndRenderTable(newsTableBody, news, false);
+                });
+            });
+        }
+
+        function setupNewsMediosDashboardFilter() {
+            const indicators = document.querySelectorAll('#news-dashboard-medios .indicator-card');
+
+            indicators.forEach(element => {
+                element.addEventListener('click', () => {
+                    const medioFilter = element.dataset.medio;
+                    const isDeactivating = (activeNewsMedioFilter && activeNewsMedioFilter === medioFilter) || !medioFilter;
+                    
+                    document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
+
+                    if (isDeactivating) {
+                        activeNewsMedioFilter = null;
+
+                        // Limpiar todos los filtros asociados a la tabla de noticias
+                        activeFilters.main = {};
+                        document.querySelectorAll('#main-table-header .filterable-header.active').forEach(header => {
+                            header.classList.remove('active');
+                        });
+                        const searchInput = document.getElementById('filter-input-main');
+                        if (searchInput) {
+                            searchInput.value = '';
+                            searchInput.dispatchEvent(new Event('input'));
+                        }
+                    } else {
+                        activeNewsMedioFilter = medioFilter;
+                        element.classList.add('active-filter');
+                    }
+
+                    // Re-renderizar la tabla de noticias con el filtro (o sin él)
+                    sortAndRenderTable(newsTableBody, news, false);
+                });
+            });
+        }
+
         function setupMediosDashboardFilter() {
             const indicators = document.querySelectorAll('#dashboard-medios .indicator-card');
 
@@ -3086,6 +3204,7 @@
             newsCollectionRef.onSnapshot((snapshot) => {
                 news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(newsTableBody, news, false);
+                updateNewsMediosDashboard();
                 updateCharts();
                 updateDynamicSelectOptions();
             }, (error) => console.error("Error en listener de noticias:", error));
@@ -3307,6 +3426,7 @@
             setupColumnFilters('historical-table-header', () => historicalNews, renderTable, 'historical');
             setupFiltering('filter-input-main', () => news, renderTable, false);
             setupFiltering('filter-input-historical', () => historicalNews, renderTable, true);
+            setupNewsMediosDashboardFilter();
             setupAddEditButtons();
             setupPasswordVerification();
             
