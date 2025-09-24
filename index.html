@@ -1267,6 +1267,9 @@
         </div>
     </div>
 
+    <!-- Contenedor para las Alertas de Noticias (adaptado de Licitaciones) -->
+    <div id="notifications-wrapper" class="fixed bottom-4 right-4 w-full max-w-sm z-40 space-y-3"></div>
+
     <script>
         // =============================================
         // MÓDULO: Verificación de dependencias
@@ -1376,6 +1379,10 @@
         let isMigrationModeActive = false;
         let selectedNewsIdsToMigrate = new Set();
         let isReverseMigrationModeActive = false;
+
+        // Variable de estado para las notificaciones
+        let trainAlertsShown = false;
+
         let selectedHistoricalNewsIdsToMigrate = new Set();
 
         // =============================================
@@ -2943,8 +2950,6 @@
             }
         }
 
-
-
         async function findAndReplaceInDatabase(field, oldValue, newValue, activeFormId, formStateBeforeEdit) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
@@ -3230,6 +3235,9 @@
                 updateNewsMediosDashboard();
                 updateCharts();
                 updateDynamicSelectOptions();
+
+                // Llamar a la función de la alerta después de que los datos se carguen
+                setTimeout(checkAndShowTrainAlerts, 1000);
             }, (error) => console.error("Error en listener de noticias:", error));
 
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
@@ -3535,6 +3543,88 @@
             const isHistorical = button.dataset.isHistorical === 'true';
             // Llamada directa a la función de generación de documento, sin contraseña.
             generateDoc(newsId, isHistorical);
+        }
+
+        // =============================================
+        // MÓDULO: Notificación de Resumen Semanal
+        // =============================================
+
+        function getWeekRange() {
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0 (Dom) - 6 (Sáb)
+            const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Ajuste para que la semana empiece en Lunes
+            
+            const startOfWeek = new Date(now.setDate(diffToMonday));
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            return { start: startOfWeek, end: endOfWeek };
+        }
+
+        function checkAndShowTrainAlerts() {
+            if (trainAlertsShown) return;
+
+            const { start, end } = getWeekRange();
+            
+            const weeklyNews = news.filter(item => {
+                try {
+                    const itemDate = new Date(item.fecha);
+                    return itemDate >= start && itemDate <= end;
+                } catch (e) { return false; }
+            });
+
+            if (weeklyNews.length === 0) return;
+
+            const alertsToShow = [
+                { medio: "Conferencia de prensa matutina", target: "news-medio-indicator-mananera", icon: "fa-microphone-lines", color: "text-accent" },
+                { medio: "Evento Presidencial", target: "news-medio-indicator-evento", icon: "fa-users-rays", color: "text-secondary" },
+                { medio: "Informe de Gobierno", target: "news-medio-indicator-informe", icon: "fa-landmark-flag", color: "text-slate-500" }
+            ];
+
+            const wrapper = document.getElementById('notifications-wrapper');
+
+            alertsToShow.forEach(alertInfo => {
+                const count = weeklyNews.filter(item => item.medio === alertInfo.medio).length;
+                if (count > 0) {
+                    const alertId = `train-alert-${alertInfo.target}`;
+                    const alertHTML = `
+                        <div id="${alertId}" class="train-alert bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+                            <div class="p-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <i class="fa-solid ${alertInfo.icon} ${alertInfo.color} text-xl"></i>
+                                    </div>
+                                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                                        <p class="text-sm font-bold text-slate-800">${alertInfo.medio}</p>
+                                        <div class="mt-2 text-sm text-slate-600 flex justify-between items-center">
+                                            <p>Hay <strong>${count}</strong> registro(s) esta semana.</p>
+                                            <button data-target="${alertInfo.target}" class="view-train-alert-btn ml-2 text-xs font-bold text-primary hover:underline whitespace-nowrap">Ver</button>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 flex-shrink-0 flex">
+                                        <button class="close-train-alert-btn bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                            <span class="sr-only">Cerrar</span>
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    wrapper.insertAdjacentHTML('beforeend', alertHTML);
+                    const newAlert = document.getElementById(alertId);
+                    newAlert.classList.add('alert-enter');
+
+                    // Set timeout for this specific alert
+                    const timeoutId = setTimeout(() => newAlert.querySelector('.close-train-alert-btn').click(), 15000);
+                    newAlert.dataset.timeoutId = timeoutId;
+                }
+            });
+
+            trainAlertsShown = true;
         }
 
         // =============================================
@@ -4196,6 +4286,40 @@
             // });
         }
 
+        function setupTrainAlertsListeners() {
+            document.getElementById('notifications-wrapper').addEventListener('click', (e) => {
+                const viewBtn = e.target.closest('.view-train-alert-btn');
+                const closeBtn = e.target.closest('.close-train-alert-btn');
+
+                if (viewBtn) {
+                    document.querySelector('button[data-tab="noticias"]').click();
+                    const targetIndicator = document.getElementById(viewBtn.dataset.target);
+                    if (targetIndicator) targetIndicator.click();
+                }
+
+                if (viewBtn || closeBtn) {
+                    const alertDiv = (viewBtn || closeBtn).closest('.train-alert');
+                    clearTimeout(alertDiv.dataset.timeoutId);
+                    alertDiv.classList.remove('alert-enter');
+                    alertDiv.classList.add('alert-leave');
+                    setTimeout(() => alertDiv.remove(), 500);
+                }
+            });
+
+            document.getElementById('notifications-wrapper').addEventListener('mouseenter', (e) => {
+                const alertDiv = e.target.closest('.train-alert');
+                if (alertDiv) clearTimeout(alertDiv.dataset.timeoutId);
+            }, true);
+
+            document.getElementById('notifications-wrapper').addEventListener('mouseleave', (e) => {
+                const alertDiv = e.target.closest('.train-alert');
+                if (alertDiv) {
+                    const timeoutId = setTimeout(() => alertDiv.querySelector('.close-train-alert-btn').click(), 15000);
+                    alertDiv.dataset.timeoutId = timeoutId;
+                }
+            }, true);
+        }
+
         // =============================================
         // MÓDULO: Inicialización
         // =============================================
@@ -4279,6 +4403,7 @@
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
             setupEventListeners();
+            setupTrainAlertsListeners();
             setupMediosDashboardFilter();
 
             // Configurar Select2 para los selects
