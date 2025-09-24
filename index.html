@@ -2759,30 +2759,6 @@
             indicators.forEach(element => {
                 element.addEventListener('click', () => {
                     const medioFilter = element.dataset.medio;
-                    const isDeactivating = activeNewsMedioFilter === medioFilter;
-
-                    // Limpiar visualmente todos los indicadores de la pestaña de noticias
-                    document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
-
-                    if (isDeactivating) {
-                        activeNewsMedioFilter = null;
-                    } else {
-                        activeNewsMedioFilter = medioFilter;
-                        element.classList.add('active-filter');
-                    }
-
-                    // Re-renderizar la tabla de noticias con el filtro aplicado
-                    sortAndRenderTable(newsTableBody, news, false);
-                });
-            });
-        }
-
-        function setupNewsMediosDashboardFilter() {
-            const indicators = document.querySelectorAll('#news-dashboard-medios .indicator-card');
-
-            indicators.forEach(element => {
-                element.addEventListener('click', () => {
-                    const medioFilter = element.dataset.medio;
                     const isDeactivating = (activeNewsMedioFilter && activeNewsMedioFilter === medioFilter) || !medioFilter;
                     
                     document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
