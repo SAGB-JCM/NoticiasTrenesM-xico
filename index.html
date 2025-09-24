@@ -75,10 +75,22 @@
         
         .bg-success { background-color: var(--success-color); }
         .hover\:bg-success-dark:hover { background-color: #059669; }
-        
+
         .bg-danger { background-color: var(--danger-color); }
         .hover\:bg-danger-dark:hover { background-color: #DC2626; }
         
+        .indicator-card.active-filter {
+            box-shadow: 0 0 0 2px var(--primary-color), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+
+        /* Estilo para resaltar el indicador de la semana actual */
+        .indicator-card.current-week-highlight {
+            border-bottom: 3px solid var(--primary-color);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            background-color: #fcfdff;
+        }
+
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -677,7 +689,36 @@
                 </section>
             </main>
 
+            </main>
+
             <div id="tab-content-historico" class="tab-content hidden">
+                <section id="dashboard-medios" class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-primary">Radar de Medios</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Total Noticias -->
+                        <div id="medio-indicator-total" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para mostrar todo">
+                            <div class="bg-primary/10 p-2 rounded-full"><i class="fa-solid fa-newspaper text-primary text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Total de Noticias</p><p id="medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
+                        </div>
+                        <!-- Conferencia Matutina -->
+                        <div id="medio-indicator-mananera" data-medio="Conferencia de prensa matutina" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200 current-week-highlight" title="Hacer clic para filtrar">
+                            <div class="bg-accent/10 p-2 rounded-full"><i class="fa-solid fa-microphone-lines text-accent text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Conferencia Matutina</p><p id="medio-count-mananera" class="text-2xl font-bold text-accent">0</p></div>
+                        </div>
+                        <!-- Evento Presidencial -->
+                        <div id="medio-indicator-evento" data-medio="Evento Presidencial" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
+                            <div class="bg-secondary/10 p-2 rounded-full"><i class="fa-solid fa-users-rays text-secondary text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Evento Presidencial</p><p id="medio-count-evento" class="text-2xl font-bold text-secondary">0</p></div>
+                        </div>
+                        <!-- Informe de Gobierno -->
+                        <div id="medio-indicator-informe" data-medio="Informe de Gobierno" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
+                            <div class="bg-slate-500/10 p-2 rounded-full"><i class="fa-solid fa-landmark-flag text-slate-500 text-xl"></i></div>
+                            <div><p class="text-sm text-slate-500">Informe de Gobierno</p><p id="medio-count-informe" class="text-2xl font-bold text-slate-600">0</p></div>
+                        </div>
+                    </div>
+                </section>
                 <section id="historical-log">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Registro Histórico</h2>
@@ -1276,9 +1317,11 @@
             main: {},
             historical: {}
         };
+
         let currentFilterDropdown = null;
         let activeSelectElement = null;
         let openModalCount = 0; // Contador para modales anidados
+        let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
 
         // =============================================
@@ -1509,6 +1552,34 @@
             });
 
             return tempDiv.innerHTML;
+        }
+
+        /**
+         * Actualiza el dashboard de medios basándose en los datos del histórico.
+         */
+        function updateMediosDashboard() {
+            const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
+            const counts = {
+                noticias: 0,
+                mananera: 0,
+                evento: 0,
+                informe: 0
+            };
+
+            historicalNews.forEach(newsItem => {
+                if (newsItem.medio === specialMedios[0]) counts.mananera++;
+                else if (newsItem.medio === specialMedios[1]) counts.evento++;
+                else if (newsItem.medio === specialMedios[2]) counts.informe++;
+                else {
+                    // Si no es ninguno de los medios especiales, es una "noticia"
+                    counts.noticias++;
+                }
+            });
+
+            document.getElementById('medio-count-noticias').textContent = counts.noticias;
+            document.getElementById('medio-count-mananera').textContent = counts.mananera;
+            document.getElementById('medio-count-evento').textContent = counts.evento;
+            document.getElementById('medio-count-informe').textContent = counts.informe;
         }
 
         function escapeXml(str) {
@@ -1810,15 +1881,20 @@
             tabsContainer.addEventListener('click', (e) => {
                 if (e.target.matches('.tab-btn')) {
                     const tabName = e.target.dataset.tab;
+
                     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                     e.target.classList.add('active');
+
                     tabContents.forEach(content => content.classList.toggle('hidden', content.id !== `tab-content-${tabName}`));
                     if (tabName === 'reportes') {
-                        setTimeout(updateCharts, 50);
+                        setTimeout(updateCharts, 50); // Delay para asegurar que el contenedor es visible
+                    } else if (tabName === 'historico') {
+                        setTimeout(updateMediosDashboard, 50); // Actualizar el radar al cambiar a la pestaña
                     }
                 }
             });
         }
+
 
         async function processFile(fileInput) {
             const file = fileInput.files[0];
@@ -1853,7 +1929,7 @@
                 row.className = 'bg-white border-b hover:bg-gray-50';
 
                 const links = (newsItem.fuente || '').split(linkSeparator).map(link => link.trim()).filter(link => link);
-                let linkCellContent = `<span class="text-slate-400" title="No hay link válido"><i class="fa-solid fa-link-slash"></i></span>`;
+                let linkCellContent = `<span class="text-slate-400" title="No hay enlace válido"><i class="fa-solid fa-link-slash"></i></span>`;
 
                 if (links.length > 0) {
                     linkCellContent = links.map(link => 
@@ -1862,10 +1938,6 @@
                             : ''
                     ).join('<span class="mx-1"></span>'); // Añade un pequeño espacio entre iconos
                 }
-
-                const linkCell = newsItem.fuente && isValidUrl(newsItem.fuente)
-                    ? `<span class="link-cell text-blue-600 hover:underline cursor-pointer" data-url="${newsItem.fuente}" title="${newsItem.fuente}"><i class="fa-solid fa-link"></i></span>`
-                    : `<span class="text-slate-400" title="No hay link válido"><i class="fa-solid fa-link-slash"></i></span>`;
                 
                 row.innerHTML = `
                     <td class="py-4 px-6">${index + 1}</td>
@@ -1911,6 +1983,16 @@
             const columnFilters = activeFilters[filterKey];
 
             return data.filter(item => {
+                // 0. Check medio dashboard filter (only for historical table)
+                if (filterKey === 'historical' && activeMedioDashboardFilter) {                    
+                    const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
+                    if (activeMedioDashboardFilter === '__NOTICIAS_ONLY__') {
+                        // Si el filtro es para "Solo Noticias", el medio NO debe ser uno de los especiales.
+                        if (specialMedios.includes(item.medio)) return false;
+                    } else if (item.medio !== activeMedioDashboardFilter) {
+                        return false;
+                    }
+                }
                 // 1. Check search box filter
                 const matchesSearch = searchText === '' || Object.values(item).some(value => 
                     String(value).toLowerCase().includes(searchText)
@@ -1945,6 +2027,17 @@
             const columnFilters = activeFilters[filterKey];
 
             return allData.filter(item => {
+                // Primero, aplicar el filtro del dashboard si está activo
+                if (filterKey === 'historical' && activeMedioDashboardFilter) {                    
+                    const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
+                    if (activeMedioDashboardFilter === '__NOTICIAS_ONLY__') {
+                        // Si el filtro es para "Solo Noticias", el medio NO debe ser uno de los especiales.
+                        if (specialMedios.includes(item.medio)) return false;
+                    } else if (item.medio !== activeMedioDashboardFilter) {
+                        return false;
+                    }
+                }
+
                 const matchesSearch = searchText === '' || Object.values(item).some(value => String(value).toLowerCase().includes(searchText));
                 if (!matchesSearch) return false;
 
@@ -2530,6 +2623,42 @@
             }
         }
 
+        function setupMediosDashboardFilter() {
+            const indicators = document.querySelectorAll('#dashboard-medios .indicator-card');
+
+            indicators.forEach(element => {
+                element.addEventListener('click', () => {
+                    const medioFilter = element.dataset.medio; // undefined para el total
+                    const isDeactivating = activeMedioDashboardFilter && activeMedioDashboardFilter === medioFilter;
+                    
+                    document.querySelectorAll('.indicator-card').forEach(card => card.classList.remove('active-filter'));
+
+                    if (isDeactivating) {
+                        // Si se hace clic en el filtro ya activo, o en el total, se desactiva todo.
+                        activeMedioDashboardFilter = null;
+                        
+                        // Limpiar todos los filtros asociados a la tabla histórica
+                        activeFilters.historical = {};
+                        document.querySelectorAll('#historical-table-header .filterable-header.active').forEach(header => {
+                            header.classList.remove('active');
+                        });
+                        const searchInput = document.getElementById('filter-input-historical');
+                        if (searchInput) {
+                            searchInput.value = '';
+                            searchInput.dispatchEvent(new Event('input')); // Para ocultar el botón 'x'
+                        }
+                    } else {
+                        // Activar nuevo filtro
+                        activeMedioDashboardFilter = medioFilter;
+                        element.classList.add('active-filter');
+                    }
+
+                    // Re-renderizar la tabla de histórico con el filtro (o sin él)
+                    sortAndRenderTable(historicalTableBody, historicalNews, true);
+                });
+            });
+        }
+
         // =============================================
         // MÓDULO: Gestión de datos históricos
         // =============================================
@@ -2937,10 +3066,11 @@
                 updateCharts();
                 updateDynamicSelectOptions();
             }, (error) => console.error("Error en listener de noticias:", error));
-            
+
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
                 historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 sortAndRenderTable(historicalTableBody, historicalNews, true);
+                updateMediosDashboard(); // <-- AÑADIDO: Actualiza el radar al cargar/actualizar datos.
                 updateCharts();
                 updateDynamicSelectOptions();
             }, (error) => console.error("Error en listener de histórico:", error));
@@ -3758,10 +3888,10 @@
             cancelLinksBtn = document.getElementById('cancel-links-btn');
             saveLinksBtn = document.getElementById('save-links-btn');
 
-
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
             setupEventListeners();
+            setupMediosDashboardFilter();
 
             // Configurar Select2 para los selects
             $('#news-project, #news-subproject, #news-category, #news-medio, #edit-news-project, #edit-news-subproject, #edit-news-category, #edit-news-medio').each(function() {
