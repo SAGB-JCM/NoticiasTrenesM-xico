@@ -569,6 +569,13 @@
             border-radius: 2px;
         }
 
+        /* Estilos para la Alerta de Resumen (copiado de Licitaciones y Llamadas) */
+        .train-alert.alert-enter { animation: slideInUp 0.5s ease-out forwards; }
+        .train-alert.alert-leave { animation: slideOutDown 0.5s ease-in forwards; }
+
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+
     </style>
     
     <script>
@@ -1382,7 +1389,6 @@
 
         // Variable de estado para las notificaciones
         let trainAlertsShown = false;
-
         let selectedHistoricalNewsIdsToMigrate = new Set();
 
         // =============================================
@@ -2104,6 +2110,19 @@
             });
         }
 
+        /**
+         * Obtiene el valor normalizado de un campo para ser usado en los filtros.
+         * Asegura que el tratamiento de valores nulos/vacíos sea consistente.
+         * @param {object} item - El objeto de datos (la fila).
+         * @param {string} columnKey - La clave de la columna (ej. 'fecha', 'cita').
+         * @returns {string} - El valor normalizado para el filtro.
+         */
+        function getFilterableValue(item, columnKey) {
+            if (columnKey === 'fecha') return formatDate(item[columnKey]);
+            const value = item[columnKey];
+            return (value === null || value === undefined || String(value).trim() === '') ? 'N/A' : String(value).trim();
+        }
+
         function applyAllFilters(data, filterKey) {
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
             const searchText = searchInput ? searchInput.value.toLowerCase() : '';
@@ -2139,8 +2158,8 @@
                 // 2. Check column filters
                 for (const col in columnFilters) {
                     if (columnFilters[col].length > 0) {
-                        const itemValue = col === 'fecha' ? formatDate(item[col]) : (item[col] || 'N/A');
-                        if (!columnFilters[col].includes(itemValue)) {
+                        const filterableValue = getFilterableValue(item, col);
+                        if (!columnFilters[col].includes(filterableValue)) {
                             return false;
                         }
                     }
@@ -2180,8 +2199,7 @@
 
                 return Object.entries(columnFilters).every(([col, values]) => {
                     if (col === excludeColumn || values.length === 0) return true;
-                    const itemValue = col === 'fecha' ? formatDate(item[col]) : (item[col] || 'N/A');
-                    return values.includes(itemValue);
+                    return values.includes(getFilterableValue(item, col));
                 });
             });
         }
@@ -2201,17 +2219,7 @@
                 // Usar los datos pre-filtrados para generar las opciones del dropdown.
                 const preFilteredData = getPreFilteredData(dataProvider, filterKey, filterBy);
 
-                const uniqueValues = [...new Set(preFilteredData.map(item => {
-                    let value = item[filterBy] || 'N/A';
-                    // Normalización para campos de texto (proyecto, resumen, etc.)
-                    if (typeof value === 'string') {
-                        // Para la fecha, usamos el formato específico.
-                        if (filterBy === 'fecha') return formatDate(value);
-                        // Para otros strings, normalizamos eliminando espacios al inicio y final.
-                        return value.trim();
-                    }
-                    return value;
-                }))].sort((a, b) => {
+                const uniqueValues = [...new Set(preFilteredData.map(item => getFilterableValue(item, filterBy)))].sort((a, b) => {
                     // Lógica de ordenamiento personalizada para fechas en el filtro
                     if (filterBy === 'fecha') {
                         try {
@@ -2680,8 +2688,13 @@
                 // Usamos PizZip directamente desde el objeto window
                 const zip = new PizZip(templateBlob);
                 const doc = new window.docxtemplater(zip, {
+                    // Clave de la solución: Si un párrafo contiene solo un placeholder
+                    // que resulta ser nulo o undefined, el párrafo completo se elimina.
+                    // Esto evita los espacios en blanco de las líneas de "Cita" o "Subproyecto" cuando no tienen datos.
                     paragraphLoop: true,
-                    linebreaks: true // Reactivamos esta opción, es la forma correcta para texto plano.
+                    paragraphLoop: true,
+                    linebreaks: true,
+                    nullGetter: () => "" // Trata los valores null y undefined como una cadena vacía.
                 });
 
                 // 4. Preparar el contenido del resumen (palabra_clave_5) con lógica condicional
@@ -2704,14 +2717,14 @@
                 const dataForTemplate = {
                     palabra_clave_0: getMonthName(record.fecha),
                     palabra_clave_1: formatLongDate(record.fecha),
-                    palabra_clave_2: (record.fuente || 'No especificado').split(';').map(link => link.trim()).filter(Boolean).join('\n'),
-                    palabra_clave_3: record.proyecto || 'No especificado',
-                    palabra_clave_4: record.subproyecto || 'No especificado',                    
+                    palabra_clave_2: (record.fuente || '').split(';').map(link => link.trim()).filter(Boolean).join('\n'),
+                    palabra_clave_3: record.proyecto,
+                    palabra_clave_4: record.subproyecto,
                     palabra_clave_5: resumenParaPlantilla,
-                    palabra_clave_6: record.categoria || 'No especificado',
-                    palabra_clave_7: record.medio || 'No especificado',
-                    palabra_clave_8: record.comentario || 'No especificado', // Este es ahora el Título
-                    palabra_clave_9: record.cita || 'No especificado',
+                    palabra_clave_6: record.categoria,
+                    palabra_clave_7: record.medio,
+                    palabra_clave_8: record.comentario, // Este es ahora el Título
+                    palabra_clave_9: record.cita,
                 };
 
                 doc.setData(dataForTemplate);
@@ -2759,6 +2772,7 @@
                 }
             }
         }
+
 
         function setupNewsMediosDashboardFilter() {
             const indicators = document.querySelectorAll('#news-dashboard-medios .indicator-card');
@@ -2915,6 +2929,11 @@
             updateSelectOptions('subproyectos', fieldOptions.subproyectos);
         }
 
+        const specialMediosForNewsForm = [
+            "Conferencia de prensa matutina",
+            "Evento Presidencial",
+            "Informe de Gobierno"
+        ];
         function updateSelectOptions(field, options, selectedId = null) {
             const fieldToSelectMap = {
                 'proyectos': ['news-project', 'edit-news-project'],
@@ -2923,7 +2942,13 @@
                 'medios': ['news-medio', 'edit-news-medio']
             };
 
-            const normalizedOptions = options.map(opt => ({id: opt, text: opt}));
+            let normalizedOptions = options.map(opt => ({id: opt, text: opt}));
+
+            // Filtro especial para el campo 'medio' en los formularios de noticias
+            if (field === 'medios') {
+                normalizedOptions = normalizedOptions.filter(opt => !specialMediosForNewsForm.includes(opt.id));
+            }
+
             
             if (fieldToSelectMap[field]) {
                 fieldToSelectMap[field].forEach(selectId => {
@@ -2949,6 +2974,8 @@
                 });
             }
         }
+
+
 
         async function findAndReplaceInDatabase(field, oldValue, newValue, activeFormId, formStateBeforeEdit) {
             const fieldToDbFieldMap = {
@@ -3538,17 +3565,28 @@
             showDetailsModal(newsItem);
         }
 
-        function handleGenerateDocClick(button) {
+        async function handleGenerateDocClick(button) {
             const newsId = button.dataset.id;
             const isHistorical = button.dataset.isHistorical === 'true';
-            // Llamada directa a la función de generación de documento, sin contraseña.
-            generateDoc(newsId, isHistorical);
+            
+            // Deshabilitar el botón para evitar múltiples clics
+            button.disabled = true;
+            const originalIcon = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                // Llamada a la función de generación de documento
+                await generateDoc(newsId, isHistorical);
+            } finally {
+                // Rehabilitar el botón y restaurar su ícono original
+                button.innerHTML = originalIcon;
+                button.disabled = false;
+            }
         }
 
         // =============================================
-        // MÓDULO: Notificación de Resumen Semanal
+        // MÓDULO: Notificación de Resumen Semanal (Adaptado de Llamadas)
         // =============================================
-
         function getWeekRange() {
             const now = new Date();
             const dayOfWeek = now.getDay(); // 0 (Dom) - 6 (Sáb)
@@ -3627,6 +3665,40 @@
             trainAlertsShown = true;
         }
 
+        function setupTrainAlertsListeners() {
+            document.getElementById('notifications-wrapper').addEventListener('click', (e) => {
+                const viewBtn = e.target.closest('.view-train-alert-btn');
+                const closeBtn = e.target.closest('.close-train-alert-btn');
+
+                if (viewBtn) {
+                    document.querySelector('button[data-tab="noticias"]').click();
+                    const targetIndicator = document.getElementById(viewBtn.dataset.target);
+                    if (targetIndicator) targetIndicator.click();
+                }
+
+                if (viewBtn || closeBtn) {
+                    const alertDiv = (viewBtn || closeBtn).closest('.train-alert');
+                    clearTimeout(alertDiv.dataset.timeoutId);
+                    alertDiv.classList.remove('alert-enter');
+                    alertDiv.classList.add('alert-leave');
+                    setTimeout(() => alertDiv.remove(), 500);
+                }
+            });
+
+            document.getElementById('notifications-wrapper').addEventListener('mouseenter', (e) => {
+                const alertDiv = e.target.closest('.train-alert');
+                if (alertDiv) clearTimeout(alertDiv.dataset.timeoutId);
+            }, true);
+
+            document.getElementById('notifications-wrapper').addEventListener('mouseleave', (e) => {
+                const alertDiv = e.target.closest('.train-alert');
+                if (alertDiv) {
+                    const timeoutId = setTimeout(() => alertDiv.querySelector('.close-train-alert-btn').click(), 15000);
+                    alertDiv.dataset.timeoutId = timeoutId;
+                }
+            }, true);
+        }
+
         // =============================================
         // MÓDULO: Configuración de eventos
         // =============================================
@@ -3640,6 +3712,7 @@
             setupNewsMediosDashboardFilter();
             setupAddEditButtons();
             setupPasswordVerification();
+            setupTrainAlertsListeners();
             
             reportesDataSource.addEventListener('change', updateCharts);
             dynamicChartVariable.addEventListener('change', updateDynamicChart);
@@ -4286,40 +4359,6 @@
             // });
         }
 
-        function setupTrainAlertsListeners() {
-            document.getElementById('notifications-wrapper').addEventListener('click', (e) => {
-                const viewBtn = e.target.closest('.view-train-alert-btn');
-                const closeBtn = e.target.closest('.close-train-alert-btn');
-
-                if (viewBtn) {
-                    document.querySelector('button[data-tab="noticias"]').click();
-                    const targetIndicator = document.getElementById(viewBtn.dataset.target);
-                    if (targetIndicator) targetIndicator.click();
-                }
-
-                if (viewBtn || closeBtn) {
-                    const alertDiv = (viewBtn || closeBtn).closest('.train-alert');
-                    clearTimeout(alertDiv.dataset.timeoutId);
-                    alertDiv.classList.remove('alert-enter');
-                    alertDiv.classList.add('alert-leave');
-                    setTimeout(() => alertDiv.remove(), 500);
-                }
-            });
-
-            document.getElementById('notifications-wrapper').addEventListener('mouseenter', (e) => {
-                const alertDiv = e.target.closest('.train-alert');
-                if (alertDiv) clearTimeout(alertDiv.dataset.timeoutId);
-            }, true);
-
-            document.getElementById('notifications-wrapper').addEventListener('mouseleave', (e) => {
-                const alertDiv = e.target.closest('.train-alert');
-                if (alertDiv) {
-                    const timeoutId = setTimeout(() => alertDiv.querySelector('.close-train-alert-btn').click(), 15000);
-                    alertDiv.dataset.timeoutId = timeoutId;
-                }
-            }, true);
-        }
-
         // =============================================
         // MÓDULO: Inicialización
         // =============================================
@@ -4403,7 +4442,6 @@
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
             setupEventListeners();
-            setupTrainAlertsListeners();
             setupMediosDashboardFilter();
 
             // Configurar Select2 para los selects
