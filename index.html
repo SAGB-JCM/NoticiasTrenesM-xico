@@ -681,9 +681,17 @@
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Descargar Excel</span>
                             </button>
-                            <button id="migrate-news-btn" class="migrate-btn bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                            <button id="start-migration-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-database"></i>
-                                <span>Migrar a Histórico</span>
+                                <span>Migrar Noticias</span>
+                            </button>
+                            <button id="confirm-migration-btn" class="hidden bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap" disabled>
+                                <i class="fa-solid fa-check"></i>
+                                <span>Confirmar</span>
+                            </button>
+                            <button id="cancel-migration-btn" class="hidden bg-danger hover:bg-danger-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                                <i class="fa-solid fa-times"></i>
+                                <span>Cancelar</span>
                             </button>
                         </div>
                     </div>
@@ -691,6 +699,9 @@
                         <table class="w-full text-sm text-left text-slate-500">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr id="main-table-header">
+                                    <th scope="col" class="py-3 px-6 migration-select-col hidden">
+                                        <input type="checkbox" id="select-all-news-checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    </th>
                                     <th scope="col" class="py-3 px-6">No.</th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fecha">Fecha <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
@@ -713,8 +724,6 @@
                 </section>
             </main>
 
-            </main>
-
             <div id="tab-content-historico" class="tab-content hidden">
                 <section id="dashboard-medios" class="mb-8">
                     <div class="flex justify-between items-center mb-4">
@@ -724,22 +733,22 @@
                         <!-- Total Noticias -->
                         <div id="medio-indicator-total" data-medio="__NOTICIAS_ONLY__" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
                             <div class="bg-primary/10 p-2 rounded-full"><i class="fa-solid fa-newspaper text-primary text-xl"></i></div>
-                            <div><p class="text-sm text-slate-500">Noticias</p><p id="medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
+                            <div><p class="text-sm text-slate-500">Noticias</p><p id="historical-medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
                         </div>
                         <!-- Conferencia Matutina -->
                         <div id="medio-indicator-mananera" data-medio="Conferencia de prensa matutina" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200 current-week-highlight" title="Hacer clic para filtrar">
                             <div class="bg-accent/10 p-2 rounded-full"><i class="fa-solid fa-microphone-lines text-accent text-xl"></i></div>
-                            <div><p class="text-sm text-slate-500">Conferencia Matutina</p><p id="medio-count-mananera" class="text-2xl font-bold text-accent">0</p></div>
+                            <div><p class="text-sm text-slate-500">Conferencia Matutina</p><p id="historical-medio-count-mananera" class="text-2xl font-bold text-accent">0</p></div>
                         </div>
                         <!-- Evento Presidencial -->
                         <div id="medio-indicator-evento" data-medio="Evento Presidencial" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
                             <div class="bg-secondary/10 p-2 rounded-full"><i class="fa-solid fa-users-rays text-secondary text-xl"></i></div>
-                            <div><p class="text-sm text-slate-500">Evento Presidencial</p><p id="medio-count-evento" class="text-2xl font-bold text-secondary">0</p></div>
+                            <div><p class="text-sm text-slate-500">Evento Presidencial</p><p id="historical-medio-count-evento" class="text-2xl font-bold text-secondary">0</p></div>
                         </div>
                         <!-- Informe de Gobierno -->
                         <div id="medio-indicator-informe" data-medio="Informe de Gobierno" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
                             <div class="bg-slate-500/10 p-2 rounded-full"><i class="fa-solid fa-landmark-flag text-slate-500 text-xl"></i></div>
-                            <div><p class="text-sm text-slate-500">Informe de Gobierno</p><p id="medio-count-informe" class="text-2xl font-bold text-slate-600">0</p></div>
+                            <div><p class="text-sm text-slate-500">Informe de Gobierno</p><p id="historical-medio-count-informe" class="text-2xl font-bold text-slate-600">0</p></div>
                         </div>
                     </div>
                 </section>
@@ -760,12 +769,27 @@
                             </button>
                             <label for="historical-file-input" class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap"><i class="fa-solid fa-file-upload"></i><span>Subir Excel</span><input type="file" id="historical-file-input" class="hidden" accept=".xlsx, .xls"></label>
                             <button id="import-historical-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 ease-in-out hidden items-center space-x-2 whitespace-nowrap" disabled><i class="fa-solid fa-database"></i><span>Subir Excel</span></button>
+                            <button id="start-reverse-migration-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                <span>Migrar a Noticias</span>
+                            </button>
+                            <button id="confirm-reverse-migration-btn" class="hidden bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap" disabled>
+                                <i class="fa-solid fa-check"></i>
+                                <span>Confirmar</span>
+                            </button>
+                            <button id="cancel-reverse-migration-btn" class="hidden bg-danger hover:bg-danger-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
+                                <i class="fa-solid fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
                         </div>
                     </div>
                     <div id="historical-table-container" class="bg-white rounded-xl shadow-md table-container">
                         <table class="w-full text-sm text-left text-slate-500">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr id="historical-table-header">
+                                    <th scope="col" class="py-3 px-6 reverse-migration-select-col hidden">
+                                        <input type="checkbox" id="select-all-historical-news-checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    </th>
                                     <th scope="col" class="py-3 px-6">No.</th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fecha">Fecha <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="proyecto">Proyecto <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
@@ -1319,8 +1343,8 @@
         const newsCollectionRef = db.collection("news");
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
-        // Variables de estado de la aplicación
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, migrateNewsBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, migrateModal, cancelMigrateBtn, confirmMigrateBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn;
+        // Variables de estado de la aplicación y referencias DOM
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn;
         
         let currentEditIsHistorical = false;
         
@@ -1344,9 +1368,15 @@
         let currentFilterDropdown = null;
         let activeSelectElement = null;
         let openModalCount = 0; // Contador para modales anidados
-        let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias
+        let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias (main)
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
+
+        // Estado para la funcionalidad de migración
+        let isMigrationModeActive = false;
+        let selectedNewsIdsToMigrate = new Set();
+        let isReverseMigrationModeActive = false;
+        let selectedHistoricalNewsIdsToMigrate = new Set();
 
         // =============================================
         // MÓDULO: Utilidades
@@ -1611,10 +1641,10 @@
                 }
             });
 
-            document.getElementById('medio-count-total').textContent = counts.noticias;
-            document.getElementById('medio-count-mananera').textContent = counts.mananera;
-            document.getElementById('medio-count-evento').textContent = counts.evento;
-            document.getElementById('medio-count-informe').textContent = counts.informe;
+            document.getElementById('historical-medio-count-total').textContent = counts.noticias;
+            document.getElementById('historical-medio-count-mananera').textContent = counts.mananera;
+            document.getElementById('historical-medio-count-evento').textContent = counts.evento;
+            document.getElementById('historical-medio-count-informe').textContent = counts.informe;
         }
 
         /**
@@ -1985,9 +2015,12 @@
         // =============================================
         
         function renderTable(tableBody, data, isHistorical = false) {
-            const noDataMessage = isHistorical ? noHistoricalMessage : noNewsMessage;
+            const noDataMessage = isHistorical ? document.getElementById('no-historical-message') : document.getElementById('no-news-message');
             tableBody.innerHTML = '';
             noDataMessage.classList.toggle('hidden', data.length > 0);
+
+            const isMainMigrationActive = !isHistorical && isMigrationModeActive;
+            const isReverseMigrationActive = isHistorical && isReverseMigrationModeActive;
 
             const filterKey = isHistorical ? 'historical' : 'main';
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
@@ -1995,9 +2028,21 @@
 
             const linkSeparator = ';';
 
-            data.forEach((newsItem, index) => {
+            data.forEach((newsItem, index) => { // Corregido: `news` a `data`
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-gray-50';
+
+                let migrationCell = '';
+                if (isMainMigrationActive) {
+                    const isSelected = selectedNewsIdsToMigrate.has(newsItem.id);
+                    migrationCell = `<td class="py-4 px-6"><input type="checkbox" class="news-migration-checkbox rounded border-gray-300 text-primary focus:ring-primary" data-id="${newsItem.id}" ${isSelected ? 'checked' : ''}></td>`;
+                }
+
+                let reverseMigrationCell = '';
+                if (isReverseMigrationActive) {
+                    const isSelected = selectedHistoricalNewsIdsToMigrate.has(newsItem.id);
+                    reverseMigrationCell = `<td class="py-4 px-6"><input type="checkbox" class="historical-news-migration-checkbox rounded border-gray-300 text-primary focus:ring-primary" data-id="${newsItem.id}" ${isSelected ? 'checked' : ''}></td>`;
+                }
 
                 const links = (newsItem.fuente || '').split(linkSeparator).map(link => link.trim()).filter(link => link);
                 let linkCellContent = `<span class="text-slate-400" title="No hay enlace válido"><i class="fa-solid fa-link-slash"></i></span>`;
@@ -2012,16 +2057,16 @@
 
                 const applyHighlight = (text) => highlightText(String(text), searchText);
                 
-                row.innerHTML = `
-                    <td class="py-4 px-6">${applyHighlight(index + 1)}</td>
-                    <td class="py-4 px-6">${applyHighlight(formatDate(newsItem.fecha))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.proyecto, 30))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.subproyecto, 30))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.categoria, 30))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.comentario, 30))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 30))}</td>                    
-                    <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 50))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.medio, 30))}</td>
+                let rowContent = `
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(index + 1)}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(formatDate(newsItem.fecha))}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.proyecto, 30))}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.subproyecto, 30))}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.categoria, 30))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.comentario, 40))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 40))}</td>                    
+                    <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 40))}</td>
+                    <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.medio, 30))}</td>
                     <td class="py-4 px-6 text-center">${linkCellContent}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
@@ -2036,6 +2081,8 @@
                     </td>
                 `;
                 
+                row.innerHTML = migrationCell + reverseMigrationCell + rowContent;
+
                 tableBody.appendChild(row);
             });
 
@@ -2055,7 +2102,7 @@
             const searchText = searchInput ? searchInput.value.toLowerCase() : '';
             const columnFilters = activeFilters[filterKey];
 
-            return data.filter(item => {
+            return (data || []).filter(item => {
                 // AÑADE ESTE BLOQUE AL INICIO DE LA FUNCIÓN DE FILTRADO
                 if (filterKey === 'main' && activeNewsMedioFilter) {
                     const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
@@ -2765,14 +2812,14 @@
         }
 
         function setupMediosDashboardFilter() {
-            const indicators = document.querySelectorAll('#dashboard-medios .indicator-card');
+            const indicators = document.querySelectorAll('#tab-content-historico #dashboard-medios .indicator-card');
 
             indicators.forEach(element => {
                 element.addEventListener('click', () => {
                     const medioFilter = element.dataset.medio; // undefined para el total
-                    const isDeactivating = (activeMedioDashboardFilter && activeMedioDashboardFilter === medioFilter) || !medioFilter;
+                    const isDeactivating = activeMedioDashboardFilter === medioFilter;
                     
-                    document.querySelectorAll('.indicator-card').forEach(card => card.classList.remove('active-filter'));
+                    document.querySelectorAll('#tab-content-historico .indicator-card').forEach(card => card.classList.remove('active-filter'));
 
                     if (isDeactivating) {
                         // Si se hace clic en el filtro ya activo, o en el total, se desactiva todo.
@@ -3358,40 +3405,138 @@
         // MÓDULO: Migración de datos
         // =============================================
         
-        async function migrateNewsToHistorical() {
+        async function migrateSelectedNewsToHistorical() {
             try {
-                if (news.length === 0) {
-                    showAlert("No hay noticias para migrar.", "warning");
+                if (selectedNewsIdsToMigrate.size === 0) {
+                    showAlert("No hay noticias seleccionadas para migrar.", "warning");
                     return;
                 }
                 
-                const batch = db.batch();
-                const newsCount = news.length;
+                showLoader(true);
                 
-                news.forEach(newsItem => {
-                    const historicalDocRef = historicalNewsCollectionRef.doc();
+                const batch = db.batch();
+                // Obtener los datos filtrados actualmente en la tabla para solo migrar lo visible
+                const currentlyVisibleNews = applyAllFilters(news, 'main');
+                const newsToMigrate = currentlyVisibleNews.filter(item => selectedNewsIdsToMigrate.has(item.id));
+
+
+                if (newsToMigrate.length === 0) return; // Doble verificación
+
+                newsToMigrate.forEach(newsItem => {
+                    const historicalDocRef = historicalNewsCollectionRef.doc(); // Crea un nuevo doc en el histórico
                     const { id, ...newsData } = newsItem;
                     batch.set(historicalDocRef, { 
                         ...newsData,
                         migratedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         originalId: id
                     });
-                });
-                
-                news.forEach(newsItem => {
+
                     const newsDocRef = newsCollectionRef.doc(newsItem.id);
                     batch.delete(newsDocRef);
                 });
                 
                 await batch.commit();
                 
-                news = [];
-                sortAndRenderTable(newsTableBody, news, false);
-                
-                showAlert(`Se migraron ${newsCount} noticias al histórico.`, "success");
+                showAlert(`Se migraron ${newsToMigrate.length} noticias al histórico.`, "success");
             } catch (error) {
                 console.error("Error al migrar noticias:", error);
                 showAlert(`Error al migrar: ${error.message}`, "error");
+            } finally {
+                showLoader(false);
+                // Salir del modo migración después de completar
+                toggleMigrationMode(false);
+            }
+        }
+
+        function toggleMigrationMode(activate) {
+            isMigrationModeActive = activate;
+            selectedNewsIdsToMigrate.clear();
+
+            // Referencias a los botones dentro de la función para asegurar que existen
+            const startBtn = document.getElementById('start-migration-btn');
+            const confirmBtn = document.getElementById('confirm-migration-btn');
+            const cancelBtn = document.getElementById('cancel-migration-btn');
+            const selectAllCheckbox = document.getElementById('select-all-news-checkbox');
+
+            // Alternar visibilidad de botones
+            startBtn.classList.toggle('hidden', activate);
+            confirmBtn.classList.toggle('hidden', !activate);
+            cancelBtn.classList.toggle('hidden', !activate);
+            confirmBtn.disabled = true; // Siempre deshabilitar al entrar/salir del modo
+
+            // Alternar visibilidad de la columna de checkboxes
+            document.querySelectorAll('.migration-select-col').forEach(col => col.classList.toggle('hidden', !activate));
+
+            // Re-renderizar la tabla principal para mostrar/ocultar los checkboxes en las filas
+            sortAndRenderTable(newsTableBody, news, false);
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        }
+
+        // --- INICIO: Funciones para Migración Inversa ---
+
+        function toggleReverseMigrationMode(activate) {
+            isReverseMigrationModeActive = activate;
+            selectedHistoricalNewsIdsToMigrate.clear();
+
+            const startBtn = document.getElementById('start-reverse-migration-btn');
+            const confirmBtn = document.getElementById('confirm-reverse-migration-btn');
+            const cancelBtn = document.getElementById('cancel-reverse-migration-btn');
+
+            startBtn.classList.toggle('hidden', activate);
+            confirmBtn.classList.toggle('hidden', !activate);
+            cancelBtn.classList.toggle('hidden', !activate);
+            confirmBtn.disabled = true;
+
+            document.querySelectorAll('.reverse-migration-select-col').forEach(col => col.classList.toggle('hidden', !activate));
+            
+            sortAndRenderTable(historicalTableBody, historicalNews, true);
+            const selectAllCheckbox = document.getElementById('select-all-historical-news-checkbox');
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+
+        }
+
+        async function migrateSelectedNewsToRegistry() {
+            try {
+                if (selectedHistoricalNewsIdsToMigrate.size === 0) {
+                    showAlert("No hay noticias seleccionadas para migrar.", "warning");
+                    return;
+                }
+
+                showLoader(true);
+
+                const batch = db.batch();
+                // Obtener los datos filtrados actualmente en la tabla para solo migrar lo visible
+                const currentlyVisibleNews = applyAllFilters(historicalNews, 'historical');
+                const newsToMigrate = currentlyVisibleNews.filter(item => selectedHistoricalNewsIdsToMigrate.has(item.id));
+
+                newsToMigrate.forEach(newsItem => {
+                    const newNewsDocRef = newsCollectionRef.doc();
+                    const { id, migratedAt, originalId, ...newsData } = newsItem;
+                    
+                    batch.set(newNewsDocRef, { ...newsData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+                    const historicalDocRef = historicalNewsCollectionRef.doc(newsItem.id);
+                    batch.delete(historicalDocRef);
+                });
+
+                await batch.commit();
+                showAlert(`Se migraron ${newsToMigrate.length} noticias al registro principal.`, "success");
+            } catch (error) {
+                console.error("Error en la migración inversa:", error);
+                showAlert(`Error en la migración inversa: ${error.message}`, "error");
+            } finally {
+                showLoader(false);
+                toggleReverseMigrationMode(false);
+            }
+        }
+
+        // --- FIN: Funciones para Migración Inversa ---
+
+        // Añadir función showLoader si no existe
+        function showLoader(show) {
+            const loaderElement = document.getElementById('loader');
+            if (loaderElement) {
+                loaderElement.style.display = show ? 'flex' : 'none';
             }
         }
 
@@ -3574,6 +3719,43 @@
                 if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
             });
 
+            // Lógica para seleccionar/deseleccionar noticias
+            newsTableBody.addEventListener('click', e => {
+                // Si se hizo clic en un botón, manejar la acción del botón y detener.
+                const buttonTarget = e.target.closest('button');
+                if (buttonTarget) {
+                    if (buttonTarget.classList.contains('edit-btn')) handleEditClick(buttonTarget);
+                    if (buttonTarget.classList.contains('delete-btn')) handleDeleteClick(buttonTarget);
+                    if (buttonTarget.classList.contains('generate-doc-btn')) handleGenerateDocClick(buttonTarget);
+                    return;
+                }
+
+                if (isMigrationModeActive) {
+                    const row = e.target.closest('tr');
+                    const checkbox = row.querySelector('.news-migration-checkbox');
+                    if (checkbox && e.target !== checkbox) { // No procesar si el clic fue directamente en el checkbox
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            });
+
+            newsTableBody.addEventListener('change', e => {
+                if (e.target.classList.contains('news-migration-checkbox')) {
+                    const newsId = e.target.dataset.id;
+                    e.target.checked ? selectedNewsIdsToMigrate.add(newsId) : selectedNewsIdsToMigrate.delete(newsId);
+                    
+                    const confirmBtn = document.getElementById('confirm-migration-btn');
+                    confirmBtn.disabled = selectedNewsIdsToMigrate.size === 0;
+
+                    const selectAllCheckbox = document.getElementById('select-all-news-checkbox');
+                    const visibleCheckboxes = newsTableBody.querySelectorAll('.news-migration-checkbox');
+                    selectAllCheckbox.checked = selectedNewsIdsToMigrate.size === visibleCheckboxes.length && visibleCheckboxes.length > 0;
+                }
+            });
+
+
+
             uploadTemplateBtn.addEventListener('click', () => openModal(templateUploadModal));
             closeTemplateUploadModalBtn.addEventListener('click', () => closeModal(templateUploadModal));
 
@@ -3716,6 +3898,85 @@
                 if (target.classList.contains('edit-btn')) handleEditClick(target);
                 if (target.classList.contains('delete-btn')) handleDeleteClick(target);
                 if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
+            });
+
+            historicalTableBody.addEventListener('change', e => {
+                // Lógica para seleccionar/deseleccionar noticias del histórico
+                if (e.target.classList.contains('historical-news-migration-checkbox')) {
+                    const newsId = e.target.dataset.id;
+                    e.target.checked ? selectedHistoricalNewsIdsToMigrate.add(newsId) : selectedHistoricalNewsIdsToMigrate.delete(newsId);
+                    
+                    const confirmBtn = document.getElementById('confirm-reverse-migration-btn');
+                    confirmBtn.disabled = selectedHistoricalNewsIdsToMigrate.size === 0;
+
+                    const selectAllCheckbox = document.getElementById('select-all-historical-news-checkbox');
+                    const visibleCheckboxes = historicalTableBody.querySelectorAll('.historical-news-migration-checkbox');
+                    selectAllCheckbox.checked = selectedHistoricalNewsIdsToMigrate.size === visibleCheckboxes.length && visibleCheckboxes.length > 0;
+                }
+            });
+
+            // --- INICIO: Lógica para Migración Inversa (Eventos) ---
+
+            document.getElementById('start-reverse-migration-btn').addEventListener('click', () => {
+                toggleReverseMigrationMode(true);
+            });
+
+            document.getElementById('cancel-reverse-migration-btn').addEventListener('click', () => {
+                toggleReverseMigrationMode(false);
+            });
+
+            document.getElementById('confirm-reverse-migration-btn').addEventListener('click', () => {
+                if (selectedHistoricalNewsIdsToMigrate.size === 0) return;
+                requirePassword(async () => {
+                    await migrateSelectedNewsToRegistry();
+                });
+            });
+
+            document.getElementById('select-all-historical-news-checkbox').addEventListener('change', e => {
+                const isChecked = e.target.checked;
+                const visibleCheckboxes = historicalTableBody.querySelectorAll('.historical-news-migration-checkbox');
+                visibleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    const newsId = checkbox.dataset.id;
+                    isChecked ? selectedHistoricalNewsIdsToMigrate.add(newsId) : selectedHistoricalNewsIdsToMigrate.delete(newsId);
+                });
+                document.getElementById('confirm-reverse-migration-btn').disabled = selectedHistoricalNewsIdsToMigrate.size === 0;
+            });
+
+            document.getElementById('select-all-news-checkbox').addEventListener('change', e => {
+                const isChecked = e.target.checked;
+                const visibleCheckboxes = newsTableBody.querySelectorAll('.news-migration-checkbox');
+                visibleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    const newsId = checkbox.dataset.id;
+                    isChecked ? selectedNewsIdsToMigrate.add(newsId) : selectedNewsIdsToMigrate.delete(newsId);
+                });
+                document.getElementById('confirm-migration-btn').disabled = selectedNewsIdsToMigrate.size === 0;
+            });
+
+            // --- FIN: Lógica para Migración Inversa (Eventos) ---
+
+            historicalTableBody.addEventListener('click', e => {
+                if (isReverseMigrationModeActive) { // Lógica para seleccionar fila en modo de migración INVERSA
+                    const row = e.target.closest('tr');
+                    if (!row || e.target.closest('button')) return;
+
+                    const checkbox = row.querySelector('.historical-news-migration-checkbox');
+                    if (checkbox && e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+
+                const target = e.target.closest('button');
+                if (!target) return;
+
+                if (target.classList.contains('edit-btn')) handleEditClick(target);
+                if (target.classList.contains('delete-btn')) handleDeleteClick(target);
+                if (target.classList.contains('generate-doc-btn')) handleGenerateDocClick(target);
+
+
+
             });
 
         historicalTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, true));
@@ -3911,33 +4172,35 @@
                 XLSX.writeFile(wb, "noticias_historicas.xlsx");
             });
             
-            migrateNewsBtn.addEventListener('click', () => {
-                requirePassword(() => openModal(migrateModal));
-            });
-            
-            cancelMigrateBtn.addEventListener('click', () => closeModal(migrateModal));
-            
-            confirmMigrateBtn.addEventListener('click', async () => {
-                try {
-                    await migrateNewsToHistorical();
-                    closeModal(migrateModal);
-                } catch (error) {
-                    console.error("Error en migración:", error);
-                    showAlert("Error durante la migración: " + error.message, "error");
-                }
+            // --- INICIO: Lógica para Migración ---
+            document.getElementById('start-migration-btn').addEventListener('click', () => {
+                toggleMigrationMode(true);
             });
 
-            // Mejora: Cerrar el modal de webview al hacer clic en el fondo
-            webviewModal.addEventListener('click', (e) => {
-                if (e.target === webviewModal) {
-                    closeModal(webviewModal);
-                }
+            document.getElementById('cancel-migration-btn').addEventListener('click', () => {
+                toggleMigrationMode(false);
+            });
+
+            document.getElementById('confirm-migration-btn').addEventListener('click', () => {
+                if (selectedNewsIdsToMigrate.size === 0) return;
+                requirePassword(async () => {
+                    await migrateSelectedNewsToHistorical();
+                });
             });
 
             // Limpiar el src al cerrar para detener la carga y liberar recursos
             closeWebviewBtn.addEventListener('click', () => {
                 webviewFrame.src = 'about:blank';
                 closeModal(webviewModal);
+            });
+
+            // --- FIN: Lógica para Migración ---
+
+            // Mejora: Cerrar el modal de webview al hacer clic en el fondo
+            webviewModal.addEventListener('click', (e) => {
+                if (e.target === webviewModal) {
+                    closeModal(webviewModal);
+                }
             });
 
             closeDetailsModalBtn.addEventListener('click', () => closeModal(viewDetailsModal));
@@ -3967,10 +4230,9 @@
             appContainer = document.getElementById('app');
             userInfo = document.getElementById('user-info');
             tabsContainer = document.getElementById('tabs');
-            tabContents = document.querySelectorAll('.tab-content');
+            tabContents = document.querySelectorAll('.tab-content'); // Ya existe
             addNewsBtn = document.getElementById('add-news-btn');
-            downloadExcelBtn = document.getElementById('download-excel-btn');
-            migrateNewsBtn = document.getElementById('migrate-news-btn');
+            downloadExcelBtn = document.getElementById('download-excel-btn'); // Ya existe
             newsTableBody = document.getElementById('news-table-body');
             noNewsMessage = document.getElementById('no-news-message');
             historicalTableBody = document.getElementById('historical-table-body');
@@ -4007,9 +4269,6 @@
             webviewModal = document.getElementById('webview-modal');
             webviewFrame = document.getElementById('webview-frame');
             closeWebviewBtn = document.getElementById('close-webview-btn');
-            migrateModal = document.getElementById('migrate-modal');
-            cancelMigrateBtn = document.getElementById('cancel-migrate-btn'); // Esta línea está duplicada, pero la dejamos por seguridad
-            confirmMigrateBtn = document.getElementById('confirm-migrate-btn'); // Esta línea está duplicada, pero la dejamos por seguridad
             uploadTemplateBtn = document.getElementById('upload-template-btn');
             viewDetailsModal = document.getElementById('view-details-modal');
             templateUploadModal = document.getElementById('template-upload-modal');
@@ -4030,6 +4289,16 @@
             noLinksMessage = document.getElementById('no-links-message');
             cancelLinksBtn = document.getElementById('cancel-links-btn');
             saveLinksBtn = document.getElementById('save-links-btn');
+
+            // Nuevas referencias para los botones de migración
+            const confirmMigrationBtn = document.getElementById('confirm-migration-btn');
+            const cancelMigrationBtn = document.getElementById('cancel-migration-btn');
+            const selectAllNewsCheckbox = document.getElementById('select-all-news-checkbox');
+            const startReverseMigrationBtn = document.getElementById('start-reverse-migration-btn');
+            const confirmReverseMigrationBtn = document.getElementById('confirm-reverse-migration-btn');
+            const cancelReverseMigrationBtn = document.getElementById('cancel-reverse-migration-btn');
+            const selectAllHistoricalNewsCheckbox = document.getElementById('select-all-historical-news-checkbox');
+
 
             // Inicializar la autenticación y los listeners
             initializeAppWithAuth();
