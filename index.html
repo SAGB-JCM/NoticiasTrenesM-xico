@@ -563,6 +563,12 @@
             border-collapse: collapse;
             border: 1px solid #e5e7eb;
         }
+        /* Estilo para resaltar el texto de búsqueda */
+        .highlight {
+            background-color: #fef9c3; /* Tailwind yellow-100 */
+            border-radius: 2px;
+        }
+
     </style>
     
     <script>
@@ -698,9 +704,9 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Total Noticias -->
-                        <div id="medio-indicator-total" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para mostrar todo">
+                        <div id="medio-indicator-total" data-medio="__NOTICIAS_ONLY__" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
                             <div class="bg-primary/10 p-2 rounded-full"><i class="fa-solid fa-newspaper text-primary text-xl"></i></div>
-                            <div><p class="text-sm text-slate-500">Total de Noticias</p><p id="medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
+                            <div><p class="text-sm text-slate-500">Noticias</p><p id="medio-count-total" class="text-2xl font-bold text-primary">0</p></div>
                         </div>
                         <!-- Conferencia Matutina -->
                         <div id="medio-indicator-mananera" data-medio="Conferencia de prensa matutina" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200 current-week-highlight" title="Hacer clic para filtrar">
@@ -1342,6 +1348,17 @@
             setTimeout(() => { alertContainer.remove(); }, 3000);
         }
 
+        //Función para resaltar texto
+        function highlightText(text, searchTerm) {
+            if (!searchTerm || typeof text !== 'string') {
+                return text;
+            }
+            // Escapar caracteres especiales en el término de búsqueda para la expresión regular
+            const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+            return text.replace(regex, `<span class="highlight">$1</span>`);
+        }
+
         function openModal(modal) {
             modal.classList.remove('hidden', 'modal-leave');
             modal.classList.add('modal-enter');
@@ -1576,7 +1593,7 @@
                 }
             });
 
-            document.getElementById('medio-count-noticias').textContent = counts.noticias;
+            document.getElementById('medio-count-total').textContent = counts.noticias;
             document.getElementById('medio-count-mananera').textContent = counts.mananera;
             document.getElementById('medio-count-evento').textContent = counts.evento;
             document.getElementById('medio-count-informe').textContent = counts.informe;
@@ -1922,6 +1939,10 @@
             tableBody.innerHTML = '';
             noDataMessage.classList.toggle('hidden', data.length > 0);
 
+            const filterKey = isHistorical ? 'historical' : 'main';
+            const searchInput = document.getElementById(`filter-input-${filterKey}`);
+            const searchText = searchInput ? searchInput.value.trim() : '';
+
             const linkSeparator = ';';
 
             data.forEach((newsItem, index) => {
@@ -1938,17 +1959,19 @@
                             : ''
                     ).join('<span class="mx-1"></span>'); // Añade un pequeño espacio entre iconos
                 }
+
+                const applyHighlight = (text) => highlightText(String(text), searchText);
                 
                 row.innerHTML = `
-                    <td class="py-4 px-6">${index + 1}</td>
-                    <td class="py-4 px-6">${formatDate(newsItem.fecha)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.proyecto, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.subproyecto, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.categoria, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.comentario, 30)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.cita, 30)}</td>                    
-                    <td class="py-4 px-6">${truncateText(htmlToPlainText(newsItem.resumen), 50)}</td>
-                    <td class="py-4 px-6">${truncateText(newsItem.medio, 30)}</td>
+                    <td class="py-4 px-6">${applyHighlight(index + 1)}</td>
+                    <td class="py-4 px-6">${applyHighlight(formatDate(newsItem.fecha))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.proyecto, 30))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.subproyecto, 30))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.categoria, 30))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.comentario, 30))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 30))}</td>                    
+                    <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 50))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.medio, 30))}</td>
                     <td class="py-4 px-6 text-center">${linkCellContent}</td>
                     <td class="py-4 px-6 flex space-x-2">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
@@ -2629,14 +2652,14 @@
             indicators.forEach(element => {
                 element.addEventListener('click', () => {
                     const medioFilter = element.dataset.medio; // undefined para el total
-                    const isDeactivating = activeMedioDashboardFilter && activeMedioDashboardFilter === medioFilter;
+                    const isDeactivating = (activeMedioDashboardFilter && activeMedioDashboardFilter === medioFilter) || !medioFilter;
                     
                     document.querySelectorAll('.indicator-card').forEach(card => card.classList.remove('active-filter'));
 
                     if (isDeactivating) {
                         // Si se hace clic en el filtro ya activo, o en el total, se desactiva todo.
                         activeMedioDashboardFilter = null;
-                        
+
                         // Limpiar todos los filtros asociados a la tabla histórica
                         activeFilters.historical = {};
                         document.querySelectorAll('#historical-table-header .filterable-header.active').forEach(header => {
