@@ -2139,7 +2139,7 @@
                     <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.subproyecto, 30))}</td>
                     <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.categoria, 30))}</td>
                     <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.comentario, 40))}</td>
-                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 50))}</td>                    
+                    <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 40))}</td>                    
                     <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 40))}</td>
                     <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.medio, 30))}</td>
                     <td class="py-4 px-6 text-center">${linkCellContent}</td>
@@ -2397,7 +2397,7 @@
 
                     let citaHtml = '';
                     if (cita && cita.trim() !== '') {
-                        citaHtml = `<p class="cita-text">“${truncateText(cita, 100)}”</p>`;
+                        citaHtml = `<p class="cita-text">“${truncateText(cita, 150)}”</p>`;
                     }
 
                     tooltipContent = `
