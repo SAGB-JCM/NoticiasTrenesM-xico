@@ -597,10 +597,8 @@
 
         /* Estilo especial para el tooltip de conferencias/eventos */
         #quick-view-tooltip.quick-view-conference {
-            background-color: #1f2937; /* Fondo oscuro (gray-800) */
             color: #f9fafb; /* Texto claro (gray-50) */
             text-align: center;
-            border-color: var(--accent-color);
         }
         #quick-view-tooltip.quick-view-conference .medio-title {
             font-size: 1.15rem;
@@ -2383,23 +2381,30 @@
                 if (specialMedios.includes(medio)) {
                     // Tooltip especial para Conferencias/Eventos con iconos y colores dinámicos
                     tooltip.classList.add('quick-view-conference');
-                    let iconClass = 'fa-microphone-lines'; // Default
-                    let colorClass = 'text-accent'; // Default
+                    let iconClass = 'fa-microphone-lines';
+                    let colorVar = '--accent-color';
+                    let bgColor = '#16463c'; // accent-dark
 
                     if (medio === "Evento Presidencial") {
                         iconClass = 'fa-users-rays';
-                        colorClass = 'text-secondary';
+                        colorVar = '--secondary-color';
+                        bgColor = '#8a6b22'; // secondary-dark
                     } else if (medio === "Informe de Gobierno") {
                         iconClass = 'fa-landmark-flag';
-                        colorClass = 'text-slate-500';
+                        colorVar = '--slate-500-color'; // Usaremos un color base para slate
+                        bgColor = '#475569'; // slate-600
+                        // Definir la variable CSS si no existe
+                        document.documentElement.style.setProperty('--slate-500-color', '#64748b');
                     }
 
-                    // Actualizar el color del icono en el CSS del tooltip
-                    // Esto es necesario porque el color del icono se define en el CSS de quick-view-conference
-                    tooltip.querySelector('.medio-icon')?.style.setProperty('color', `var(--${colorClass.replace('text-', '')}-color)`);
+                    // Aplicar estilos dinámicamente
+                    tooltip.style.backgroundColor = bgColor;
+                    tooltip.style.borderColor = `var(${colorVar})`;
 
                     tooltipContent = `
-                        <div class="medio-icon ${colorClass}"><i class="fa-solid ${iconClass} fa-lg"></i></div>
+                        <div class="medio-icon" style="color: white;">
+                            <i class="fa-solid ${iconClass} fa-lg"></i>
+                        </div>
                         <div class="medio-title">${medio}</div>
                         <p class="fecha-larga">${fechaLarga}</p>
                     `;
@@ -2431,6 +2436,9 @@
 
             const hideTooltip = () => {
                 tooltip.classList.remove('visible');
+                // Limpiar estilos en línea al ocultar para no afectar otros tooltips
+                tooltip.style.backgroundColor = '';
+                tooltip.style.borderColor = '';
                 tooltip.classList.remove('quick-view-conference'); // Limpiar al ocultar
             };
 
