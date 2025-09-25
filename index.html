@@ -2381,10 +2381,25 @@
                 const fechaLarga = formatLongDate(fecha);
 
                 if (specialMedios.includes(medio)) {
-                    // Tooltip especial para Conferencias/Eventos
+                    // Tooltip especial para Conferencias/Eventos con iconos y colores dinámicos
                     tooltip.classList.add('quick-view-conference');
+                    let iconClass = 'fa-microphone-lines'; // Default
+                    let colorClass = 'text-accent'; // Default
+
+                    if (medio === "Evento Presidencial") {
+                        iconClass = 'fa-users-rays';
+                        colorClass = 'text-secondary';
+                    } else if (medio === "Informe de Gobierno") {
+                        iconClass = 'fa-landmark-flag';
+                        colorClass = 'text-slate-500';
+                    }
+
+                    // Actualizar el color del icono en el CSS del tooltip
+                    // Esto es necesario porque el color del icono se define en el CSS de quick-view-conference
+                    tooltip.querySelector('.medio-icon')?.style.setProperty('color', `var(--${colorClass.replace('text-', '')}-color)`);
+
                     tooltipContent = `
-                        <div class="medio-icon"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
+                        <div class="medio-icon ${colorClass}"><i class="fa-solid ${iconClass} fa-lg"></i></div>
                         <div class="medio-title">${medio}</div>
                         <p class="fecha-larga">${fechaLarga}</p>
                     `;
