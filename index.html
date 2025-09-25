@@ -2625,6 +2625,11 @@
         function showDetailsModal(newsItem) {
             if (!newsItem) return;
 
+            // Ocultar el tooltip de vista rápida al abrir el modal de detalles.
+            if (quickViewTooltip) {
+                quickViewTooltip.classList.remove('visible');
+            }
+
 
             if (specialMedios.includes(newsItem.medio)) {
                 // --- NUEVO DISEÑO PARA CASOS ESPECIALES ---
