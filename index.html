@@ -1440,7 +1440,7 @@
         let isReverseMigrationModeActive = false;
 
         // Variable de estado para las notificaciones
-        let trainAlertsShown = false;
+        let weeklyAlertsShown = false;
         let selectedHistoricalNewsIdsToMigrate = new Set();
 
         // =============================================
@@ -3390,14 +3390,17 @@
         
         function setupRealtimeListeners() {
             newsCollectionRef.onSnapshot((snapshot) => {
+                let weeklyAlertCounts = {};
                 news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Optimización: Pre-calcular los conteos de alertas aquí para no bloquear la UI más tarde.
+                weeklyAlertCounts = calculateWeeklyAlerts(news);
                 sortAndRenderTable(newsTableBody, news, false);
                 updateNewsMediosDashboard();
                 updateCharts();
                 updateDynamicSelectOptions();
 
                 // Llamar a la función de la alerta después de que los datos se carguen
-                setTimeout(checkAndShowTrainAlerts, 1000);
+                setTimeout(() => checkAndShowTrainAlerts(weeklyAlertCounts), 1000);
             }, (error) => console.error("Error en listener de noticias:", error));
 
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
@@ -3735,31 +3738,47 @@
             return { start: startOfWeek, end: endOfWeek };
         }
 
-        function checkAndShowTrainAlerts() {
-            if (trainAlertsShown) return;
-
+        /**
+         * Pre-calcula eficientemente los conteos de noticias de la semana actual,
+         * desglosados por medio. Esto evita realizar un costoso y redundante .filter()
+         * en la función que muestra las alertas, mejorando el rendimiento de la carga inicial.
+         * @param {Array} newsData - El array completo de noticias.
+         * @returns {object} Un objeto con los conteos, ej: { mananera: X, evento: Y, informe: Z }.
+         */
+        function calculateWeeklyAlerts(newsData) {
             const { start, end } = getWeekRange();
-            
-            const weeklyNews = news.filter(item => {
+            const counts = { mananera: 0, evento: 0, informe: 0 };
+
+            const weeklyNews = newsData.filter(item => {
                 try {
                     const itemDate = new Date(item.fecha);
                     return itemDate >= start && itemDate <= end;
                 } catch (e) { return false; }
             });
 
-            if (weeklyNews.length === 0) return;
+            weeklyNews.forEach(item => {
+                if (item.medio === "Conferencia de prensa matutina") counts.mananera++;
+                else if (item.medio === "Evento Presidencial") counts.evento++;
+                else if (item.medio === "Informe de Gobierno") counts.informe++;
+            });
+
+            return counts;
+        }
+
+        function checkAndShowTrainAlerts(alertCounts) {
+            if (weeklyAlertsShown) return;
+            if (!alertCounts || (alertCounts.mananera === 0 && alertCounts.evento === 0 && alertCounts.informe === 0)) return; // No mostrar si no hay nada que alertar
 
             const alertsToShow = [
-                { medio: "Conferencia de prensa matutina", target: "news-medio-indicator-mananera", icon: "fa-microphone-lines", color: "text-accent" },
-                { medio: "Evento Presidencial", target: "news-medio-indicator-evento", icon: "fa-users-rays", color: "text-secondary" },
-                { medio: "Informe de Gobierno", target: "news-medio-indicator-informe", icon: "fa-landmark-flag", color: "text-slate-500" }
+                { count: alertCounts.mananera, medio: "Conferencia de prensa matutina", target: "news-medio-indicator-mananera", icon: "fa-microphone-lines", color: "text-accent" },
+                { count: alertCounts.evento, medio: "Evento Presidencial", target: "news-medio-indicator-evento", icon: "fa-users-rays", color: "text-secondary" },
+                { count: alertCounts.informe, medio: "Informe de Gobierno", target: "news-medio-indicator-informe", icon: "fa-landmark-flag", color: "text-slate-500" }
             ];
 
             const wrapper = document.getElementById('notifications-wrapper');
 
             alertsToShow.forEach(alertInfo => {
-                const count = weeklyNews.filter(item => item.medio === alertInfo.medio).length;
-                if (count > 0) {
+                if (alertInfo.count > 0) {
                     const alertId = `train-alert-${alertInfo.target}`;
                     const alertHTML = `
                         <div id="${alertId}" class="train-alert bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
@@ -3771,7 +3790,7 @@
                                     <div class="ml-3 w-0 flex-1 pt-0.5">
                                         <p class="text-sm font-bold text-slate-800">${alertInfo.medio}</p>
                                         <div class="mt-2 text-sm text-slate-600 flex justify-between items-center">
-                                            <p>Hay <strong>${count}</strong> registro(s) esta semana.</p>
+                                            <p>Hay <strong>${alertInfo.count}</strong> registro(s) esta semana.</p>
                                             <button data-target="${alertInfo.target}" class="view-train-alert-btn ml-2 text-xs font-bold text-primary hover:underline whitespace-nowrap">Ver</button>
                                         </div>
                                     </div>
@@ -3795,7 +3814,7 @@
                 }
             });
 
-            trainAlertsShown = true;
+            weeklyAlertsShown = true;
         }
 
         function setupTrainAlertsListeners() {
