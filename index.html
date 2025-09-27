@@ -2834,13 +2834,13 @@
             openModal(viewDetailsModal);
         }
 
-        function generateSingleDetailHtml(newsItem, isHistorical = false) {
+        function generateSingleDetailHtml(newsItem, index, isHistorical = false) {
             if (!newsItem) return '';
 
             const filterKey = isHistorical ? 'historical' : 'main';
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
             const searchText = searchInput ? searchInput.value.trim() : '';
-
+            
             if (specialMedios.includes(newsItem.medio)) {
                 let resumenHeader = 'Resumen';
                 if (newsItem.medio === 'Conferencia de prensa matutina') resumenHeader = 'Resumen de la Conferencia';
@@ -2859,7 +2859,13 @@
 
                 return `
                     <div class="multi-details-item">
-                        <div class="details-header"><h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3><p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p></div>
+                        <div class="details-header flex justify-between items-start">
+                            <div>
+                                <h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3>
+                                <p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
+                            </div>
+                            <span class="text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">${index + 1}</span>
+                        </div>
                         <div class="details-section"><table class="details-table"><thead><tr><th style="text-align: center;">${highlightText(resumenHeader, searchText)}</th></tr></thead><tbody><tr><td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td></tr></tbody></table></div>
                         <div class="details-section text-center"><h4>Enlace Original</h4>${sourceLink}</div>
                     </div>`;
@@ -2879,7 +2885,12 @@
 
                 return `
                     <div class="multi-details-item">
-                        <div class="details-header"><h3 class="project">${highlightText(newsItem.proyecto || 'Proyecto no especificado', searchText)}</h3>${subproyectoHtml}<p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p></div>
+                        <div class="details-header flex justify-between items-start">
+                            <div>
+                                <h3 class="project">${highlightText(newsItem.proyecto || 'Proyecto no especificado', searchText)}</h3>${subproyectoHtml}<p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
+                            </div>
+                            <span class="text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">${index + 1}</span>
+                        </div>
                         <div class="details-section"><h4>Resumen de la Noticia</h4><table class="details-table"><tbody><tr><th style="vertical-align: middle;">Noticia</th><td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${highlightText(newsItem.comentario || 'Sin título.', searchText)}</td></tr>${citaHtml}<tr><th>Resumen</th><td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td></tr></tbody></table></div>
                         <div class="details-section"><h4>Fecha y Medio</h4><table class="details-table"><thead><tr><th>Fecha de Publicación</th><th>Medio</th><th>Categoría</th></tr></thead><tbody><tr><td>${highlightText(formatDate(newsItem.fecha) || 'N/A', searchText)}</td><td>${highlightText(newsItem.medio || 'N/A', searchText)}</td><td>${highlightText(newsItem.categoria || 'N/A', searchText)}</td></tr></tbody></table></div>
                         <div class="details-section text-center"><h4>Fuente Original</h4>${sourceLink}</div>
@@ -2890,15 +2901,15 @@
         function showMultiDetailsModal(isHistorical) {
             const filterKey = isHistorical ? 'historical' : 'main';
             const dataProvider = isHistorical ? () => historicalNews : () => news;
-            
-            const filteredData = applyAllFilters(dataProvider(), filterKey);
+            const data = dataProvider();
+            const filteredData = applyAllFilters(data, filterKey);
 
             if (filteredData.length === 0) {
                 showAlert("No hay noticias en la tabla para mostrar.", "warning");
                 return;
             }
-
-            let allDetailsHtml = filteredData.map(newsItem => generateSingleDetailHtml(newsItem, isHistorical)).join('');
+            
+            let allDetailsHtml = filteredData.map((newsItem, index) => generateSingleDetailHtml(newsItem, index, isHistorical)).join('');
             multiDetailsContentContainer.innerHTML = allDetailsHtml;
 
             openModal(multiDetailsModal);
@@ -4675,6 +4686,13 @@
 
             closeMultiDetailsModalBtn.addEventListener('click', () => closeModal(multiDetailsModal));
             closeDetailsModalBtn.addEventListener('click', () => closeModal(viewDetailsModal));
+
+            // Mejora: Cerrar el modal de detalles múltiples al hacer clic en el fondo
+            multiDetailsModal.addEventListener('click', (e) => {
+                if (e.target === multiDetailsModal) {
+                    closeModal(multiDetailsModal);
+                }
+            });
 
             // Mejora: Cerrar el modal de detalles al hacer clic en el fondo
             viewDetailsModal.addEventListener('click', (e) => {
