@@ -1503,6 +1503,43 @@
             return text.replace(regex, `<span class="highlight">$1</span>`);
         }
 
+        /**
+         * Resalta el término de búsqueda dentro de un contenido HTML de forma segura.
+         * Recorre los nodos de texto y envuelve las coincidencias sin romper las etiquetas HTML.
+         * @param {string} htmlContent - El contenido HTML a procesar.
+         * @param {string} searchTerm - El término de búsqueda.
+         * @returns {string} - El HTML con el texto resaltado.
+         */
+        function highlightHtmlContent(htmlContent, searchTerm) {
+            if (!searchTerm || !htmlContent) {
+                return htmlContent;
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+
+            const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            const nodesToProcess = [];
+
+            while (node = walker.nextNode()) {
+                nodesToProcess.push(node);
+            }
+
+            nodesToProcess.forEach(textNode => {
+                const parent = textNode.parentNode;
+                if (parent && parent.nodeName !== 'SCRIPT' && parent.nodeName !== 'STYLE') {
+                    const highlightedHtml = highlightText(textNode.textContent, searchTerm);
+                    if (highlightedHtml !== textNode.textContent) {
+                        const fragment = document.createRange().createContextualFragment(highlightedHtml);
+                        parent.replaceChild(fragment, textNode);
+                    }
+                }
+            });
+
+            return tempDiv.innerHTML;
+        }
+
         function openModal(modal) {
             modal.classList.remove('hidden', 'modal-leave');
             modal.classList.add('modal-enter');
@@ -2678,8 +2715,12 @@
             });
         }
 
-        function showDetailsModal(newsItem) {
+        function showDetailsModal(newsItem, isHistorical = false) {
             if (!newsItem) return;
+
+            const filterKey = isHistorical ? 'historical' : 'main';
+            const searchInput = document.getElementById(`filter-input-${filterKey}`);
+            const searchText = searchInput ? searchInput.value.trim() : '';
 
             // Ocultar el tooltip de vista rápida al abrir el modal de detalles.
             if (quickViewTooltip) {
@@ -2702,29 +2743,28 @@
                 let sourceLink = '<p class="text-gray-700">N/A</p>';
                 if (links.length > 0) {
                     sourceLink = links.map(link => {
-                        if (isValidUrl(link)) {
-                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
-                        }
-                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                        const highlightedLink = highlightText(link, searchText);
+                        if (isValidUrl(link)) { return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${highlightedLink}</a>`; }
+                        return `<p class="text-gray-700 break-all block mb-1">${highlightedLink}</p>`;
                     }).join('');
                 }
 
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
-                        <h3 class="project">${newsItem.medio || 'Medio no especificado'}</h3>
-                        <p class="date">${formatLongDate(newsItem.fecha)}</p>
+                        <h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3>
+                        <p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
                     </div>
 
                     <div class="details-section">
                         <table class="details-table">
                             <thead>
                                 <tr>
-                                    <th style="text-align: center;">${resumenHeader}</th>
+                                    <th style="text-align: center;">${highlightText(resumenHeader, searchText)}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
+                                    <td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2738,26 +2778,25 @@
             } else {
                 // --- DISEÑO ORIGINAL PARA NOTICIAS GENERALES ---
                 const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') 
-                    ? `<p class="date">${newsItem.subproyecto}</p>` : '';
+                    ? `<p class="date">${highlightText(newsItem.subproyecto, searchText)}</p>` : '';
                 const citaHtml = newsItem.cita
-                    ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${newsItem.cita}</i></td></tr>` : '';
+                    ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${highlightText(newsItem.cita, searchText)}</i></td></tr>` : '';
                 
                 const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
                 let sourceLink = '<p class="text-gray-700">N/A</p>';
                 if (links.length > 0) {
                     sourceLink = links.map(link => {
-                        if (isValidUrl(link)) {
-                            return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>`;
-                        }
-                        return `<p class="text-gray-700 break-all block mb-1">${link}</p>`;
+                        const highlightedLink = highlightText(link, searchText);
+                        if (isValidUrl(link)) { return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${highlightedLink}</a>`; }
+                        return `<p class="text-gray-700 break-all block mb-1">${highlightedLink}</p>`;
                     }).join('');
                 }
 
                 detailsModalContent.innerHTML = `
                     <div class="details-header">
-                        <h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>
+                        <h3 class="project">${highlightText(newsItem.proyecto || 'Proyecto no especificado', searchText)}</h3>
                         ${subproyectoHtml}                        
-                        <p class="date">${formatLongDate(newsItem.fecha)}</p>
+                        <p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
                     </div>
 
                     <div class="details-section">
@@ -2766,12 +2805,12 @@
                             <tbody>
                                 <tr>
                                     <th style="vertical-align: middle;">Noticia</th>
-                                    <td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${newsItem.comentario || 'Sin título.'}</td>
+                                    <td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${highlightText(newsItem.comentario || 'Sin título.', searchText)}</td>
                                 </tr>
                                 ${citaHtml}
                                 <tr>
                                     <th>Resumen</th>
-                                    <td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td>
+                                    <td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2781,7 +2820,7 @@
                         <h4>Fecha y Medio</h4>
                         <table class="details-table">
                             <thead><tr><th>Fecha de Publicación</th><th>Medio</th><th>Categoría</th></tr></thead>
-                            <tbody><tr><td>${formatDate(newsItem.fecha) || 'N/A'}</td><td>${newsItem.medio || 'N/A'}</td><td>${newsItem.categoria || 'N/A'}</td></tr></tbody>
+                            <tbody><tr><td>${highlightText(formatDate(newsItem.fecha) || 'N/A', searchText)}</td><td>${highlightText(newsItem.medio || 'N/A', searchText)}</td><td>${highlightText(newsItem.categoria || 'N/A', searchText)}</td></tr></tbody>
                         </table>
                     </div>
 
@@ -2795,8 +2834,12 @@
             openModal(viewDetailsModal);
         }
 
-        function generateSingleDetailHtml(newsItem) {
+        function generateSingleDetailHtml(newsItem, isHistorical = false) {
             if (!newsItem) return '';
+
+            const filterKey = isHistorical ? 'historical' : 'main';
+            const searchInput = document.getElementById(`filter-input-${filterKey}`);
+            const searchText = searchInput ? searchInput.value.trim() : '';
 
             if (specialMedios.includes(newsItem.medio)) {
                 let resumenHeader = 'Resumen';
@@ -2807,30 +2850,38 @@
                 const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
                 let sourceLink = '<p class="text-gray-700">N/A</p>';
                 if (links.length > 0) {
-                    sourceLink = links.map(link => isValidUrl(link) ? `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>` : `<p class="text-gray-700 break-all block mb-1">${link}</p>`).join('');
+                    sourceLink = links.map(link => {
+                        const highlightedLink = highlightText(link, searchText);
+                        if (isValidUrl(link)) { return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${highlightedLink}</a>`; }
+                        return `<p class="text-gray-700 break-all block mb-1">${highlightedLink}</p>`;
+                    }).join('');
                 }
 
                 return `
                     <div class="multi-details-item">
-                        <div class="details-header"><h3 class="project">${newsItem.medio || 'Medio no especificado'}</h3><p class="date">${formatLongDate(newsItem.fecha)}</p></div>
-                        <div class="details-section"><table class="details-table"><thead><tr><th style="text-align: center;">${resumenHeader}</th></tr></thead><tbody><tr><td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td></tr></tbody></table></div>
+                        <div class="details-header"><h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3><p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p></div>
+                        <div class="details-section"><table class="details-table"><thead><tr><th style="text-align: center;">${highlightText(resumenHeader, searchText)}</th></tr></thead><tbody><tr><td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td></tr></tbody></table></div>
                         <div class="details-section text-center"><h4>Enlace Original</h4>${sourceLink}</div>
                     </div>`;
             } else {
-                const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') ? `<p class="date">${newsItem.subproyecto}</p>` : '';
-                const citaHtml = newsItem.cita ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${newsItem.cita}</i></td></tr>` : '';
+                const subproyectoHtml = (newsItem.subproyecto && newsItem.subproyecto.trim() !== '-') ? `<p class="date">${highlightText(newsItem.subproyecto, searchText)}</p>` : '';
+                const citaHtml = newsItem.cita ? `<tr><th style="vertical-align: middle;">Cita</th><td class="formatted-content"><i>${highlightText(newsItem.cita, searchText)}</i></td></tr>` : '';
                 
                 const links = (newsItem.fuente || '').split(';').map(link => link.trim()).filter(link => link);
                 let sourceLink = '<p class="text-gray-700">N/A</p>';
                 if (links.length > 0) {
-                    sourceLink = links.map(link => isValidUrl(link) ? `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${link}</a>` : `<p class="text-gray-700 break-all block mb-1">${link}</p>`).join('');
+                    sourceLink = links.map(link => {
+                        const highlightedLink = highlightText(link, searchText);
+                        if (isValidUrl(link)) { return `<a href="${link}" target="_blank" class="text-blue-600 hover:underline break-all block mb-1">${highlightedLink}</a>`; }
+                        return `<p class="text-gray-700 break-all block mb-1">${highlightedLink}</p>`;
+                    }).join('');
                 }
 
                 return `
                     <div class="multi-details-item">
-                        <div class="details-header"><h3 class="project">${newsItem.proyecto || 'Proyecto no especificado'}</h3>${subproyectoHtml}<p class="date">${formatLongDate(newsItem.fecha)}</p></div>
-                        <div class="details-section"><h4>Resumen de la Noticia</h4><table class="details-table"><tbody><tr><th style="vertical-align: middle;">Noticia</th><td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${newsItem.comentario || 'Sin título.'}</td></tr>${citaHtml}<tr><th>Resumen</th><td class="formatted-content" style="text-align: justify;">${newsItem.resumen || 'No hay resumen disponible.'}</td></tr></tbody></table></div>
-                        <div class="details-section"><h4>Fecha y Medio</h4><table class="details-table"><thead><tr><th>Fecha de Publicación</th><th>Medio</th><th>Categoría</th></tr></thead><tbody><tr><td>${formatDate(newsItem.fecha) || 'N/A'}</td><td>${newsItem.medio || 'N/A'}</td><td>${newsItem.categoria || 'N/A'}</td></tr></tbody></table></div>
+                        <div class="details-header"><h3 class="project">${highlightText(newsItem.proyecto || 'Proyecto no especificado', searchText)}</h3>${subproyectoHtml}<p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p></div>
+                        <div class="details-section"><h4>Resumen de la Noticia</h4><table class="details-table"><tbody><tr><th style="vertical-align: middle;">Noticia</th><td class="formatted-content" style="font-weight: bold; font-size: 1.1em;">${highlightText(newsItem.comentario || 'Sin título.', searchText)}</td></tr>${citaHtml}<tr><th>Resumen</th><td class="formatted-content" style="text-align: justify;">${highlightHtmlContent(newsItem.resumen || 'No hay resumen disponible.', searchText)}</td></tr></tbody></table></div>
+                        <div class="details-section"><h4>Fecha y Medio</h4><table class="details-table"><thead><tr><th>Fecha de Publicación</th><th>Medio</th><th>Categoría</th></tr></thead><tbody><tr><td>${highlightText(formatDate(newsItem.fecha) || 'N/A', searchText)}</td><td>${highlightText(newsItem.medio || 'N/A', searchText)}</td><td>${highlightText(newsItem.categoria || 'N/A', searchText)}</td></tr></tbody></table></div>
                         <div class="details-section text-center"><h4>Fuente Original</h4>${sourceLink}</div>
                     </div>`;
             }
@@ -2847,7 +2898,7 @@
                 return;
             }
 
-            let allDetailsHtml = filteredData.map(newsItem => generateSingleDetailHtml(newsItem)).join('');
+            let allDetailsHtml = filteredData.map(newsItem => generateSingleDetailHtml(newsItem, isHistorical)).join('');
             multiDetailsContentContainer.innerHTML = allDetailsHtml;
 
             openModal(multiDetailsModal);
@@ -3817,7 +3868,7 @@
 
             const data = isHistorical ? historicalNews : news;
             const newsItem = data.find(item => item.id === newsId);
-            showDetailsModal(newsItem);
+            showDetailsModal(newsItem, isHistorical);
         }
 
         async function handleGenerateDocClick(button) {
