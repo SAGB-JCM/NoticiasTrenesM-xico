@@ -3735,8 +3735,9 @@
                 "Subproyecto": newsItem.subproyecto || "",
                 "Categoría": newsItem.categoria || "",
                 "Noticia": newsItem.comentario || "",
-                "Cita": newsItem.cita || "",                
-                "Resumen": htmlToPlainText(newsItem.resumen) || "",
+                "Cita": newsItem.cita || "",
+                "Resumen": htmlToPlainText(newsItem.resumen) || "", //desactivada para exportar en HTML               
+                //"Resumen": newsItem.resumen || "", // Exportar el HTML directamente para preservar el formato
                 "Medio": newsItem.medio || "",
                 "Enlace": newsItem.fuente || ""
             }));
@@ -4632,7 +4633,17 @@
                             const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
                             const sheetName = workbook.SheetNames[0];
                             const worksheet = workbook.Sheets[sheetName];
-                            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                            // --- MEJORA: Detección de título en A1 ---
+                            const options = {};
+                            const cellA1 = worksheet['A1'];
+                            // Si la celda A1 existe y su valor (v) es un string que empieza con el título del reporte,
+                            // asumimos que la fila 1 es un título y los encabezados están en la fila 2.
+                            // Por lo tanto, los datos para sheet_to_json empiezan en la fila 3 (índice 2).
+                            if (cellA1 && typeof cellA1.v === 'string' && cellA1.v.startsWith('Noticias y Conferencias')) {
+                                options.range = 2; // Inicia la lectura de datos desde la tercera fila (A3).
+                            }
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, options);
                             
                             if (jsonData.length === 0) return showAlert("El archivo no contiene datos válidos.", "warning");
 
@@ -4649,7 +4660,8 @@
                                     'fuente': 'fuente', // Fallback a 'Fuente'
                                     'fuente de la noticia': 'fuente', // Fallback adicional
                                     'resumen de la noticia': 'resumen',
-                                    'noticia': 'comentario', // Busca 'Noticia' primero
+                                    'noticia': 'comentario', // Busca 'Noticia' primero,
+                                    'categoría': 'categoria', // Mapea la versión con acento a la clave sin acento
                                     'título': 'comentario' // Fallback a 'Título'
                                 };
                                 const mappedRow = mapKeys(row, keyMapping);
