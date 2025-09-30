@@ -947,6 +947,9 @@
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
                             <h3 class="text-xl font-semibold text-slate-800">Proyectos por Categoría</h3>
+                            <button id="toggle-chart-type-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded ml-2" title="Cambiar a Gráfica Apilada">
+                                <i class="fa-solid fa-chart-bar"></i>
+                            </button>
                         </div>
                         <div class="chart-wrapper" style="height: 400px;">
                             <canvas id="projectCategoryChart"></canvas>
@@ -1508,6 +1511,7 @@
         let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias (main)
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
+        let isProjectChartStacked = false; // Estado para controlar si la gráfica de proyectos es apilada
 
         // Estado para la funcionalidad de migración
         let isMigrationModeActive = false;
@@ -3732,11 +3736,15 @@
             else data = [...news, ...historicalNews];
 
             const projectCategoryData = {};
+            const projectTotals = {}; // Para ordenar los proyectos
             const allCategories = new Set();
 
             data.forEach(item => {
                 const project = item.proyecto || 'N/A';
                 const category = item.categoria || 'N/A';
+
+                // Contar el total por proyecto para ordenar
+                projectTotals[project] = (projectTotals[project] || 0) + 1;
 
                 if (project !== 'N/A' && category !== 'N/A') {
                     if (!projectCategoryData[project]) {
@@ -3748,7 +3756,10 @@
             });
 
             const sortedCategories = Array.from(allCategories).sort();
-            const projects = Object.keys(projectCategoryData).sort();
+            // Ordenar los proyectos por el total de noticias, de mayor a menor
+            const projects = Object.keys(projectCategoryData).sort((a, b) => {
+                return (projectTotals[b] || 0) - (projectTotals[a] || 0);
+            });
 
             // --- INICIO: Lógica de la tabla con totales ---
             const table = document.getElementById('projectCategoryTable');
@@ -3810,8 +3821,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: false },
-                        y: { stacked: false, beginAtZero: true }
+                        x: { stacked: isProjectChartStacked },
+                        y: { stacked: isProjectChartStacked, beginAtZero: true }
                     }
                 }
             });
@@ -3836,10 +3847,15 @@
             // Update dynamic table
             dynamicTableBody.innerHTML = '';
             dynamicTableHeader.textContent = selectedVariable.charAt(0).toUpperCase() + selectedVariable.slice(1);
-            
+
+            // --- INICIO DE LA MEJORA: Ordenar los datos por conteo descendente ---
+            const sortedData = Object.entries(variableCounts).sort(([, a], [, b]) => b - a);
+            // --- FIN DE LA MEJORA ---
+
             let total = 0;
 
-            Object.entries(variableCounts).forEach(([value, count]) => {
+            // Usar los datos ordenados (sortedData) para renderizar la tabla
+            sortedData.forEach(([value, count]) => {
                 total += count;
 
                 const row = document.createElement('tr');
@@ -3849,7 +3865,6 @@
                 `;
                 dynamicTableBody.appendChild(row);
             });
-
             // Add total row
             const totalRow = document.createElement('tr');
             totalRow.className = 'bg-slate-200 font-bold';
@@ -3862,8 +3877,9 @@
             // Update dynamic chart
             if (charts.dynamic) charts.dynamic.destroy();
             
-            const labels = Object.keys(variableCounts);
-            const chartData = Object.values(variableCounts);
+            // Usar los datos ordenados para la gráfica
+            const labels = sortedData.map(([value]) => truncateText(value, 25));
+            const chartData = sortedData.map(([, count]) => count);
             
             charts.dynamic = new Chart(dynamicChartCanvas, {
                 type: 'bar',
@@ -4382,10 +4398,35 @@
             
             toggleLabelsBtn.addEventListener('click', () => {
                 showChartLabels = !showChartLabels;
+                const icon = toggleLabelsBtn.querySelector('i');
                 toggleLabelsBtn.classList.toggle('bg-primary', showChartLabels);
                 toggleLabelsBtn.classList.toggle('text-white', showChartLabels);
+                toggleLabelsBtn.classList.toggle('bg-slate-200', !showChartLabels);
+                toggleLabelsBtn.classList.toggle('text-slate-700', !showChartLabels);
+                icon.className = showChartLabels ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+                toggleLabelsBtn.title = showChartLabels ? 'Ocultar etiquetas del eje X' : 'Mostrar etiquetas del eje X';
                 updateDynamicChart();
             });
+
+            // Inicializar el estado visual del botón de etiquetas
+            toggleLabelsBtn.click(); toggleLabelsBtn.click(); // Doble clic para inicializar sin cambiar el estado
+            // Listener para el nuevo botón de tipo de gráfica
+            document.getElementById('toggle-chart-type-btn').addEventListener('click', (e) => {
+                isProjectChartStacked = !isProjectChartStacked;
+                const button = e.currentTarget;
+                const icon = button.querySelector('i');
+                
+                button.classList.toggle('bg-primary', isProjectChartStacked);
+                button.classList.toggle('text-white', isProjectChartStacked);
+                button.classList.toggle('bg-slate-200', !isProjectChartStacked);
+                button.classList.toggle('text-slate-700', !isProjectChartStacked);
+                button.title = isProjectChartStacked ? "Cambiar a Gráfica Agrupada" : "Cambiar a Gráfica Apilada";
+                icon.className = isProjectChartStacked ? 'fa-solid fa-layer-group' : 'fa-solid fa-chart-bar';
+                updateProjectCategoryChart();
+            });
+            
+            // Inicializar el estado visual del botón de tipo de gráfica
+            document.getElementById('toggle-chart-type-btn').click(); document.getElementById('toggle-chart-type-btn').click();
             
             addNewsBtn.addEventListener('click', () => {
                 // Clear form
@@ -5172,5 +5213,5 @@
         // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
     </script>
-</body> 
-</html>
+</body>  
+</html> 
