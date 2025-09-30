@@ -728,6 +728,9 @@
                         <h2 class="text-xl font-bold text-primary">Registro de Noticias</h2>
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center space-x-2">
+                                <button id="clear-all-filters-main-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Limpiar todos los filtros">
+                                    <i class="fa-solid fa-paint-brush"></i>
+                                </button>
                                 <button id="view-all-details-main-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Ver detalles de todos los resultados visibles">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
@@ -825,6 +828,9 @@
                         <h2 class="text-xl font-bold text-primary">Registro Histórico</h2>
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center space-x-2">
+                                <button id="clear-all-filters-historical-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Limpiar todos los filtros">
+                                    <i class="fa-solid fa-paint-brush"></i>
+                                </button>
                                 <button id="view-all-details-historical-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Ver detalles de todos los resultados visibles">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
@@ -2132,6 +2138,55 @@
             });
 
             return resultXml;
+        }
+
+        /**
+         * Limpia todos los filtros aplicados a la tabla de noticias principal.
+         * Esto incluye el buscador, los filtros de columna y el filtro del radar de medios.
+         */
+        function clearAllMainFilters() {
+            // 1. Limpiar filtro del radar de medios
+            activeNewsMedioFilter = null;
+            document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
+
+            // 2. Limpiar filtros de columna
+            activeFilters.main = {};
+            document.querySelectorAll('#main-table-header .filterable-header.active').forEach(header => {
+                header.classList.remove('active');
+            });
+
+            // 3. Limpiar el campo de búsqueda
+            const searchInput = document.getElementById('filter-input-main');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input')); // Dispara el evento para que la UI reaccione
+            }
+
+            // 4. Re-renderizar la tabla para mostrar todos los datos
+            sortAndRenderTable(newsTableBody, news, false);
+            showAlert("Filtros de Noticias limpiados.", "info");
+        }
+
+        /**
+         * Limpia todos los filtros aplicados a la tabla de noticias históricas.
+         * Esto incluye el buscador, los filtros de columna y el filtro del radar de medios.
+         */
+        function clearAllHistoricalFilters() {
+            // 1. Limpiar filtro del radar de medios
+            activeMedioDashboardFilter = null; // Asegúrate de que esta variable controla el filtro del radar histórico
+            document.querySelectorAll('#tab-content-historico #dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
+
+            // 2. Limpiar filtros de columna
+            activeFilters.historical = {};
+            document.querySelectorAll('#historical-table-header .filterable-header.active').forEach(header => header.classList.remove('active'));
+
+            // 3. Limpiar el campo de búsqueda
+            const searchInput = document.getElementById('filter-input-historical');
+            if (searchInput) { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
+
+            // 4. Re-renderizar la tabla para mostrar todos los datos
+            sortAndRenderTable(historicalTableBody, historicalNews, true);
+            showAlert("Filtros de Histórico limpiados.", "info");
         }
 
         function plainTextToOpenXml(text) {
@@ -4977,6 +5032,15 @@
                 if (e.target === viewDetailsModal) {
                     closeModal(viewDetailsModal);
                 }
+            });
+
+            // Listeners para los nuevos botones de limpiar filtros
+            document.getElementById('clear-all-filters-main-btn').addEventListener('click', () => {
+                clearAllMainFilters();
+            });
+
+            document.getElementById('clear-all-filters-historical-btn').addEventListener('click', () => {
+                clearAllHistoricalFilters();
             });
             
             // El evento 'shown' no es un evento estándar del DOM. 
