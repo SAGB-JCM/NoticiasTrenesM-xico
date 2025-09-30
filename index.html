@@ -936,6 +936,27 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Gráfica de Proyectos por Categoría (Movida aquí) -->
+                    <div class="dynamic-chart-container">
+                        <div class="dynamic-chart-header">
+                            <h3 class="text-xl font-semibold text-slate-800">Proyectos por Categoría</h3>
+                        </div>
+                        <div class="chart-wrapper" style="height: 400px;">
+                            <canvas id="projectCategoryChart"></canvas>
+                        </div>
+                        <div class="dynamic-table-container mt-4">
+                            <h4 class="text-lg font-semibold text-slate-800 mb-2 text-center">Distribución Detallada</h4>
+                            <table id="projectCategoryTable" class="dynamic-table">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot></tfoot>
+                            </table>
+                        </div>
+                    </div>
+
                 </section>
             </div>
         </div>
@@ -1451,7 +1472,7 @@
         let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
         
         let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
-        let quickViewTooltip;
+        let quickViewTooltip, projectCategoryChart;
         let currentEditIsHistorical = false;
         
         let newsSummaryEditor, editNewsSummaryEditor;
@@ -1469,6 +1490,10 @@
         let activeFilters = {
             main: {},
             historical: {}
+        };
+        let charts = {
+            dynamic: null,
+            projectCategory: null
         };
 
         let currentFilterDropdown = null;
@@ -3636,12 +3661,106 @@
             else if (source === 'historico') data = historicalNews;
             else data = [...news, ...historicalNews];
             
-            const proyectoCounts = {}, categoriaCounts = {};
-        
-            if (dynamicChart) dynamicChart.destroy();
+            if (charts.dynamic) charts.dynamic.destroy();
+            if (charts.projectCategory) charts.projectCategory.destroy();
 
             // Update dynamic chart
             updateDynamicChart();
+            updateProjectCategoryChart();
+        }
+
+        function updateProjectCategoryChart() {
+            const source = reportesDataSource.value;
+            let data = [];
+            if (source === 'noticias') data = news;
+            else if (source === 'historico') data = historicalNews;
+            else data = [...news, ...historicalNews];
+
+            const projectCategoryData = {};
+            const allCategories = new Set();
+
+            data.forEach(item => {
+                const project = item.proyecto || 'N/A';
+                const category = item.categoria || 'N/A';
+
+                if (project !== 'N/A' && category !== 'N/A') {
+                    if (!projectCategoryData[project]) {
+                        projectCategoryData[project] = {};
+                    }
+                    projectCategoryData[project][category] = (projectCategoryData[project][category] || 0) + 1;
+                    allCategories.add(category);
+                }
+            });
+
+            const sortedCategories = Array.from(allCategories).sort();
+            const projects = Object.keys(projectCategoryData).sort();
+
+            // --- INICIO: Lógica de la tabla con totales ---
+            const table = document.getElementById('projectCategoryTable');
+            // Encabezado con columna de Total
+            table.querySelector('thead').innerHTML = `<tr><th>Proyecto</th>${sortedCategories.map(cat => `<th>${cat}</th>`).join('')}<th>Total</th></tr>`;
+            
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            const categoryTotals = {};
+            let grandTotal = 0;
+
+            projects.forEach(project => {
+                const row = document.createElement('tr');
+                let rowHTML = `<td>${project}</td>`;
+                let projectTotal = 0;
+
+                sortedCategories.forEach(cat => {
+                    const count = projectCategoryData[project][cat] || 0;
+                    rowHTML += `<td>${count}</td>`;
+                    projectTotal += count;
+                    categoryTotals[cat] = (categoryTotals[cat] || 0) + count;
+                });
+
+                // Añadir total horizontal (por proyecto)
+                rowHTML += `<td class="font-bold">${projectTotal}</td>`;
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+                grandTotal += projectTotal;
+            });
+
+            // Fila de totales verticales (tfoot)
+            let footerHTML = `<tr class="bg-slate-200 font-bold"><td>Total</td>`;
+            sortedCategories.forEach(cat => {
+                footerHTML += `<td>${categoryTotals[cat] || 0}</td>`;
+            });
+            // Gran total
+            footerHTML += `<td>${grandTotal}</td></tr>`;
+            table.querySelector('tfoot').innerHTML = footerHTML;
+            // --- FIN: Lógica de la tabla con totales ---
+
+            // --- INICIO: Lógica del gráfico (sin cambios) ---
+            const colors = ['#9C2348', '#A6802D', '#1E5B4F', '#64748B', '#3B82F6', '#F59E0B', '#10B981'];
+            const datasets = sortedCategories.map((category, index) => ({
+                label: category,
+                data: projects.map(project => projectCategoryData[project][category] || 0),
+                backgroundColor: colors[index % colors.length],
+            }));
+
+            if (charts.projectCategory) charts.projectCategory.destroy();
+
+            charts.projectCategory = new Chart(document.getElementById('projectCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: projects,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: false },
+                        y: { stacked: false, beginAtZero: true }
+                    }
+                }
+            });
+            // --- FIN: Lógica del gráfico ---
         }
 
         function updateDynamicChart() {
@@ -3686,12 +3805,12 @@
             dynamicTableBody.appendChild(totalRow);
             
             // Update dynamic chart
-            if (dynamicChart) dynamicChart.destroy();
+            if (charts.dynamic) charts.dynamic.destroy();
             
             const labels = Object.keys(variableCounts);
             const chartData = Object.values(variableCounts);
             
-            dynamicChart = new Chart(dynamicChartCanvas, {
+            charts.dynamic = new Chart(dynamicChartCanvas, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -3719,7 +3838,7 @@
                 }
             });
         }
-
+        
         function updateConferenceSummaryLabel(medio, labelElement) {
             let labelText = 'Resumen';
             if (medio === 'Conferencia de prensa matutina') {
@@ -4945,6 +5064,7 @@
             cancelImportWarningBtn = document.getElementById('cancel-import-warning-btn');
             confirmImportWarningBtn = document.getElementById('confirm-import-warning-btn');
             quickViewTooltip = document.getElementById('quick-view-tooltip');
+            projectCategoryChart = document.getElementById('projectCategoryChart');
             // Nuevas referencias para los botones de migración
             const confirmMigrationBtn = document.getElementById('confirm-migration-btn');
             const cancelMigrationBtn = document.getElementById('cancel-migration-btn');
