@@ -1289,6 +1289,18 @@
         </div>
     </div>
 
+    <div id="import-warning-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-4 text-center">
+            <h3 class="text-xl font-bold text-primary mb-4">Advertencia de Importación</h3>
+            <p class="text-slate-600 mb-2">Está a punto de importar un nuevo archivo de histórico.</p>
+            <p class="text-slate-600 mb-6">Esta acción <strong class="text-danger">reemplazará todas las noticias existentes</strong> en la pestaña "Histórico", pero <strong class="text-success">NO afectará</strong> los registros de "Conferencia Matutina", "Evento Presidencial" o "Informe de Gobierno".</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-import-warning-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirm-import-warning-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Continuar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="migrate-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Migrar Noticias</h3>
@@ -1438,6 +1450,7 @@
         // Variables de estado de la aplicación y referencias DOM
         let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
         
+        let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
         let quickViewTooltip;
         let currentEditIsHistorical = false;
         
@@ -4626,7 +4639,17 @@
             // =============================================
 
             importHistoricalBtn.addEventListener('click', () => {
-                requirePassword(async () => {
+                openModal(importWarningModal);
+            });
+
+            cancelImportWarningBtn.addEventListener('click', () => {
+                closeModal(importWarningModal);
+            });
+
+            confirmImportWarningBtn.addEventListener('click', () => {
+                closeModal(importWarningModal);
+                // Una vez que el usuario confirma la advertencia, se procede a pedir la contraseña.
+                requirePassword(async () => { 
                     const file = historicalFileInput.files[0];
                     if (!file) {
                         showAlert("Por favor, selecciona un archivo Excel primero.", "warning");
@@ -4640,14 +4663,15 @@
                             const sheetName = workbook.SheetNames[0];
                             const worksheet = workbook.Sheets[sheetName];
 
-                            // --- MEJORA: Detección de título en A1 ---
-                            const options = {};
+                            // --- LÓGICA CORREGIDA (v2): Detección de título y generación de objetos ---
+                            const options = {}; // Por defecto, genera objetos usando la primera fila como encabezados.
                             const cellA1 = worksheet['A1'];
-                            // Si la celda A1 existe y su valor (v) es un string que empieza con el título del reporte,
-                            // asumimos que la fila 1 es un título y los encabezados están en la fila 2.
-                            // Por lo tanto, los datos para sheet_to_json empiezan en la fila 3 (índice 2).
+                            
+                            // Si la celda A1 contiene el título, significa que los encabezados reales están en la fila 2.
                             if (cellA1 && typeof cellA1.v === 'string' && cellA1.v.startsWith('Noticias y Conferencias')) {
-                                options.range = 2; // Inicia la lectura de datos desde la tercera fila (A3).
+                                // Usamos 'range: 1' para indicarle a la librería que ignore la fila 0 (el título)
+                                // y use la siguiente fila (la 1, que es la segunda fila) como encabezados.
+                                options.range = 1;
                             }
                             const jsonData = XLSX.utils.sheet_to_json(worksheet, options);
                             
@@ -4741,23 +4765,10 @@
 
                             if (processedData.length === 0) return showAlert("El archivo Excel está vacío o no es válido.", "warning");
                             
-                            let replace = false;
+                            // La lógica de reemplazo ahora se basa en la confirmación del nuevo modal.
+                            // Borra solo las noticias, no las conferencias, antes de importar.
                             if (historicalNews.length > 0) {
-                                openModal(replaceHistoricalModal);
-                                await new Promise(resolve => {
-                                    confirmReplaceBtn.onclick = () => {
-                                        replace = true;
-                                        closeModal(replaceHistoricalModal);
-                                        resolve();
-                                    };
-                                    cancelReplaceBtn.onclick = () => {
-                                        replace = false;
-                                        closeModal(replaceHistoricalModal);
-                                        resolve();
-                                    };
-                                });
-                                // Si el usuario confirma el reemplazo, borra solo las noticias, no las conferencias.
-                                if (replace) await deleteNonConferenceHistorical();
+                                await deleteNonConferenceHistorical();
                             }
                             await importHistoricalData(processedData);
                             historicalFileInput.value = '';
@@ -4930,6 +4941,9 @@
             multiDetailsContentContainer = document.getElementById('multi-details-content-container');
             saveLinksBtn = document.getElementById('save-links-btn');
 
+            importWarningModal = document.getElementById('import-warning-modal');
+            cancelImportWarningBtn = document.getElementById('cancel-import-warning-btn');
+            confirmImportWarningBtn = document.getElementById('confirm-import-warning-btn');
             quickViewTooltip = document.getElementById('quick-view-tooltip');
             // Nuevas referencias para los botones de migración
             const confirmMigrationBtn = document.getElementById('confirm-migration-btn');
