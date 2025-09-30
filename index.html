@@ -22,8 +22,8 @@
     <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- js-xlsx para leer archivos de Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- xlsx-js-style para leer/escribir archivos de Excel con formato -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
     
     <!-- Select2 for searchable dropdown -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -3159,6 +3159,18 @@
             });
         }
 
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses son base 0
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${day}-${month}-${year}_${hours}h-${minutes}m-${seconds}s`;
+        }
+
+
         // =============================================
         // MÓDULO: Gestión de datos históricos
         // =============================================
@@ -3728,6 +3740,128 @@
                 "Medio": newsItem.medio || "",
                 "Enlace": newsItem.fuente || ""
             }));
+        }
+
+        /**
+         * Exporta datos a un archivo Excel con formato personalizado.
+         * @param {Array} data - Los datos a exportar.
+         * @param {string} sheetName - El nombre de la hoja de Excel.
+         * @param {string} fileName - El nombre del archivo a descargar.
+         */
+        function exportToExcelWithFormatting(data, sheetName, fileName) {
+            if (data.length === 0) {
+                return showAlert("No hay datos en la tabla para descargar.", "warning");
+            }
+
+            // 1. Crear estilos
+            const titleStyle = {
+                font: { name: "Noto Sans", sz: 12, bold: true },
+            };
+            const headerStyle = {
+                font: { name: "Noto Sans", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+                alignment: { horizontal: "center", vertical: "center" },
+                fill: { fgColor: { rgb: "9C2348" } },
+                border: {
+                    top: { style: "thin" },
+                    bottom: { style: "thin" },
+                    left: { style: "thin" },
+                    right: { style: "thin" },
+                },
+            };
+            const cellStyle = {
+                font: { name: "Noto Sans", sz: 10 },
+                border: {
+                    top: { style: "thin" },
+                    bottom: { style: "thin" },
+                    left: { style: "thin" },
+                    right: { style: "thin" },
+                },
+            };
+            const centeredCellStyle = {
+                ...cellStyle, // Hereda el estilo base
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+
+            // 2. Preparar los datos
+            const longDate = formatLongDate(new Date().toISOString().split('T')[0]);
+            const title = `Noticias y Conferencias de Proyectos Ferroviarios al ${longDate}`;
+            
+            // Fila de título
+            const titleRow = [[title]];
+
+            // Fila de encabezados
+            const headerRow = [exportHeaders];
+
+            // Filas de datos (sin el campo "No." que se genera dinámicamente)
+            const dataRows = data.map((item, index) => [
+                index + 1,
+                item["Fecha"],
+                item["Proyecto"],
+                item["Subproyecto"],
+                item["Categoría"],
+                item["Noticia"],
+                item["Cita"],
+                item["Resumen"],
+                item["Medio"],
+                item["Enlace"]
+            ]);
+
+            // Combinar todo
+            const finalData = [...titleRow, ...headerRow, ...dataRows];
+
+            // 3. Crear la hoja de cálculo
+            const ws = XLSX.utils.aoa_to_sheet(finalData);
+
+            // 4. Aplicar estilos
+            // Título en A1
+            ws["A1"].s = titleStyle;
+
+            // Encabezados en la fila 2
+            const headerRange = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: 1, c: C });
+                if (ws[cellAddress]) ws[cellAddress].s = headerStyle;
+            }
+
+            // Datos y bordes para toda la tabla (desde la fila 2)
+            for (let R = 1; R <= headerRange.e.r; ++R) {
+                for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                    // Columnas a centrar: No.(0), Fecha(1), Proyecto(2), Subproyecto(3), Categoría(4), Medio(8)
+                    const columnsToCenter = [0, 1, 2, 3, 4, 8];
+
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[cellAddress]) {
+                        if (R === 1) { // Fila de encabezado
+                            ws[cellAddress].s = headerStyle;
+                        } else { // Filas de datos
+                            if (columnsToCenter.includes(C)) {
+                                ws[cellAddress].s = centeredCellStyle;
+                            } else {
+                                ws[cellAddress].s = cellStyle;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. Ajustar anchos de columna
+            ws['!cols'] = [
+                { wch: 5 }, // Columna "No."
+                { wch: 12 }, // Fecha
+                { wch: 30 }, // Proyecto
+                { wch: 30 }, // Subproyecto
+                { wch: 25 }, // Categoría
+                { wch: 50 }, // Noticia
+                { wch: 50 }, // Cita
+                { wch: 60 }, // Resumen
+                { wch: 30 }, // Medio
+                { wch: 40 }, // Enlace
+            ];
+
+            // 6. Generar y descargar el archivo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            XLSX.writeFile(wb, fileName);
         }
 
         // =============================================
@@ -4626,24 +4760,20 @@
 
 
             downloadExcelBtn.addEventListener('click', () => {
-                if (news.length === 0) return showAlert("No hay datos para descargar.", "warning");
-                const data = prepareExportData(news);
-                const ws = XLSX.utils.json_to_sheet(data, { header: exportHeaders });
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Noticias");
-                XLSX.writeFile(wb, "noticias_trenes.xlsx");
+                const dataToExport = prepareExportData(applyAllFilters(news, 'main'));
+                const sheetName = "Noticias y Conferencias";
+                const timestamp = getFormattedTimestamp();
+                const fileName = `Resumen de Noticias y Conferencias - ${timestamp}.xlsx`;
+                exportToExcelWithFormatting(dataToExport, sheetName, fileName);
             });
             
             document.getElementById('download-historical-excel-btn').addEventListener('click', () => {
-                // Obtener los datos actualmente filtrados en la tabla
                 const filteredData = applyAllFilters(historicalNews, 'historical');
-
-                if (filteredData.length === 0) return showAlert("No hay datos en la tabla para descargar.", "warning");
                 const dataToExport = prepareExportData(filteredData);
-                const ws = XLSX.utils.json_to_sheet(dataToExport, { header: exportHeaders });
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Histórico Filtrado");
-                XLSX.writeFile(wb, "noticias_historicas.xlsx");
+                const sheetName = "Histórico de Noticias";
+                const timestamp = getFormattedTimestamp();
+                const fileName = `Resumen de Noticias y Conferencias Históricas - ${timestamp}.xlsx`;
+                exportToExcelWithFormatting(dataToExport, sheetName, fileName);
             });
             
             // --- INICIO: Lógica para Migración ---
