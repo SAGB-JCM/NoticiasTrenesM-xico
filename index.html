@@ -916,7 +916,41 @@
                         </div>
                     </div>
 
-                    
+                    <!-- Total de Noticias y Conferencias Registradas -->
+                    <div class="dynamic-chart-container">
+                        <div class="dynamic-chart-header">
+                            <h3 class="text-xl font-semibold text-slate-800">Total de Noticias y Conferencias Registradas</h3>
+                        </div>
+                        <div class="dynamic-chart-content">
+                            <div class="chart-wrapper">
+                                <canvas id="totalNewsByTypeChart"></canvas>
+                            </div>
+                            <div class="dynamic-table-container">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-lg font-semibold text-slate-800 text-center flex-grow">Distribución por Tipo</h4>
+                                    <button id="download-total-news-type-table-excel-btn" class="text-slate-400 hover:text-primary p-2 rounded-lg transition-colors" title="Descargar tabla como Excel">
+                                        <i class="fa-solid fa-file-excel"></i>
+                                    </button>
+                                </div>
+                                <table id="totalNewsByTypeTable" class="dynamic-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo de Registro</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="totalNewsByTypeTableBody">
+                                        <!-- El contenido se generará dinámicamente -->
+                                    </tbody>
+                                    <tfoot>
+                                        <!-- El total se generará dinámicamente -->
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
                             <h3 class="text-xl font-semibold text-slate-800">Noticias por</h3>
@@ -1516,7 +1550,7 @@
         let activeFilters = {
             main: {},
             historical: {}
-        };
+        }; 
         let charts = {
             dynamic: null,
             projectCategory: null
@@ -3769,12 +3803,14 @@
             
             if (charts.dynamic) charts.dynamic.destroy();
             if (charts.projectCategory) charts.projectCategory.destroy();
+            if (charts.totalNewsByType) charts.totalNewsByType.destroy();
 
             // Update dynamic chart
             updateDynamicChart();
             updateProjectCategoryChart();
+            updateTotalNewsByTypeChart();
         }
-
+ 
         /**
          * Navega a la pestaña de histórico y aplica los filtros especificados.
          * @param {Object} filtersToApply - Un objeto donde las claves son los campos a filtrar y los valores son arrays de los valores a incluir.
@@ -3784,7 +3820,17 @@
             document.querySelector('button[data-tab="historico"]').click();
 
             // 2. Limpiar todos los filtros existentes en la tabla de histórico
-            clearAllHistoricalFilters();
+            clearAllHistoricalFilters(); 
+
+            // Lógica de filtro especial para el dashboard de tipos de noticia
+            if (filtersToApply.medio && filtersToApply.medio[0] === '__NOTICIAS_ONLY__') {
+                activeMedioDashboardFilter = '__NOTICIAS_ONLY__';
+                document.getElementById('medio-indicator-total').classList.add('active-filter');
+                // Eliminar la clave para no aplicarla como un filtro de columna normal
+                delete filtersToApply.medio;
+            } else if (filtersToApply.medio) {
+                activeMedioDashboardFilter = filtersToApply.medio[0];
+            }
 
             // 3. Aplicar los nuevos filtros
             Object.entries(filtersToApply).forEach(([key, value]) => {
@@ -3792,6 +3838,11 @@
                 activeFilters.historical[key] = Array.isArray(value) ? value : [value];
                 // Marcar visualmente el encabezado como activo
                 const header = document.querySelector(`#historical-table-header .filterable-header[data-filter-by="${key}"]`);
+                // Marcar también el indicador del dashboard si el filtro viene de ahí
+                const indicator = document.querySelector(`#tab-content-historico #dashboard-medios .indicator-card[data-medio="${value[0]}"]`);
+                if (indicator) {
+                    indicator.classList.add('active-filter');
+                }
                 if (header) header.classList.add('active');
             });
 
@@ -3986,6 +4037,83 @@
             });
         }
         
+        function updateTotalNewsByTypeChart() {
+            const source = reportesDataSource.value;
+            let data = [];
+            if (source === 'noticias') data = news;
+            else if (source === 'historico') data = historicalNews;
+            else data = [...news, ...historicalNews];
+
+            const counts = {
+                noticias: 0,
+                mananera: 0,
+                evento: 0,
+                informe: 0
+            };
+
+            data.forEach(item => {
+                if (item.medio === "Conferencia de prensa matutina") counts.mananera++;
+                else if (item.medio === "Evento Presidencial") counts.evento++;
+                else if (item.medio === "Informe de Gobierno") counts.informe++;
+                else counts.noticias++;
+            });
+
+            const tableBody = document.getElementById('totalNewsByTypeTableBody');
+            const tableFoot = document.getElementById('totalNewsByTypeTable').querySelector('tfoot');
+            tableBody.innerHTML = '';
+            tableFoot.innerHTML = '';
+
+            const chartData = [
+                { label: 'Noticias', count: counts.noticias, filterValue: '__NOTICIAS_ONLY__' },
+                { label: 'Conferencia Matutina', count: counts.mananera, filterValue: 'Conferencia de prensa matutina' },
+                { label: 'Evento Presidencial', count: counts.evento, filterValue: 'Evento Presidencial' },
+                { label: 'Informe de Gobierno', count: counts.informe, filterValue: 'Informe de Gobierno' }
+            ];
+
+            let total = 0;
+            chartData.forEach(item => {
+                total += item.count;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.label}</td>
+                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.count}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Fila de total
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'bg-slate-200 font-bold';
+            totalRow.innerHTML = `<td>Total</td><td>${total}</td>`;
+            tableFoot.appendChild(totalRow);
+
+            // Actualizar la gráfica
+            if (charts.totalNewsByType) charts.totalNewsByType.destroy();
+
+            charts.totalNewsByType = new Chart(document.getElementById('totalNewsByTypeChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(d => d.label),
+                    datasets: [{
+                        label: 'Total de Registros',
+                        data: chartData.map(d => d.count),
+                        backgroundColor: [
+                            '#9C2348', // Primary
+                            '#1E5B4F', // Accent
+                            '#A6802D', // Secondary
+                            '#64748B'  // Slate
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
         function updateConferenceSummaryLabel(medio, labelElement) {
             let labelText = 'Resumen';
             if (medio === 'Conferencia de prensa matutina') {
@@ -5313,6 +5441,19 @@
                 exportTableToExcel('projectCategoryTable', 'Detalle por Categoría', fileName);
             });
 
+            document.getElementById('download-total-news-type-table-excel-btn').addEventListener('click', () => {
+                const fileName = `Reporte_Total_Registros_por_Tipo.xlsx`;
+                exportTableToExcel('totalNewsByTypeTable', 'Total por Tipo', fileName);
+            });
+
+            document.getElementById('totalNewsByTypeTableBody').addEventListener('click', e => {
+                const cell = e.target.closest('td');
+                if (!cell) return;
+                const { filterVariable, filterValue } = cell.dataset;
+                if (filterVariable && filterValue) {
+                    navigateAndFilter({ [filterVariable]: [filterValue] });
+                }
+            });
 
             // El evento 'shown' no es un evento estándar del DOM. 
             // La lógica para establecer la fecha ya está en el listener de 'addNewsBtn'.
@@ -5401,6 +5542,10 @@
             quickViewTooltip = document.getElementById('quick-view-tooltip');
             projectCategoryChart = document.getElementById('projectCategoryChart');
             // Nuevas referencias para los botones de migración
+            charts.totalNewsByType = null; // Inicializar la referencia al nuevo chart
+
+
+
             const confirmMigrationBtn = document.getElementById('confirm-migration-btn');
             const cancelMigrationBtn = document.getElementById('cancel-migration-btn');
             const selectAllNewsCheckbox = document.getElementById('select-all-news-checkbox');
