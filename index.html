@@ -900,18 +900,17 @@
                 <section id="reportes" class="bg-white p-6 rounded-xl shadow-md mb-8">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Reportes</h2>
-                        <div class="flex items-center space-x-4">
-                            <button id="upload-template-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2">
-                                <i class="fa-solid fa-file-word"></i>
-                                <span>Cargar Plantilla Word</span>
-                            </button>
-                            <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1">
                                 <label for="reportes-data-source" class="block text-sm font-medium text-gray-700">Fuente de datos:</label>
                                 <select id="reportes-data-source" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
                                     <option value="historico">Histórico</option>
                                     <option value="noticias">Noticias</option>
-                                    <option value="combinado">Noticias + Histórico</option>
+                                    <option value="combinado">Histórico + Noticias</option>
                                 </select>
+                                <button id="report-settings-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg transition-colors" title="Configuración de Reportes">
+                                    <i class="fa-solid fa-cog fa-lg"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1417,6 +1416,23 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURACIÓN DE REPORTES -->
+    <div id="report-settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary">Configuración de Reportes</h3>
+                <button id="close-report-settings-modal-btn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-times-circle fa-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <button id="open-template-uploader-btn" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-upload"></i><span>Cargar Plantilla Word</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="view-details-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-details-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
@@ -1532,10 +1548,11 @@
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
         // Variables de estado de la aplicación y referencias DOM
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
+        let historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
         
         let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
         let quickViewTooltip, projectCategoryChart;
+        let reportSettingsModal, closeReportSettingsModalBtn, openTemplateUploaderBtn, reportSettingsBtn;
         let currentEditIsHistorical = false;
         
         let newsSummaryEditor, editNewsSummaryEditor;
@@ -4966,9 +4983,24 @@
                 }
             });
 
+            if (reportSettingsBtn) {
+                reportSettingsBtn.addEventListener('click', () => openModal(reportSettingsModal));
+            }
 
+            if (closeReportSettingsModalBtn) {
+                closeReportSettingsModalBtn.addEventListener('click', () => closeModal(reportSettingsModal));
+            }
 
-            uploadTemplateBtn.addEventListener('click', () => openModal(templateUploadModal));
+            if (openTemplateUploaderBtn) {
+                openTemplateUploaderBtn.addEventListener('click', () => {
+                    closeModal(reportSettingsModal);
+                    openModal(templateUploadModal);
+                });
+            }
+            closeTemplateUploadModalBtn.addEventListener('click', () => {
+                closeModal(templateUploadModal);
+            });
+
             closeTemplateUploadModalBtn.addEventListener('click', () => closeModal(templateUploadModal));
 
             document.querySelectorAll('.upload-template-type-btn').forEach(button => {
@@ -5540,7 +5572,6 @@
             passwordInput = document.getElementById('password-input');
             cancelPasswordBtn = document.getElementById('cancel-password-btn');
             confirmPasswordBtn = document.getElementById('confirm-password-btn');
-            webviewModal = document.getElementById('webview-modal');
             webviewFrame = document.getElementById('webview-frame');
             closeWebviewBtn = document.getElementById('close-webview-btn');
             uploadTemplateBtn = document.getElementById('upload-template-btn');
@@ -5571,11 +5602,15 @@
             cancelImportWarningBtn = document.getElementById('cancel-import-warning-btn');
             confirmImportWarningBtn = document.getElementById('confirm-import-warning-btn');
             quickViewTooltip = document.getElementById('quick-view-tooltip');
+            webviewModal = document.getElementById('webview-modal');
+            reportSettingsModal = document.getElementById('report-settings-modal'); // Ya existe
+            closeReportSettingsModalBtn = document.getElementById('close-report-settings-modal-btn'); // Ya existe
+            openTemplateUploaderBtn = document.getElementById('open-template-uploader-btn'); // Ya existe
+            reportSettingsBtn = document.getElementById('report-settings-btn'); // Ya existe
+
             projectCategoryChart = document.getElementById('projectCategoryChart');
             // Nuevas referencias para los botones de migración
             charts.totalNewsByType = null; // Inicializar la referencia al nuevo chart
-
-
 
             const confirmMigrationBtn = document.getElementById('confirm-migration-btn');
             const cancelMigrationBtn = document.getElementById('cancel-migration-btn');
