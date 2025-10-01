@@ -3833,41 +3833,52 @@
  
         /**
          * Navega a la pestaña de histórico y aplica los filtros especificados.
+         * @param {string} targetTab - La pestaña de destino ('noticias' o 'historico').
          * @param {Object} filtersToApply - Un objeto donde las claves son los campos a filtrar y los valores son arrays de los valores a incluir.
          */
-        function navigateAndFilter(filtersToApply) {
-            // 1. Cambiar a la pestaña de Histórico
-            document.querySelector('button[data-tab="historico"]').click();
+        function navigateAndFilter(targetTab, filtersToApply) {
+            if (targetTab !== 'noticias' && targetTab !== 'historico') return;
 
-            // 2. Limpiar todos los filtros existentes en la tabla de histórico
-            clearAllHistoricalFilters(); 
+            // 1. Cambiar a la pestaña correcta
+            document.querySelector(`button[data-tab="${targetTab}"]`).click();
 
-            // Lógica de filtro especial para el dashboard de tipos de noticia
-            if (filtersToApply.medio && filtersToApply.medio[0] === '__NOTICIAS_ONLY__') {
-                activeMedioDashboardFilter = '__NOTICIAS_ONLY__';
-                document.getElementById('medio-indicator-total').classList.add('active-filter');
-                // Eliminar la clave para no aplicarla como un filtro de columna normal
-                delete filtersToApply.medio;
-            } else if (filtersToApply.medio) {
-                activeMedioDashboardFilter = filtersToApply.medio[0];
+            const isHistorical = targetTab === 'historico';
+            const filterKey = isHistorical ? 'historical' : 'main';
+            const dataProvider = isHistorical ? () => historicalNews : () => news;
+            const tableBody = isHistorical ? historicalTableBody : newsTableBody;
+            const headerId = isHistorical ? 'historical-table-header' : 'main-table-header';
+            const dashboardId = isHistorical ? 'tab-content-historico' : 'news-dashboard-medios';
+
+            // 2. Limpiar filtros existentes en la tabla de destino
+            isHistorical ? clearAllHistoricalFilters() : clearAllMainFilters();
+
+            // 3. Lógica de filtro especial para el dashboard de medios
+            if (filtersToApply.medio) {
+                const medioFilterValue = filtersToApply.medio[0];
+                if (isHistorical) {
+                    activeMedioDashboardFilter = medioFilterValue;
+                } else {
+                    activeNewsMedioFilter = medioFilterValue;
+                }
+
+                const indicator = document.querySelector(`#${dashboardId} .indicator-card[data-medio="${medioFilterValue}"]`);
+                if (indicator) indicator.classList.add('active-filter');
+
+                // Si el filtro es por tipo de medio, no lo aplicamos como filtro de columna
+                if (medioFilterValue === '__NOTICIAS_ONLY__' || specialMedios.includes(medioFilterValue)) {
+                    delete filtersToApply.medio;
+                }
             }
 
-            // 3. Aplicar los nuevos filtros
+            // 4. Aplicar los nuevos filtros de columna
             Object.entries(filtersToApply).forEach(([key, value]) => {
-                // Asegurarse de que el valor sea siempre un array
-                activeFilters.historical[key] = Array.isArray(value) ? value : [value];
-                // Marcar visualmente el encabezado como activo
-                const header = document.querySelector(`#historical-table-header .filterable-header[data-filter-by="${key}"]`);
-                // Marcar también el indicador del dashboard si el filtro viene de ahí
-                const indicator = document.querySelector(`#tab-content-historico #dashboard-medios .indicator-card[data-medio="${value[0]}"]`);
-                if (indicator) {
-                    indicator.classList.add('active-filter');
-                }
+                activeFilters[filterKey][key] = Array.isArray(value) ? value : [value];
+                const header = document.querySelector(`#${headerId} .filterable-header[data-filter-by="${key}"]`);
                 if (header) header.classList.add('active');
             });
 
-            // 4. Re-renderizar la tabla de histórico con los nuevos filtros aplicados
-            sortAndRenderTable(historicalTableBody, historicalNews, true);
+            // 5. Re-renderizar la tabla de destino con los filtros aplicados
+            sortAndRenderTable(tableBody, dataProvider(), isHistorical);
         }
 
         function updateProjectCategoryChart() {
@@ -3882,6 +3893,7 @@
             const allCategories = new Set();
 
             data.forEach(item => {
+                if (specialMedios.includes(item.medio)) return; // Excluir conferencias de esta gráfica
                 const project = item.proyecto || 'N/A';
                 const category = item.categoria || 'N/A';
 
@@ -3904,6 +3916,7 @@
             });
 
             // --- INICIO: Lógica de la tabla con totales ---
+            const isClickable = reportesDataSource.value !== 'combinado';
             const table = document.getElementById('projectCategoryTable');
             // Encabezado con columna de Total
             table.querySelector('thead').innerHTML = `<tr><th>Proyecto</th>${sortedCategories.map(cat => `<th>${cat}</th>`).join('')}<th>Total</th></tr>`;
@@ -3916,12 +3929,13 @@
 
             projects.forEach(project => {
                 const row = document.createElement('tr');
-                let rowHTML = `<td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="proyecto" data-filter-value="${project}">${project}</td>`;
+                const clickableClass = isClickable ? 'clickable-cell hover:bg-slate-100 hover:text-primary' : '';
+                let rowHTML = `<td class="${clickableClass}" data-filter-variable="proyecto" data-filter-value="${project}">${project}</td>`;
                 let projectTotal = 0;
 
                 sortedCategories.forEach(cat => {
                     const count = projectCategoryData[project][cat] || 0;
-                    rowHTML += `<td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="proyecto" data-filter-value="${project}" data-filter-category="${cat}">${count}</td>`;
+                    rowHTML += `<td class="${clickableClass}" data-filter-variable="proyecto" data-filter-value="${project}" data-filter-category="${cat}">${count}</td>`;
                     projectTotal += count;
                     categoryTotals[cat] = (categoryTotals[cat] || 0) + count;
                 });
@@ -3997,12 +4011,14 @@
             // --- INICIO DE LA MEJORA: Ordenar los datos por conteo descendente ---
             const sortedData = Object.entries(variableCounts).sort(([, a], [, b]) => b - a);
             // --- FIN DE LA MEJORA ---
+            const isClickable = reportesDataSource.value !== 'combinado';
 
             let total = 0;
 
             // Usar los datos ordenados (sortedData) para renderizar la tabla
             sortedData.forEach(([value, count]) => {
                 total += count;
+                const clickableClass = isClickable ? 'clickable-cell hover:bg-slate-100 hover:text-primary' : '';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -4083,6 +4099,7 @@
             tableBody.innerHTML = '';
             tableFoot.innerHTML = '';
 
+            const isClickable = reportesDataSource.value !== 'combinado';
             const chartData = [
                 { label: 'Noticias', count: counts.noticias, filterValue: '__NOTICIAS_ONLY__' },
                 { label: 'Conferencia Matutina', count: counts.mananera, filterValue: 'Conferencia de prensa matutina' },
@@ -4093,10 +4110,11 @@
             let total = 0;
             chartData.forEach(item => {
                 total += item.count;
+                const clickableClass = isClickable ? 'clickable-cell hover:bg-slate-100 hover:text-primary' : '';
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.label}</td>
-                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.count}</td>
+                    <td class="${clickableClass}" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.label}</td>
+                    <td class="${clickableClass}" data-filter-variable="medio" data-filter-value="${item.filterValue}">${item.count}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -4780,24 +4798,26 @@
 
             // Listener para la tabla de distribución dinámica (Reportes)
             dynamicTableBody.addEventListener('click', e => {
-                const cell = e.target.closest('td');
-                if (!cell) return;
+                const cell = e.target.closest('td.clickable-cell');
+                if (!cell) return; // Solo actuar si la celda es clickeable
 
                 const { filterVariable, filterValue } = cell.dataset;
+                const targetTab = reportesDataSource.value; // 'noticias' o 'historico'
                 
                 if (filterVariable && filterValue && filterValue !== 'Total') {
-                    navigateAndFilter({ [filterVariable]: [filterValue] });
+                    navigateAndFilter(targetTab, { [filterVariable]: [filterValue] });
                 }
             });
 
             // Listener para la tabla de proyectos por categoría (Reportes)
             document.getElementById('projectCategoryTable').addEventListener('click', e => {
-                const cell = e.target.closest('td');
-                if (!cell) return;
+                const cell = e.target.closest('td.clickable-cell');
+                if (!cell) return; // Solo actuar si la celda es clickeable
         
                 // Extraer todos los posibles datos de filtro de la celda
                 const { filterVariable, filterValue, filterCategory } = cell.dataset;
                 const filtersToApply = {};
+                const targetTab = reportesDataSource.value;
         
                 // Construir el objeto de filtros combinando los datos disponibles
                 if (filterVariable && filterValue) {
@@ -4807,7 +4827,9 @@
                     filtersToApply['categoria'] = [filterCategory];
                 }
         
-                if (Object.keys(filtersToApply).length > 0) navigateAndFilter(filtersToApply);
+                if (Object.keys(filtersToApply).length > 0) {
+                    navigateAndFilter(targetTab, filtersToApply);
+                }
             });
             
             // Inicializar el estado visual del botón de tipo de gráfica
@@ -5510,10 +5532,13 @@
 
             document.getElementById('totalNewsByTypeTableBody').addEventListener('click', e => {
                 const cell = e.target.closest('td');
-                if (!cell) return;
+                if (!cell || !cell.classList.contains('clickable-cell')) return;
+
                 const { filterVariable, filterValue } = cell.dataset;
+                const targetTab = reportesDataSource.value;
+
                 if (filterVariable && filterValue) {
-                    navigateAndFilter({ [filterVariable]: [filterValue] });
+                    navigateAndFilter(targetTab, { [filterVariable]: [filterValue] });
                 }
             });
 
