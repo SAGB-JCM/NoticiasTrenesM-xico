@@ -362,7 +362,7 @@
 
         .chart-wrapper {
             position: relative;
-            height: 300px;
+            height: 100%;
         }
 
         .dynamic-chart-container {
@@ -4714,6 +4714,8 @@
             dynamicChartVariable.addEventListener('change', updateDynamicChart);
             
             toggleLabelsBtn.addEventListener('click', () => {
+                if (!charts.dynamic) return; // Prevenir error si el chart no existe
+
                 showChartLabels = !showChartLabels;
                 const icon = toggleLabelsBtn.querySelector('i');
                 toggleLabelsBtn.classList.toggle('bg-primary', showChartLabels);
@@ -4724,6 +4726,9 @@
                 toggleLabelsBtn.title = showChartLabels ? 'Ocultar etiquetas del eje X' : 'Mostrar etiquetas del eje X';
                 updateDynamicChart();
             });
+
+            // Fortalecer la responsividad de las gráficas al cambiar el tamaño de la ventana (zoom)
+            window.addEventListener('resize', updateCharts);
 
             // Inicializar el estado visual del botón de etiquetas
             toggleLabelsBtn.click(); toggleLabelsBtn.click(); // Doble clic para inicializar sin cambiar el estado
