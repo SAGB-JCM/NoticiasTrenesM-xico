@@ -581,6 +581,13 @@
             border-radius: 2px;
         }
 
+        /* Estilo para celdas clickeables en tablas de reportes */
+        .clickable-cell {
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+
         /* Estilos para la Alerta de Resumen (copiado de Licitaciones y Llamadas) */
         .train-alert.alert-enter { animation: slideInUp 0.5s ease-out forwards; }
         .train-alert.alert-leave { animation: slideOutDown 0.5s ease-in forwards; }
@@ -2200,7 +2207,6 @@
 
             // 4. Re-renderizar la tabla para mostrar todos los datos
             sortAndRenderTable(historicalTableBody, historicalNews, true);
-            showAlert("Filtros de Histórico limpiados.", "info");
         }
 
         function plainTextToOpenXml(text) {
@@ -3769,6 +3775,30 @@
             updateProjectCategoryChart();
         }
 
+        /**
+         * Navega a la pestaña de histórico y aplica los filtros especificados.
+         * @param {Object} filtersToApply - Un objeto donde las claves son los campos a filtrar y los valores son arrays de los valores a incluir.
+         */
+        function navigateAndFilter(filtersToApply) {
+            // 1. Cambiar a la pestaña de Histórico
+            document.querySelector('button[data-tab="historico"]').click();
+
+            // 2. Limpiar todos los filtros existentes en la tabla de histórico
+            clearAllHistoricalFilters();
+
+            // 3. Aplicar los nuevos filtros
+            Object.entries(filtersToApply).forEach(([key, value]) => {
+                // Asegurarse de que el valor sea siempre un array
+                activeFilters.historical[key] = Array.isArray(value) ? value : [value];
+                // Marcar visualmente el encabezado como activo
+                const header = document.querySelector(`#historical-table-header .filterable-header[data-filter-by="${key}"]`);
+                if (header) header.classList.add('active');
+            });
+
+            // 4. Re-renderizar la tabla de histórico con los nuevos filtros aplicados
+            sortAndRenderTable(historicalTableBody, historicalNews, true);
+        }
+
         function updateProjectCategoryChart() {
             const source = reportesDataSource.value;
             let data = [];
@@ -3815,12 +3845,12 @@
 
             projects.forEach(project => {
                 const row = document.createElement('tr');
-                let rowHTML = `<td>${project}</td>`;
+                let rowHTML = `<td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="proyecto" data-filter-value="${project}">${project}</td>`;
                 let projectTotal = 0;
 
                 sortedCategories.forEach(cat => {
                     const count = projectCategoryData[project][cat] || 0;
-                    rowHTML += `<td>${count}</td>`;
+                    rowHTML += `<td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="proyecto" data-filter-value="${project}" data-filter-category="${cat}">${count}</td>`;
                     projectTotal += count;
                     categoryTotals[cat] = (categoryTotals[cat] || 0) + count;
                 });
@@ -3905,11 +3935,12 @@
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${value}</td>
-                    <td>${count}</td>
+                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="${selectedVariable}" data-filter-value="${value}">${value}</td>
+                    <td class="clickable-cell hover:bg-slate-100 hover:text-primary" data-filter-variable="${selectedVariable}" data-filter-value="${value}">${count}</td>
                 `;
                 dynamicTableBody.appendChild(row);
             });
+
             // Add total row
             const totalRow = document.createElement('tr');
             totalRow.className = 'bg-slate-200 font-bold';
@@ -4570,6 +4601,38 @@
                 button.title = isProjectChartStacked ? "Cambiar a Gráfica Agrupada" : "Cambiar a Gráfica Apilada";
                 icon.className = isProjectChartStacked ? 'fa-solid fa-layer-group' : 'fa-solid fa-chart-bar';
                 updateProjectCategoryChart();
+            });
+
+            // Listener para la tabla de distribución dinámica (Reportes)
+            dynamicTableBody.addEventListener('click', e => {
+                const cell = e.target.closest('td');
+                if (!cell) return;
+
+                const { filterVariable, filterValue } = cell.dataset;
+                
+                if (filterVariable && filterValue && filterValue !== 'Total') {
+                    navigateAndFilter({ [filterVariable]: [filterValue] });
+                }
+            });
+
+            // Listener para la tabla de proyectos por categoría (Reportes)
+            document.getElementById('projectCategoryTable').addEventListener('click', e => {
+                const cell = e.target.closest('td');
+                if (!cell) return;
+        
+                // Extraer todos los posibles datos de filtro de la celda
+                const { filterVariable, filterValue, filterCategory } = cell.dataset;
+                const filtersToApply = {};
+        
+                // Construir el objeto de filtros combinando los datos disponibles
+                if (filterVariable && filterValue) {
+                    filtersToApply[filterVariable] = [filterValue];
+                }
+                if (filterCategory) {
+                    filtersToApply['categoria'] = [filterCategory];
+                }
+        
+                if (Object.keys(filtersToApply).length > 0) navigateAndFilter(filtersToApply);
             });
             
             // Inicializar el estado visual del botón de tipo de gráfica
