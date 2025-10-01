@@ -920,6 +920,9 @@
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
                             <h3 class="text-xl font-semibold text-slate-800">Total de Noticias y Conferencias Registradas</h3>
+                            <button id="toggle-total-news-chart-type-btn" class="bg-primary text-white font-bold py-2 px-3 rounded ml-2 transition-colors duration-200" title="Cambiar a Gráfica de Barras">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </button>
                         </div>
                         <div class="dynamic-chart-content">
                             <div class="chart-wrapper">
@@ -1563,6 +1566,7 @@
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
         let isProjectChartStacked = false; // Estado para controlar si la gráfica de proyectos es apilada
+        let isTotalNewsChartPie = true; // Estado para controlar si la gráfica de totales es de pastel (por defecto)
 
         // Estado para la funcionalidad de migración
         let isMigrationModeActive = false;
@@ -4091,25 +4095,32 @@
             if (charts.totalNewsByType) charts.totalNewsByType.destroy();
 
             charts.totalNewsByType = new Chart(document.getElementById('totalNewsByTypeChart'), {
-                type: 'bar',
+                type: isTotalNewsChartPie ? 'pie' : 'bar',
                 data: {
                     labels: chartData.map(d => d.label),
                     datasets: [{
                         label: 'Total de Registros',
                         data: chartData.map(d => d.count),
                         backgroundColor: [
-                            '#9C2348', // Primary
-                            '#1E5B4F', // Accent
-                            '#A6802D', // Secondary
-                            '#64748B'  // Slate
+                            '#9C2348', // Primary para Noticias
+                            '#1E5B4F', // Accent para Mañanera
+                            '#A6802D', // Secondary para Evento
+                            '#64748B'  // Slate para Informe
                         ]
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false } }
+                    scales: { 
+                        // Ocultar ejes para la gráfica de pastel
+                        y: { display: !isTotalNewsChartPie, beginAtZero: true },
+                        x: { display: !isTotalNewsChartPie }
+                    },
+                    plugins: { 
+                        // Mostrar leyenda para la gráfica de pastel, ocultarla para la de barras
+                        legend: { display: isTotalNewsChartPie } 
+                    }
                 }
             });
         }
@@ -4729,6 +4740,21 @@
                 button.title = isProjectChartStacked ? "Cambiar a Gráfica Agrupada" : "Cambiar a Gráfica Apilada";
                 icon.className = isProjectChartStacked ? 'fa-solid fa-layer-group' : 'fa-solid fa-chart-bar';
                 updateProjectCategoryChart();
+            });
+
+            // Listener para el nuevo botón de tipo de gráfica de totales
+            document.getElementById('toggle-total-news-chart-type-btn').addEventListener('click', (e) => {
+                isTotalNewsChartPie = !isTotalNewsChartPie;
+                const button = e.currentTarget;
+                const icon = button.querySelector('i');
+
+                button.classList.toggle('bg-primary', isTotalNewsChartPie);
+                button.classList.toggle('text-white', isTotalNewsChartPie);
+                button.classList.toggle('bg-slate-200', !isTotalNewsChartPie);
+                button.classList.toggle('text-slate-700', !isTotalNewsChartPie);
+                button.title = isTotalNewsChartPie ? "Cambiar a Gráfica de Barras" : "Cambiar a Gráfica de Pastel";
+                icon.className = isTotalNewsChartPie ? 'fa-solid fa-chart-bar' : 'fa-solid fa-chart-pie';
+                updateTotalNewsByTypeChart();
             });
 
             // Listener para la tabla de distribución dinámica (Reportes)
