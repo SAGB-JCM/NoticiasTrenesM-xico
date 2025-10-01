@@ -1425,9 +1425,40 @@
                     <i class="fa-solid fa-times-circle fa-lg"></i>
                 </button>
             </div>
-            <div class="space-y-4">
-                <button id="open-template-uploader-btn" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-upload"></i><span>Cargar Plantilla Word</span>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-md font-semibold text-slate-700 mb-2">Plantillas</h4>
+                    <button id="open-template-uploader-btn" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-upload"></i><span>Cargar Plantilla Word</span>
+                    </button>
+                </div>
+                <div class="border-t border-gray-200 pt-4">
+                    <h4 class="text-md font-semibold text-slate-700 mb-3">Filtro de Fechas para Reportes</h4>
+                    <fieldset class="space-y-2">
+                        <div class="flex items-center">
+                            <input id="date-filter-all" name="date-filter-mode" type="radio" class="focus:ring-primary h-4 w-4 text-primary border-gray-300" value="all" checked>
+                            <label for="date-filter-all" class="ml-3 block text-sm font-medium text-gray-700">Todos los datos</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="date-filter-period" name="date-filter-mode" type="radio" class="focus:ring-primary h-4 w-4 text-primary border-gray-300" value="period">
+                            <label for="date-filter-period" class="ml-3 block text-sm font-medium text-gray-700">Seleccionar periodo</label>
+                        </div>
+                    </fieldset>
+                    <div id="date-range-picker-container" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50 transition-opacity">
+                        <div>
+                            <label for="report-start-date" class="block text-sm font-medium text-gray-700">Fecha de inicio</label>
+                            <input type="date" id="report-start-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 disabled:bg-gray-100 disabled:cursor-not-allowed" disabled>
+                        </div>
+                        <div>
+                            <label for="report-end-date" class="block text-sm font-medium text-gray-700">Fecha de fin</label>
+                            <input type="date" id="report-end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 disabled:bg-gray-100 disabled:cursor-not-allowed" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="save-report-settings-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 ease-in-out">
+                    Guardar Cambios
                 </button>
             </div>
         </div>
@@ -1555,6 +1586,13 @@
         let currentEditIsHistorical = false;
         
         let newsSummaryEditor, editNewsSummaryEditor;
+        // Objeto para almacenar la configuración de los reportes
+        let reportSettings = {
+            dateFilterMode: 'all', // 'all' o 'period'
+            startDate: '',
+            endDate: '',
+            dataSource: 'historico' // Valor por defecto
+        };
         let fieldOptions = {
             proyectos: [],
             categorias: [],
@@ -3814,6 +3852,33 @@
         // MÓDULO: Gráficos y reportes
         // =============================================
         
+        /**
+         * Obtiene y filtra los datos para los reportes según la configuración guardada.
+         * @returns {Array} El conjunto de datos (news, historicalNews, o combinado) filtrado por fecha si aplica.
+         */
+        function getReportData() {
+            const source = reportesDataSource.value;
+            let baseData = [];
+
+            if (source === 'noticias') baseData = news;
+            else if (source === 'historico') baseData = historicalNews;
+            else baseData = [...news, ...historicalNews];
+
+            // Aplicar filtro de fecha si está configurado
+            if (reportSettings.dateFilterMode === 'period' && reportSettings.startDate && reportSettings.endDate) {
+                try {
+                    return baseData.filter(item => {
+                        // La comparación de strings 'YYYY-MM-DD' funciona correctamente para rangos.
+                        return item.fecha && item.fecha >= reportSettings.startDate && item.fecha <= reportSettings.endDate;
+                    });
+                } catch (e) {
+                    console.error("Error al filtrar fechas:", e);
+                    return baseData; // Devuelve los datos sin filtrar en caso de error.
+                }
+            }
+            return baseData; // Devuelve todos los datos si el filtro no está activo.
+        }
+
         function updateCharts() {
             const source = reportesDataSource.value;
             let data = [];
@@ -3852,6 +3917,22 @@
             // 2. Limpiar filtros existentes en la tabla de destino
             isHistorical ? clearAllHistoricalFilters() : clearAllMainFilters();
 
+            // --- INICIO DE LA MEJORA: Aplicar filtro de fecha si hay un periodo activo en reportes ---
+            if (reportSettings.dateFilterMode === 'period' && reportSettings.startDate && reportSettings.endDate) {
+                const dataForDateFiltering = dataProvider(); // Obtener todos los datos de la tabla de destino.
+                
+                // Encontrar todas las fechas únicas que caen dentro del rango del reporte.
+                const datesInRange = [...new Set(
+                    dataForDateFiltering
+                        .filter(item => item.fecha && item.fecha >= reportSettings.startDate && item.fecha <= reportSettings.endDate)
+                        .map(item => formatDate(item.fecha)) // Usar la fecha formateada, que es como el filtro la espera.
+                )];
+
+                // Añadir las fechas encontradas al objeto de filtros a aplicar.
+                filtersToApply['fecha'] = datesInRange;
+            }
+            // --- FIN DE LA MEJORA ---
+
             // 3. Lógica de filtro especial para el dashboard de medios
             if (filtersToApply.medio) {
                 const medioFilterValue = filtersToApply.medio[0];
@@ -3882,12 +3963,7 @@
         }
 
         function updateProjectCategoryChart() {
-            const source = reportesDataSource.value;
-            let data = [];
-            if (source === 'noticias') data = news;
-            else if (source === 'historico') data = historicalNews;
-            else data = [...news, ...historicalNews];
-
+            const data = getReportData();
             const projectCategoryData = {};
             const projectTotals = {}; // Para ordenar los proyectos
             const allCategories = new Set();
@@ -3986,12 +4062,7 @@
         }
 
         function updateDynamicChart() {
-            const source = reportesDataSource.value;
-            let data = [];
-            if (source === 'noticias') data = news;
-            else if (source === 'historico') data = historicalNews;
-            else data = [...news, ...historicalNews];
-            
+            const data = getReportData();
             // Filtrar los datos para excluir conferencias y eventos especiales, mostrando solo noticias.
             const onlyNewsData = data.filter(item => !specialMedios.includes(item.medio));
 
@@ -4074,12 +4145,7 @@
         }
         
         function updateTotalNewsByTypeChart() {
-            const source = reportesDataSource.value;
-            let data = [];
-            if (source === 'noticias') data = news;
-            else if (source === 'historico') data = historicalNews;
-            else data = [...news, ...historicalNews];
-
+            const data = getReportData();
             const counts = {
                 noticias: 0,
                 mananera: 0,
@@ -4658,7 +4724,7 @@
                 if (alertInfo.count > 0) {
                     const alertId = `train-alert-${alertInfo.target}`;
                     const alertHTML = `
-                        <div id="${alertId}" class="train-alert bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+                        <div id="${alertId}" data-target="${alertInfo.target}" class="train-alert bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden cursor-pointer">
                             <div class="p-4">
                                 <div class="flex items-start">
                                     <div class="flex-shrink-0">
@@ -4666,10 +4732,7 @@
                                     </div>
                                     <div class="ml-3 w-0 flex-1 pt-0.5">
                                         <p class="text-sm font-bold text-slate-800">${alertInfo.medio}</p>
-                                        <div class="mt-2 text-sm text-slate-600 flex justify-between items-center">
-                                            <p>Hay <strong>${alertInfo.count}</strong> registro(s) esta semana.</p>
-                                            <button data-target="${alertInfo.target}" class="view-train-alert-btn ml-2 text-xs font-bold text-primary hover:underline whitespace-nowrap">Ver</button>
-                                        </div>
+                                        <p class="mt-2 text-sm text-slate-600">Hay <strong>${alertInfo.count}</strong> registro(s) esta semana.</p>
                                     </div>
                                     <div class="ml-4 flex-shrink-0 flex">
                                         <button class="close-train-alert-btn bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
@@ -4696,17 +4759,21 @@
 
         function setupTrainAlertsListeners() {
             document.getElementById('notifications-wrapper').addEventListener('click', (e) => {
-                const viewBtn = e.target.closest('.view-train-alert-btn');
+                const alertDiv = e.target.closest('.train-alert');
                 const closeBtn = e.target.closest('.close-train-alert-btn');
 
-                if (viewBtn) {
+                if (closeBtn) {
+                    // Si se hace clic en el botón de cerrar, solo se cierra.
+                    clearTimeout(alertDiv.dataset.timeoutId);
+                    alertDiv.classList.remove('alert-enter');
+                    alertDiv.classList.add('alert-leave');
+                    setTimeout(() => alertDiv.remove(), 500);
+                } else if (alertDiv) { // Si se hace clic en cualquier otra parte de la alerta
+                    // Si se hace clic en cualquier otra parte de la notificación, se activa la vista.
                     document.querySelector('button[data-tab="noticias"]').click();
-                    const targetIndicator = document.getElementById(viewBtn.dataset.target);
+                    const targetIndicator = document.getElementById(alertDiv.dataset.target);
                     if (targetIndicator) targetIndicator.click();
-                }
-
-                if (viewBtn || closeBtn) {
-                    const alertDiv = (viewBtn || closeBtn).closest('.train-alert');
+                    // Y también se cierra la notificación.
                     clearTimeout(alertDiv.dataset.timeoutId);
                     alertDiv.classList.remove('alert-enter');
                     alertDiv.classList.add('alert-leave');
@@ -5005,7 +5072,67 @@
             });
 
             if (reportSettingsBtn) {
-                reportSettingsBtn.addEventListener('click', () => openModal(reportSettingsModal));
+                reportSettingsBtn.addEventListener('click', () => {
+                    // Cargar la configuración actual en el modal antes de abrirlo
+                    document.querySelector(`input[name="date-filter-mode"][value="${reportSettings.dateFilterMode}"]`).checked = true;
+                    const startDateInput = document.getElementById('report-start-date');
+                    const endDateInput = document.getElementById('report-end-date');
+                    const dateContainer = document.getElementById('date-range-picker-container');
+
+                    startDateInput.value = reportSettings.startDate;
+                    endDateInput.value = reportSettings.endDate;
+
+                    if (reportSettings.dateFilterMode === 'period') {
+                        dateContainer.classList.remove('opacity-50');
+                        startDateInput.disabled = false;
+                        endDateInput.disabled = false;
+                    } else {
+                        dateContainer.classList.add('opacity-50');
+                        startDateInput.disabled = true;
+                        endDateInput.disabled = true;
+                    }
+
+                    openModal(reportSettingsModal);
+                });
+            }
+
+            if (document.getElementById('save-report-settings-btn')) {
+                document.getElementById('save-report-settings-btn').addEventListener('click', () => {
+                    const dateFilterMode = document.querySelector('input[name="date-filter-mode"]:checked').value;
+                    const startDate = document.getElementById('report-start-date').value;
+                    const endDate = document.getElementById('report-end-date').value;
+
+                    // 3. Validación robusta: no guardar si el período está seleccionado pero las fechas están vacías.
+                    if (dateFilterMode === 'period' && (!startDate || !endDate)) {
+                        showAlert("Por favor, seleccione una fecha de inicio y una de fin para el período.", "warning");
+                        return; // Detiene la ejecución
+                    }
+
+                    reportSettings.dateFilterMode = dateFilterMode;
+                    reportSettings.startDate = startDate;
+                    reportSettings.endDate = endDate;
+
+                    showAlert("Configuración de reportes guardada.", "success");
+                    updateCharts(); // Actualizar los gráficos inmediatamente después de guardar la nueva configuración.
+                    closeModal(reportSettingsModal);
+                });
+            }
+
+            // 1. Cierre del modal de configuración de reportes al hacer clic fuera.
+            if (reportSettingsModal) {
+                reportSettingsModal.addEventListener('click', (e) => {
+                    if (e.target === reportSettingsModal) {
+                        closeModal(reportSettingsModal);
+                    }
+                });
+
+                // 2. Guardar cambios en el modal de configuración con la tecla "Enter".
+                reportSettingsModal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevenir cualquier comportamiento por defecto.
+                        document.getElementById('save-report-settings-btn').click();
+                    }
+                });
             }
 
             if (closeReportSettingsModalBtn) {
@@ -5028,6 +5155,19 @@
                 button.addEventListener('click', (e) => {
                     const templateType = e.currentTarget.dataset.templateType;
                     uploadTemplateFile(templateType);
+                });
+            });
+
+            document.querySelectorAll('input[name="date-filter-mode"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const isPeriod = e.target.value === 'period';
+                    const container = document.getElementById('date-range-picker-container');
+                    const startDateInput = document.getElementById('report-start-date');
+                    const endDateInput = document.getElementById('report-end-date');
+
+                    container.classList.toggle('opacity-50', !isPeriod);
+                    startDateInput.disabled = !isPeriod;
+                    endDateInput.disabled = !isPeriod;
                 });
             });
 
