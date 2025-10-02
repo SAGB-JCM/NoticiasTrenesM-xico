@@ -3826,16 +3826,16 @@
         
         function setupRealtimeListeners() {
             newsCollectionRef.onSnapshot((snapshot) => {
-                let weeklyAlertCounts = {};
                 news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Optimización: Pre-calcular los conteos de alertas aquí para no bloquear la UI más tarde.
-                weeklyAlertCounts = calculateWeeklyAlerts(news);
+                
+                // 1. Renderizar la tabla principal primero para una carga percibida más rápida.
                 sortAndRenderTable(newsTableBody, news, false);
+
+                // 2. Ejecutar actualizaciones secundarias después de que la tabla es visible.
+                const weeklyAlertCounts = calculateWeeklyAlerts(news);
                 updateNewsMediosDashboard();
                 updateCharts();
                 updateDynamicSelectOptions();
-
-                // Llamar a la función de la alerta después de que los datos se carguen
                 setTimeout(() => checkAndShowTrainAlerts(weeklyAlertCounts), 1000);
             }, (error) => console.error("Error en listener de noticias:", error));
 
