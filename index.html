@@ -2354,9 +2354,10 @@
         
         function renderTable(tableBody, data, isHistorical = false) {
             const noDataMessage = isHistorical ? document.getElementById('no-historical-message') : document.getElementById('no-news-message');
-            tableBody.innerHTML = '';
-            noDataMessage.classList.toggle('hidden', data.length > 0);
 
+            // Crear un DocumentFragment para la inserción masiva
+            const fragment = document.createDocumentFragment();
+ 
             const isMainMigrationActive = !isHistorical && isMigrationModeActive;
             const isReverseMigrationActive = isHistorical && isReverseMigrationModeActive;
 
@@ -2431,10 +2432,17 @@
                 
                 row.innerHTML = migrationCell + reverseMigrationCell + rowContent;
 
-                tableBody.appendChild(row);
+                fragment.appendChild(row); // Anexar la fila al fragmento en lugar de al DOM directamente
             });
 
-            // Add event listeners to link cells
+            // 1. Limpiar el tbody justo antes de la inserción.
+            tableBody.innerHTML = '';
+            // 2. Realizar la única manipulación del DOM para insertar todas las filas.
+            tableBody.appendChild(fragment);
+            // 3. Actualizar el mensaje de "no hay datos" después de la inserción.
+            noDataMessage.classList.toggle('hidden', data.length > 0);
+
+            // Los listeners se pueden añadir después de que el contenido está en el DOM
             document.querySelectorAll('.link-cell').forEach(link => {
                 link.addEventListener('click', (e) => {
                     const url = e.currentTarget.getAttribute('data-url');
@@ -3472,31 +3480,60 @@
 
         function updateDynamicSelectOptions() {
             const allData = [...news, ...historicalNews];
-            
-            // Proyectos - combinar catálogo con datos existentes
-            const historicalProyectos = allData.map(c => c.proyecto).filter(Boolean).map(p => p.trim());
-            const combinedProyectos = [...new Set([...catalogoProyectos, ...historicalProyectos])].sort();
+
+            // Inicializar sets con los catálogos (preservando comportamiento original)
+            const proyectosSet = new Set(catalogoProyectos || []);
+            const categoriasSet = new Set(catalogoCategorias || []);
+            const mediosSet = new Set(catalogoMedios || []);
+            const subproyectosSet = new Set(catalogoSubproyectos || []);
+
+            // Un solo barrido sobre allData
+            for (const item of allData) {
+                if (!item) continue;
+
+                const p = item.proyecto;
+                if (p != null) {
+                    const t = String(p).trim();
+                    if (t) proyectosSet.add(t);
+                }
+
+                const c = item.categoria;
+                if (c != null) {
+                    const t = String(c).trim();
+                    if (t) categoriasSet.add(t);
+                }
+
+                const m = item.medio;
+                if (m != null) {
+                    const t = String(m).trim();
+                    if (t) mediosSet.add(t);
+                }
+
+                const s = item.subproyecto;
+                if (s != null) {
+                    const t = String(s).trim();
+                    if (t) subproyectosSet.add(t);
+                }
+            }
+
+            // Convertir a arrays ordenados y actualizar fieldOptions + selects
+            const combinedProyectos = Array.from(proyectosSet).sort();
             fieldOptions.proyectos = combinedProyectos;
             updateSelectOptions('proyectos', fieldOptions.proyectos);
-        
-            // Categorías - combinar catálogo con datos existentes
-            const historicalCategorias = allData.map(c => c.categoria).filter(Boolean).map(c => c.trim());
-            const combinedCategorias = [...new Set([...catalogoCategorias, ...historicalCategorias])].sort();
+
+            const combinedCategorias = Array.from(categoriasSet).sort();
             fieldOptions.categorias = combinedCategorias;
             updateSelectOptions('categorias', fieldOptions.categorias);
 
-            // Medios - combinar catálogo con datos existentes
-            const historicalMedios = allData.map(c => c.medio).filter(Boolean).map(m => m.trim());
-            const combinedMedios = [...new Set([...catalogoMedios, ...historicalMedios])].sort();
+            const combinedMedios = Array.from(mediosSet).sort();
             fieldOptions.medios = combinedMedios;
             updateSelectOptions('medios', fieldOptions.medios);
 
-            // Subproyectos - solo datos existentes
-            const historicalSubproyectos = allData.map(c => c.subproyecto).filter(Boolean).map(s => s.trim());
-            const combinedSubproyectos = [...new Set([...catalogoSubproyectos, ...historicalSubproyectos])].sort();
+            const combinedSubproyectos = Array.from(subproyectosSet).sort();
             fieldOptions.subproyectos = combinedSubproyectos;
             updateSelectOptions('subproyectos', fieldOptions.subproyectos);
         }
+
 
         const specialMediosForNewsForm = [
             "Conferencia de prensa matutina",
@@ -3827,26 +3864,30 @@
         function setupRealtimeListeners() {
             // Listener para la colección de noticias
             newsCollectionRef.onSnapshot((snapshot) => {
-                news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Paso 1: Mapeo y renderización síncrona para una carga visual inmediata.
+                news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));                
                 sortAndRenderTable(newsTableBody, news, false);
-                updateNewsMediosDashboard();
-                updateCharts();
-                updateDynamicSelectOptions();
                 
-                // La alerta se llama después de un breve retardo para no interferir con el renderizado inicial.
+                // Paso 2: Desacoplar operaciones pesadas para que se ejecuten de forma asíncrona.
                 setTimeout(() => {
+                    updateNewsMediosDashboard();
+                    updateDynamicSelectOptions();
                     const alertCounts = calculateWeeklyAlertCounts();
                     checkAndShowTrainAlerts(alertCounts);
-                }, 900);
+                }, 100);
             }, (error) => console.error("Error en listener de noticias:", error));
 
             // Listener para la colección de histórico
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
-                historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Paso 1: Mapeo y renderización síncrona.
+                historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));                
                 sortAndRenderTable(historicalTableBody, historicalNews, true);
-                updateMediosDashboard();
-                updateCharts();
-                updateDynamicSelectOptions();
+                
+                // Paso 2: Desacoplar operaciones pesadas.
+                setTimeout(() => {
+                    updateMediosDashboard();
+                    updateDynamicSelectOptions();
+                }, 100);
             }, (error) => console.error("Error en listener de histórico:", error));
         }
 
