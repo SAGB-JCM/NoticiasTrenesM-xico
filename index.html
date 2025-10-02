@@ -3826,14 +3826,40 @@
         
         function setupRealtimeListeners() {
             newsCollectionRef.onSnapshot((snapshot) => {
-                news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const { start, end } = getWeekRange();
+                const weeklyAlertCounts = { mananera: 0, evento: 0, informe: 0 };
+                const newsMedioCounts = { noticias: 0, mananera: 0, evento: 0, informe: 0 };
+                const specialMediosSet = new Set(specialMedios);
+
+                news = snapshot.docs.map(doc => {
+                    const newsItem = { id: doc.id, ...doc.data() };
+                    const medio = newsItem.medio;
+
+                    // Conteo para el Radar de Medios (Dashboard)
+                    if (medio === "Conferencia de prensa matutina") newsMedioCounts.mananera++;
+                    else if (medio === "Evento Presidencial") newsMedioCounts.evento++;
+                    else if (medio === "Informe de Gobierno") newsMedioCounts.informe++;
+                    else newsMedioCounts.noticias++;
+
+                    // Conteo para las Alertas Semanales (solo para medios especiales)
+                    if (specialMediosSet.has(medio)) {
+                        try {
+                            const itemDate = new Date(newsItem.fecha);
+                            if (itemDate >= start && itemDate <= end) {
+                                if (medio === "Conferencia de prensa matutina") weeklyAlertCounts.mananera++;
+                                else if (medio === "Evento Presidencial") weeklyAlertCounts.evento++;
+                                else if (medio === "Informe de Gobierno") weeklyAlertCounts.informe++;
+                            }
+                        } catch (e) { /* Ignorar fechas inválidas */ }
+                    }
+                    return newsItem;
+                });
                 
                 // 1. Renderizar la tabla principal primero para una carga percibida más rápida.
                 sortAndRenderTable(newsTableBody, news, false);
 
                 // 2. Ejecutar actualizaciones secundarias después de que la tabla es visible.
-                const weeklyAlertCounts = calculateWeeklyAlerts(news);
-                updateNewsMediosDashboard();
+                updateNewsMediosDashboard(newsMedioCounts); // Usar los conteos ya calculados
                 updateCharts();
                 updateDynamicSelectOptions();
                 setTimeout(() => checkAndShowTrainAlerts(weeklyAlertCounts), 1000);
@@ -3848,6 +3874,23 @@
             }, (error) => console.error("Error en listener de histórico:", error));
         }
 
+        /**
+         * Actualiza el dashboard de medios basándose en los datos de Noticias.
+         * @param {object} counts - Un objeto pre-calculado con los conteos.
+         */
+        function updateNewsMediosDashboard(counts) {
+            if (!counts) return; // Salir si no se proporcionan los conteos
+
+            const totalElement = document.getElementById('news-medio-count-total');
+            const mananeraElement = document.getElementById('news-medio-count-mananera');
+            const eventoElement = document.getElementById('news-medio-count-evento');
+            const informeElement = document.getElementById('news-medio-count-informe');
+
+            if (totalElement) totalElement.textContent = counts.noticias;
+            if (mananeraElement) mananeraElement.textContent = counts.mananera;
+            if (eventoElement) eventoElement.textContent = counts.evento;
+            if (informeElement) informeElement.textContent = counts.informe;
+        }
         // =============================================
         // MÓDULO: Gráficos y reportes
         // =============================================
@@ -4679,33 +4722,6 @@
             endOfWeek.setHours(23, 59, 59, 999);
 
             return { start: startOfWeek, end: endOfWeek };
-        }
-
-        /**
-         * Pre-calcula eficientemente los conteos de noticias de la semana actual,
-         * desglosados por medio. Esto evita realizar un costoso y redundante .filter()
-         * en la función que muestra las alertas, mejorando el rendimiento de la carga inicial.
-         * @param {Array} newsData - El array completo de noticias.
-         * @returns {object} Un objeto con los conteos, ej: { mananera: X, evento: Y, informe: Z }.
-         */
-        function calculateWeeklyAlerts(newsData) {
-            const { start, end } = getWeekRange();
-            const counts = { mananera: 0, evento: 0, informe: 0 };
-
-            const weeklyNews = newsData.filter(item => {
-                try {
-                    const itemDate = new Date(item.fecha);
-                    return itemDate >= start && itemDate <= end;
-                } catch (e) { return false; }
-            });
-
-            weeklyNews.forEach(item => {
-                if (item.medio === "Conferencia de prensa matutina") counts.mananera++;
-                else if (item.medio === "Evento Presidencial") counts.evento++;
-                else if (item.medio === "Informe de Gobierno") counts.informe++;
-            });
-
-            return counts;
         }
 
         function checkAndShowTrainAlerts(alertCounts) {
