@@ -3825,45 +3825,47 @@
         }
         
         function setupRealtimeListeners() {
-            newsCollectionRef.onSnapshot((snapshot) => {
-                const { start, end } = getWeekRange();
-                const weeklyAlertCounts = { mananera: 0, evento: 0, informe: 0 };
-                const newsMedioCounts = { noticias: 0, mananera: 0, evento: 0, informe: 0 };
-                const specialMediosSet = new Set(specialMedios);
-
-                news = snapshot.docs.map(doc => {
-                    const newsItem = { id: doc.id, ...doc.data() };
-                    const medio = newsItem.medio;
-
-                    // Conteo para el Radar de Medios (Dashboard)
-                    if (medio === "Conferencia de prensa matutina") newsMedioCounts.mananera++;
-                    else if (medio === "Evento Presidencial") newsMedioCounts.evento++;
-                    else if (medio === "Informe de Gobierno") newsMedioCounts.informe++;
-                    else newsMedioCounts.noticias++;
-
-                    // Conteo para las Alertas Semanales (solo para medios especiales)
-                    if (specialMediosSet.has(medio)) {
-                        try {
-                            const itemDate = new Date(newsItem.fecha);
-                            if (itemDate >= start && itemDate <= end) {
-                                if (medio === "Conferencia de prensa matutina") weeklyAlertCounts.mananera++;
-                                else if (medio === "Evento Presidencial") weeklyAlertCounts.evento++;
-                                else if (medio === "Informe de Gobierno") weeklyAlertCounts.informe++;
-                            }
-                        } catch (e) { /* Ignorar fechas inválidas */ }
-                    }
-                    return newsItem;
-                });
-                
-                // 1. Renderizar la tabla principal primero para una carga percibida más rápida.
-                sortAndRenderTable(newsTableBody, news, false);
-
-                // 2. Ejecutar actualizaciones secundarias después de que la tabla es visible.
-                updateNewsMediosDashboard(newsMedioCounts); // Usar los conteos ya calculados
-                updateCharts();
-                updateDynamicSelectOptions();
-                setTimeout(() => checkAndShowTrainAlerts(weeklyAlertCounts), 1000);
-            }, (error) => console.error("Error en listener de noticias:", error));
+             newsCollectionRef.onSnapshot((snapshot) => {
+                 const { start, end } = getWeekRange();
+                 const weeklyAlertCounts = { mananera: 0, evento: 0, informe: 0 };
+                 const newsMedioCounts = { noticias: 0, mananera: 0, evento: 0, informe: 0 };
+                 const specialMediosSet = new Set(specialMedios);
+ 
+                 // 1. Procesar datos y calcular contadores en un solo bucle para máxima eficiencia.
+                 news = snapshot.docs.map(doc => {
+                     const newsItem = { id: doc.id, ...doc.data() };
+                     const medio = newsItem.medio;
+ 
+                     // Conteo combinado para Radar de Medios y Alertas Semanales
+                     if (medio === "Conferencia de prensa matutina") {
+                         newsMedioCounts.mananera++;
+                         try { if (new Date(newsItem.fecha) >= start && new Date(newsItem.fecha) <= end) weeklyAlertCounts.mananera++; } catch(e) {}
+                     } else if (medio === "Evento Presidencial") {
+                         newsMedioCounts.evento++;
+                         try { if (new Date(newsItem.fecha) >= start && new Date(newsItem.fecha) <= end) weeklyAlertCounts.evento++; } catch(e) {}
+                     } else if (medio === "Informe de Gobierno") {
+                         newsMedioCounts.informe++;
+                         try { if (new Date(newsItem.fecha) >= start && new Date(newsItem.fecha) <= end) weeklyAlertCounts.informe++; } catch(e) {}
+                     } else {
+                         newsMedioCounts.noticias++;
+                     }
+                     return newsItem;
+                 });
+ 
+                 // 2. Renderizar la tabla principal inmediatamente. Esta es la tarea prioritaria.
+                 sortAndRenderTable(newsTableBody, news, false);
+ 
+                 // 3. Delegar las actualizaciones secundarias de la UI al navegador para que no bloqueen.
+                 // Esto hace que la aplicación se sienta mucho más rápida y responsiva.
+                 requestAnimationFrame(() => {
+                     updateNewsMediosDashboard(newsMedioCounts);
+                     updateCharts();
+                     updateDynamicSelectOptions();
+                     // Las notificaciones pueden esperar un poco más para no interferir.
+                     setTimeout(() => checkAndShowTrainAlerts(weeklyAlertCounts), 500);
+                 });
+ 
+             }, (error) => console.error("Error en listener de noticias:", error));
 
             historicalNewsCollectionRef.onSnapshot((snapshot) => {
                 historicalNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -3876,10 +3878,11 @@
 
         /**
          * Actualiza el dashboard de medios basándose en los datos de Noticias.
-         * @param {object} counts - Un objeto pre-calculado con los conteos.
+         * @param {object} [counts] - Un objeto pre-calculado con los conteos. Si no se provee, se recalcula.
          */
         function updateNewsMediosDashboard(counts) {
-            if (!counts) return; // Salir si no se proporcionan los conteos
+            // Si no se proporcionan los conteos, no hacer nada. La nueva lógica siempre los proveerá.
+            if (!counts) return;
 
             const totalElement = document.getElementById('news-medio-count-total');
             const mananeraElement = document.getElementById('news-medio-count-mananera');
