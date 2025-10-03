@@ -5362,7 +5362,7 @@
                 });
             });
 
-        newsTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, false));
+            newsTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, false));
 
             historicalTableBody.addEventListener('click', e => {
                 const target = e.target.closest('button');
@@ -5451,7 +5451,7 @@
 
             });
 
-        historicalTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, true));
+            historicalTableBody.addEventListener('dblclick', (e) => handleRowDoubleClick(e, true));
 
             cancelDeleteBtn.addEventListener('click', () => {
                 closeModal(confirmModal);
@@ -5748,13 +5748,6 @@
                     navigateAndFilter(targetTab, { [filterVariable]: [filterValue] });
                 }
             });
-
-            // El evento 'shown' no es un evento estándar del DOM. 
-            // La lógica para establecer la fecha ya está en el listener de 'addNewsBtn'.
-            // newsModal.addEventListener('shown', () => {
-            //     const today = new Date().toISOString().split('T')[0];
-            //     document.getElementById('news-date').value = today;
-            // });
         }
 
         // =============================================
