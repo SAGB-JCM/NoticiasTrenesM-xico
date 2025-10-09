@@ -65,7 +65,7 @@
         .border-primary { border-color: var(--primary-color); }
         .focus\:ring-primary:focus { --tw-ring-color: var(--primary-color); }
         
-        .bg-secondary { background-color: var(--secondary-color); }
+        .bg-secondary { background-color: var(--primary-color); }
         .text-secondary { color: var(--secondary-color); }
         .border-secondary { border-color: var(--secondary-color); }
         
@@ -82,6 +82,26 @@
         .indicator-card.active-filter {
             box-shadow: 0 0 0 2px var(--primary-color), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transform: translateY(-2px);
+        }
+
+        /* Estilos para el nuevo radar de días */
+        .day-indicator {
+            cursor: pointer;
+            padding: 0.25rem 1rem; /* Aumentar padding para texto más largo */
+            border-radius: 9999px;
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e5e7eb; /* slate-200 */
+            background-color: #f9fafb; /* gray-50 */
+        }
+        .day-indicator:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .day-indicator.active-day {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
         /* Estilo para resaltar el indicador de la semana actual */
@@ -309,7 +329,7 @@
         }
 
         .flex-with-buttons button.edit-btn {
-            background-color: var(--secondary-color);
+            background-color: var(--primary-color);
             color: white;
         }
 
@@ -705,7 +725,15 @@
             <main id="tab-content-noticias" class="tab-content">
                 <section id="news-dashboard-medios" class="mb-8">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-primary">Radar de Medios</h2>
+                        <h2 class="text-xl font-bold text-primary flex-shrink-0">Radar de Medios</h2>
+                        <div id="day-filter-container" class="flex items-center justify-end space-x-2 flex-grow">
+                            <!-- Indicadores de día se insertarán aquí -->
+                            <button data-day="1" class="day-indicator">Lunes</button>
+                            <button data-day="2" class="day-indicator">Martes</button>
+                            <button data-day="3" class="day-indicator">Miércoles</button>
+                            <button data-day="4" class="day-indicator">Jueves</button>
+                            <button data-day="5" class="day-indicator">Viernes</button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Total Noticias -->
@@ -1218,20 +1246,29 @@
             <div class="news-form-container">
                 <form id="conference-form" class="space-y-6" novalidate>
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
-                        <div class="form-field">
+                        <div class="form-field sm:col-span-2">
                             <label for="conference-date">Fecha de la Conferencia/Evento/Informe</label>
                             <input type="date" id="conference-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
                         </div>
                         <div class="form-field">
+                            <label for="conference-category">Categoría</label>
+                            <div class="flex-with-buttons">
+                                <select id="conference-category" name="categoria"></select>
+                                <button type="button" id="edit-conference-category-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-field">
                             <label for="conference-medio">Medio</label>
-                            <select id="conference-medio" name="medio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></select>
+                            <select id="conference-medio" name="medio" required></select>
                         </div>
                     </div>
                     <div class="form-field sm:col-span-2 full-width">
                         <label for="conference-source">Enlace(s) (URL)</label>
                         <div class="flex items-center space-x-2">
                             <input type="text" id="conference-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
-                            <button type="button" id="manage-links-conference-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                            <button type="button" id="manage-links-conference-btn" class="bg-primary hover:bg-primary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>
@@ -1263,20 +1300,29 @@
                 <form id="edit-conference-form" class="space-y-6" novalidate>
                     <input type="hidden" id="edit-conference-id">
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
-                        <div class="form-field">
+                        <div class="form-field sm:col-span-2">
                             <label for="edit-conference-date">Fecha de la Conferencia/Evento/Informe</label>
                             <input type="date" id="edit-conference-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
                         </div>
                         <div class="form-field">
+                            <label for="edit-conference-category">Categoría</label>
+                            <div class="flex-with-buttons">
+                                <select id="edit-conference-category" name="categoria"></select>
+                                <button type="button" id="edit-conference-category-edit-btn" class="edit-btn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-field">
                             <label for="edit-conference-medio">Medio</label>
-                            <select id="edit-conference-medio" name="medio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required></select>
+                            <select id="edit-conference-medio" name="medio" required></select>
                         </div>
                     </div>
                     <div class="form-field sm:col-span-2 full-width">
                         <label for="edit-conference-source">Enlace(s) (URL)</label>
                         <div class="flex items-center space-x-2">
                             <input type="text" id="edit-conference-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
-                            <button type="button" id="manage-links-edit-conference-btn" class="bg-secondary hover:bg-secondary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                            <button type="button" id="manage-links-edit-conference-btn" class="bg-primary hover:bg-primary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>
@@ -1618,6 +1664,7 @@
         let openModalCount = 0; // Contador para modales anidados
         let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias (main)
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
+        let activeDayFilters = new Set(); // Para el nuevo filtro de días de la semana
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
         let isProjectChartStacked = false; // Estado para controlar si la gráfica de proyectos es apilada
         let isTotalNewsChartPie = true; // Estado para controlar si la gráfica de totales es de pastel (por defecto)
@@ -1735,6 +1782,21 @@
             } catch (e) {
                 return dateString;
             }
+        }
+
+        /**
+         * Obtiene el día de la semana (1=Lunes, ..., 7=Domingo) de una fecha en formato YYYY-MM-DD.
+         * Trata la fecha como UTC para evitar problemas de zona horaria.
+         * @param {string} dateString - La fecha en formato 'YYYY-MM-DD'.
+         * @returns {number|null} - El día de la semana o null si la fecha es inválida.
+         */
+        function getDayOfWeekFromYYYYMMDD(dateString) {
+            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
+            const [year, month, day] = dateString.split('-').map(Number);
+            const date = new Date(Date.UTC(year, month - 1, day));
+            const dayOfWeek = date.getUTCDay(); // 0=Domingo, 1=Lunes, ...
+            // Ajustar para que Lunes sea 1 y Domingo sea 7
+            return dayOfWeek === 0 ? 7 : dayOfWeek;
         }
 
         function truncateText(text, maxLength = 50) {
@@ -1941,6 +2003,16 @@
          * Actualiza el dashboard de medios basándose en los datos de Noticias.
          */
         function updateNewsMediosDashboard() {
+            // 1. Determinar qué datos usar: todas las noticias o solo las de los días filtrados.
+            let dataToCount = news; // Por defecto, usar todas las noticias.
+            if (activeDayFilters.size > 0) {
+                // Si hay días seleccionados, filtrar las noticias para incluir solo las de esos días.
+                dataToCount = news.filter(newsItem => {
+                    const dayOfWeek = getDayOfWeekFromYYYYMMDD(newsItem.fecha);
+                    return dayOfWeek !== null && activeDayFilters.has(dayOfWeek);
+                });
+            }
+
             const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
             const counts = {
                 noticias: 0,
@@ -1948,8 +2020,9 @@
                 evento: 0,
                 informe: 0
             };
-
-            news.forEach(newsItem => {
+ 
+            // 2. Contar sobre el conjunto de datos determinado (completo o filtrado).
+            dataToCount.forEach(newsItem => {
                 if (newsItem.medio === specialMedios[0]) counts.mananera++;
                 else if (newsItem.medio === specialMedios[1]) counts.evento++;
                 else if (newsItem.medio === specialMedios[2]) counts.informe++;
@@ -1957,7 +2030,6 @@
                     counts.noticias++;
                 }
             });
-
             const totalElement = document.getElementById('news-medio-count-total');
             const mananeraElement = document.getElementById('news-medio-count-mananera');
             const eventoElement = document.getElementById('news-medio-count-evento');
@@ -2262,6 +2334,11 @@
             activeNewsMedioFilter = null;
             document.querySelectorAll('#news-dashboard-medios .indicator-card').forEach(card => card.classList.remove('active-filter'));
 
+            // Limpiar filtro de días de la semana
+            activeDayFilters.clear();
+            document.querySelectorAll('#day-filter-container .day-indicator').forEach(btn => btn.classList.remove('active-day'));
+
+
             // 2. Limpiar filtros de columna
             activeFilters.main = {};
             document.querySelectorAll('#main-table-header .filterable-header.active').forEach(header => {
@@ -2277,6 +2354,9 @@
 
             // 4. Re-renderizar la tabla para mostrar todos los datos
             sortAndRenderTable(newsTableBody, news, false);
+            // 5. ¡Clave! Actualizar el radar de medios para que refleje los totales sin filtros.
+            updateNewsMediosDashboard();
+
             showAlert("Filtros de Noticias limpiados.", "info");
         }
 
@@ -2495,6 +2575,15 @@
             const columnFilters = activeFilters[filterKey];
 
             return (data || []).filter(item => {
+                // Filtro de Días de la Semana (solo para la tabla de noticias)
+                if (filterKey === 'main' && activeDayFilters.size > 0) {
+                    const itemDay = getDayOfWeekFromYYYYMMDD(item.fecha);
+                    if (itemDay === null || !activeDayFilters.has(itemDay)) {
+                        return false;
+                    }
+                }
+
+
                 // AÑADE ESTE BLOQUE AL INICIO DE LA FUNCIÓN DE FILTRADO
                 if (filterKey === 'main' && activeNewsMedioFilter) {
                     const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
@@ -2910,6 +2999,8 @@
                     
                     const medioSelect = document.getElementById('edit-conference-medio');
                     medioSelect.value = newsToEdit.medio || '';
+
+                    $('#edit-conference-category').val(newsToEdit.categoria || '').trigger('change');
                     
                     const summaryLabel = document.getElementById('edit-conference-summary-label');
                     updateConferenceSummaryLabel(newsToEdit.medio, summaryLabel);
@@ -3006,11 +3097,16 @@
                     }).join('');
                 }
 
+                const categoriaHtml = newsItem.categoria 
+                    ? `<p class="date">Categoría: ${highlightText(newsItem.categoria, searchText)}</p>` 
+                    : '';
+
                 detailsModalContent.innerHTML = `
                     <div class="details-header flex justify-between items-start">
                         <div>
                             <h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3>
                             <p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
+                            ${categoriaHtml}
                         </div>
                         ${downloadButtonHTML}
                     </div>
@@ -3133,12 +3229,17 @@
                     }).join('');
                 }
 
+                const categoriaHtml = newsItem.categoria 
+                    ? `<p class="date">Categoría: ${highlightText(newsItem.categoria, searchText)}</p>` 
+                    : '';
+
                 return `
                     <div class="multi-details-item">
                         <div class="details-header flex justify-between items-start">
                             <div>
                                 <h3 class="project">${highlightText(newsItem.medio || 'Medio no especificado', searchText)}</h3>
                                 <p class="date">${highlightText(formatLongDate(newsItem.fecha), searchText)}</p>
+                                ${categoriaHtml}
                             </div>
                             <div class="flex items-center space-x-3">
                                 <span class="text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">${index + 1}</span>
@@ -3620,7 +3721,7 @@
             const fieldToSelectMap = {
                 'proyectos': ['news-project', 'edit-news-project'],
                 'subproyectos': ['news-subproject', 'edit-news-subproject'],
-                'categorias': ['news-category', 'edit-news-category'],
+                'categorias': ['news-category', 'edit-news-category', 'conference-category', 'edit-conference-category'],
                 'medios': ['news-medio', 'edit-news-medio']
             };
 
@@ -3769,6 +3870,8 @@
                 'edit-subproject-btn': 'subproyectos',
                 'edit-category-btn': 'categorias',
                 'edit-medio-btn': 'medios',
+                'edit-conference-category-btn': 'categorias',
+                'edit-conference-category-edit-btn': 'categorias',
                 'edit-source-btn': 'fuente',
                 'edit-cita-btn': 'cita',
                 'edit-summary-btn': 'resumen',
@@ -3823,7 +3926,8 @@
                 closeModal(editOptionModal);
                 
                 const activeFormId = !newsModal.classList.contains('hidden') ? 'news-form' : 
-                                     !editModal.classList.contains('hidden') ? 'edit-form' : null;
+                                     !editModal.classList.contains('hidden') ? 'edit-form' :
+                                     !conferenceModal.classList.contains('hidden') ? 'conference-form' : !editConferenceModal.classList.contains('hidden') ? 'edit-conference-form' : null;
                 
                 const formStateBeforeEdit = activeFormId ? getFormState(activeFormId) : null;
                 requirePassword(async () => {
@@ -4040,23 +4144,27 @@
          * Actualiza el dashboard de medios basándose en los datos de Noticias.
          * Esta función ahora calcula sus propios contadores basándose en el array `news` global.
          */
-        function updateNewsMediosDashboard() {
-            // 1. Se inicializan los contadores dentro de la función.
+        function updateNewsMediosDashboard() { // <-- Esta es la función que he modificado
+            // 1. Determinar qué datos usar: todas las noticias o solo las de los días filtrados.
+            let dataToCount = news; // Por defecto, usar todas las noticias.
+            if (activeDayFilters.size > 0) {
+                // Si hay días seleccionados, filtrar las noticias para incluir solo las de esos días.
+                dataToCount = news.filter(newsItem => {
+                    const dayOfWeek = getDayOfWeekFromYYYYMMDD(newsItem.fecha);
+                    return dayOfWeek !== null && activeDayFilters.has(dayOfWeek);
+                });
+            }
+
+            const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
             const counts = { noticias: 0, mananera: 0, evento: 0, informe: 0 };
-
-            // 2. Se itera sobre el array `news` global para realizar los cálculos.
-            news.forEach(newsItem => {
-                if (newsItem.medio === "Conferencia de prensa matutina") {
-                    counts.mananera++;
-                } else if (newsItem.medio === "Evento Presidencial") {
-                    counts.evento++;
-                } else if (newsItem.medio === "Informe de Gobierno") {
-                    counts.informe++;
-                } else {
-                    counts.noticias++;
-                }
+ 
+            // 2. Contar sobre el conjunto de datos determinado (completo o filtrado).
+            dataToCount.forEach(newsItem => {
+                if (newsItem.medio === specialMedios[0]) counts.mananera++;
+                else if (newsItem.medio === specialMedios[1]) counts.evento++;
+                else if (newsItem.medio === specialMedios[2]) counts.informe++;
+                else { counts.noticias++; }
             });
-
             const totalElement = document.getElementById('news-medio-count-total');
             const mananeraElement = document.getElementById('news-medio-count-mananera');
             const eventoElement = document.getElementById('news-medio-count-evento');
@@ -5096,6 +5204,24 @@
             setupPasswordVerification();
             setupTrainAlertsListeners();
             setupQuickViewTooltip();
+
+            // Listener para el nuevo filtro de días de la semana
+            document.getElementById('day-filter-container').addEventListener('click', (e) => {
+                const dayButton = e.target.closest('.day-indicator');
+                if (!dayButton) return;
+
+                const day = parseInt(dayButton.dataset.day, 10);
+                
+                // Alternar la selección del día
+                if (activeDayFilters.has(day)) activeDayFilters.delete(day);
+                else activeDayFilters.add(day);
+                
+                dayButton.classList.toggle('active-day', activeDayFilters.has(day));
+                
+                // 2. Volver a renderizar la tabla y actualizar el radar de medios.
+                sortAndRenderTable(newsTableBody, news, false); // Re-renderizar la tabla de noticias
+                updateNewsMediosDashboard(); // ¡Llamada clave para sincronizar el radar!
+            });
             
             reportesDataSource.addEventListener('change', updateCharts);
             dynamicChartVariable.addEventListener('change', updateDynamicChart);
@@ -5207,6 +5333,9 @@
                 conferenceForm.reset();
                 document.getElementById('conference-summary').innerHTML = '';
                 
+                // Limpiar el nuevo campo de categoría
+                $('#conference-category').val(null).trigger('change');
+
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('conference-date').value = today;
 
@@ -5231,11 +5360,12 @@
                 const conferenceData = {
                     fecha: document.getElementById('conference-date').value,
                     medio: document.getElementById('conference-medio').value,
+                    categoria: document.getElementById('conference-category').value,
                     fuente: document.getElementById('conference-source').value,
                     resumen: document.getElementById('conference-summary').innerHTML,
                     conferenceDocx: await processFile(document.getElementById('conference-docx')),
                     // Añadir campos vacíos para mantener la estructura de datos consistente
-                    proyecto: '', subproyecto: '', categoria: '', comentario: '', cita: ''
+                    proyecto: '', subproyecto: '', comentario: '', cita: ''
                 };
 
                 saveNews(conferenceData);
@@ -5276,10 +5406,11 @@
                 const updateData = {
                     fecha: document.getElementById('edit-conference-date').value,
                     medio: document.getElementById('edit-conference-medio').value,
+                    categoria: document.getElementById('edit-conference-category').value,
                     fuente: document.getElementById('edit-conference-source').value,
                     resumen: document.getElementById('edit-conference-summary').innerHTML,                    
                     // Añadir campos vacíos para mantener la estructura de datos consistente
-                    proyecto: '', subproyecto: '', categoria: '', comentario: '', cita: ''
+                    proyecto: '', subproyecto: '', comentario: '', cita: ''
                 };
 
                 // SOLUCIÓN: Solo actualizar el documento si se ha cargado uno nuevo.
@@ -6212,7 +6343,7 @@
             setupMediosDashboardFilter();
 
             // Configurar Select2 para los selects
-            $('#news-project, #news-subproject, #news-category, #news-medio, #edit-news-project, #edit-news-subproject, #edit-news-category, #edit-news-medio').each(function() {
+            $('#news-project, #news-subproject, #news-category, #news-medio, #edit-news-project, #edit-news-subproject, #edit-news-category, #edit-news-medio, #conference-category, #edit-conference-category, #conference-medio, #edit-conference-medio').each(function() {
                  $(this).select2({
                      tags: true,
                      placeholder: "Seleccione o escriba una opción",
