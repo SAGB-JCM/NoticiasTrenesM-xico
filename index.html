@@ -983,12 +983,17 @@
 
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
-                            <h3 class="text-xl font-semibold text-slate-800">Noticias por</h3>
+                            <select id="dynamic-chart-type" class="text-xl font-semibold text-slate-800 bg-transparent border-0 focus:ring-0 p-0">
+                                <option value="noticias">Noticias por</option>
+                                <option value="conferencias">Conferencias por</option>
+                            </select>
                             <select id="dynamic-chart-variable" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
+                                <!-- Las opciones se generarán dinámicamente -->
+                                <!--
                                 <option value="proyecto">Proyecto</option>
                                 <option value="subproyecto">Subproyecto</option>
                                 <option value="categoria">Categoría</option>
-                                <option value="medio">Medio</option>
+                                <option value="medio">Medio</option> -->
                             </select>
                             <button id="toggle-labels-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded ml-2">
                                 <i class="fa-solid fa-tag"></i>
@@ -4388,20 +4393,38 @@
             // --- FIN: Lógica del gráfico ---
         }
 
+        const dynamicChartVariableOptions = {
+            noticias: [
+                { value: 'proyecto', text: 'Proyecto' },
+                { value: 'subproyecto', text: 'Subproyecto' },
+                { value: 'categoria', text: 'Categoría' },
+                { value: 'medio', text: 'Medio' }
+            ],
+            conferencias: [
+                { value: 'categoria', text: 'Categoría' }
+            ]
+        };
+
         function updateDynamicChart() {
             const data = getReportData();
-            // Filtrar los datos para excluir conferencias y eventos especiales, mostrando solo noticias.
-            const onlyNewsData = data.filter(item => !specialMedios.includes(item.medio));
-
+            const selectedType = document.getElementById('dynamic-chart-type').value;
             const selectedVariable = dynamicChartVariable.value;
+
+            // 1. Filtrar los datos según el tipo seleccionado (Noticias o Conferencias)
+            const filteredData = data.filter(item => {
+                const isConference = specialMedios.includes(item.medio);
+                return selectedType === 'conferencias' ? isConference : !isConference;
+            });
+
             const variableCounts = {};
             
-            // Usar los datos filtrados (onlyNewsData) para contar las variables.
-            onlyNewsData.forEach(newsItem => {
+            // 2. Contar las variables sobre los datos ya filtrados
+            filteredData.forEach(newsItem => {
                 const value = newsItem[selectedVariable] || 'N/A';
                 variableCounts[value] = (variableCounts[value] || 0) + 1;
             });
             
+
             // Update dynamic table
             dynamicTableBody.innerHTML = '';
             dynamicTableHeader.textContent = selectedVariable.charAt(0).toUpperCase() + selectedVariable.slice(1);
@@ -5224,6 +5247,23 @@
             });
             
             reportesDataSource.addEventListener('change', updateCharts);
+
+            // Listener para el nuevo selector de tipo de gráfica (Noticias/Conferencias)
+            document.getElementById('dynamic-chart-type').addEventListener('change', (e) => {
+                const selectedType = e.target.value;
+                const variableSelect = document.getElementById('dynamic-chart-variable');
+                const options = dynamicChartVariableOptions[selectedType];
+
+                // Limpiar y poblar el selector de variables
+                variableSelect.innerHTML = options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+                
+                // Actualizar la gráfica
+                updateDynamicChart();
+            });
+
+            // Inicializar el selector de variables al cargar
+            document.getElementById('dynamic-chart-type').dispatchEvent(new Event('change'));
+
             dynamicChartVariable.addEventListener('change', updateDynamicChart);
             
             toggleLabelsBtn.addEventListener('click', () => {
