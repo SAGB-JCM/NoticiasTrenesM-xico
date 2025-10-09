@@ -3557,6 +3557,65 @@
             return `${day}-${month}-${year}_${hours}h-${minutes}m-${seconds}s`;
         }
 
+        /**
+         * Convierte HTML complejo (incluyendo el de MS Word) a texto plano optimizado para Excel.
+         * Maneja párrafos, listas y tablas, convirtiéndolas a un formato de texto legible.
+         * @param {string} html - El contenido HTML a convertir.
+         * @returns {string} - El texto plano formateado para Excel.
+         */
+        function htmlToExcelText(html) {
+            if (!html) return '';
+
+            // 1. Limpieza preliminar de HTML específico de Word y otros elementos no deseados.
+            let cleanHtml = html
+                .replace(/<!--[\s\S]*?-->/g, '') // Eliminar comentarios HTML, incluyendo los de Word.
+                .replace(/<\/?(o|w|m):[^>]*>/g, '') // Eliminar etiquetas XML de Office.
+                .replace(/<br\s*\/?>/gi, ' '); // Reemplazar <br> con espacios.
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cleanHtml;
+
+            // 2. Función recursiva para procesar cada nodo del DOM.
+            function processNode(node) {
+                let text = '';
+                const childNodes = Array.from(node.childNodes);
+
+                childNodes.forEach((child, index) => {
+                    if (child.nodeType === 3) { // Nodo de texto
+                        text += child.textContent.replace(/\s+/g, ' ').trim();
+                    } else if (child.nodeType === 1) { // Nodo de elemento
+                        const tagName = child.tagName.toLowerCase();
+                        switch (tagName) {
+                            case 'p':
+                            case 'div':
+                            case 'li':
+                                text += '\n' + processNode(child).trim();
+                                break;
+                            case 'table':
+                                text += '\n\n' + processTable(child) + '\n\n';
+                                break;
+                            default:
+                                // Para otros elementos (b, u, i, span), solo procesar su contenido.
+                                text += processNode(child);
+                        }
+                    }
+                });
+                return text;
+            }
+
+            function processTable(tableNode) {
+                let tableText = '';
+                tableNode.querySelectorAll('tr').forEach(row => {
+                    const rowTexts = Array.from(row.querySelectorAll('td, th')).map(cell => processNode(cell).trim());
+                    tableText += rowTexts.join('\t') + '\n'; // Unir celdas con tabulación, filas con salto de línea.
+                });
+                return tableText.trim();
+            }
+
+            // 3. Procesamiento final y limpieza.
+            let result = processNode(tempDiv).trim();
+            return result.replace(/(\n\s*){3,}/g, '\n\n'); // Normalizar múltiples saltos de línea a solo dos.
+        }
 
         // =============================================
         // MÓDULO: Gestión de datos históricos
@@ -4602,19 +4661,21 @@
         ];
 
         function prepareExportData(data) {
-            return data.map((newsItem, index) => ({
-                "No.": index + 1, 
-                "Fecha": formatDate(newsItem.fecha), 
-                "Proyecto": newsItem.proyecto || "", 
-                "Subproyecto": newsItem.subproyecto || "",
-                "Categoría": newsItem.categoria || "",
-                "Noticia": newsItem.comentario || "",
-                "Cita": newsItem.cita || "",
-                "Resumen": htmlToPlainText(newsItem.resumen) || "", //desactivada para exportar en HTML               
-                //"Resumen": newsItem.resumen || "", // Exportar el HTML directamente para preservar el formato
-                "Medio": newsItem.medio || "",
-                "Enlace": newsItem.fuente || ""
-            }));
+            return data.map((newsItem, index) => {
+                const isConference = specialMedios.includes(newsItem.medio);
+                return {
+                    "No.": index + 1,
+                    "Fecha": formatDate(newsItem.fecha),
+                    "Proyecto": newsItem.proyecto || "",
+                    "Subproyecto": newsItem.subproyecto || "",
+                    "Categoría": newsItem.categoria || "",
+                    "Noticia": newsItem.comentario || "",
+                    "Cita": newsItem.cita || "",
+                    "Resumen": isConference ? htmlToExcelText(newsItem.resumen) : htmlToPlainText(newsItem.resumen),
+                    "Medio": newsItem.medio || "",
+                    "Enlace": newsItem.fuente || ""
+                };
+            });
         }
 
         /**
