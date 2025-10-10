@@ -1477,18 +1477,6 @@
         </div>
     </div>
     
-    <!-- ===== MODAL: REEMPLAZAR HISTÓRICO ===== -->
-    <div id="replace-historical-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
-            <h3 class="text-xl font-bold text-primary mb-4">Reemplazar Histórico</h3>
-            <p class="text-slate-600 mb-6">¿Desea reemplazar el histórico actual?</p>
-            <div class="flex justify-center space-x-4">
-                <button id="cancel-replace-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">No</button>
-                <button id="confirm-replace-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Sí</button>
-            </div>
-        </div>
-    </div>
-    
     <!-- ===== MODAL: EDITAR OPCIÓN DE SELECT ===== -->
     <div id="edit-option-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
@@ -1533,18 +1521,6 @@
             <div class="flex justify-center space-x-4">
                 <button id="cancel-import-warning-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
                 <button id="confirm-import-warning-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Continuar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== MODAL: CONFIRMAR MIGRACIÓN ===== -->
-    <div id="migrate-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
-            <h3 class="text-xl font-bold text-primary mb-4">Migrar Noticias</h3>
-            <p class="text-slate-600 mb-6">¿Está seguro de que desea migrar todas las noticias al Histórico? Esta acción no se puede deshacer.</p>
-            <div class="flex justify-center space-x-4">
-                <button id="cancel-migrate-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                <button id="confirm-migrate-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg">Migrar</button>
             </div>
         </div>
     </div>
@@ -1771,7 +1747,7 @@
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
         // --- Referencias a Elementos del DOM (se asignan en DOMContentLoaded) ---
-        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
+        let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
         let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
         let quickViewTooltip, projectCategoryChart;
         let reportSettingsModal, closeReportSettingsModalBtn, openTemplateUploaderBtn, reportSettingsBtn;
@@ -6487,15 +6463,23 @@
 
                             if (processedData.length === 0) return showAlert("El archivo Excel está vacío o no es válido.", "warning");
                             
+                            // --- INICIO DE LA MODIFICACIÓN ---
+                            // Filtra los datos para excluir las conferencias, eventos o informes del archivo de importación.
+                            // Esto previene la duplicación y la sobreescritura de los registros especiales existentes.
+                            const dataToImport = processedData.filter(item => !specialMedios.includes(item.medio));
+                            const conferencesSkipped = processedData.length - dataToImport.length;
+                            // --- FIN DE LA MODIFICACIÓN ---
+
                             // La lógica de reemplazo ahora se basa en la confirmación del nuevo modal.
                             // Borra solo las noticias, no las conferencias, antes de importar.
                             if (historicalNews.length > 0) {
                                 await deleteNonConferenceHistorical();
                             }
-                            await importHistoricalData(processedData);
+                            await importHistoricalData(dataToImport); // Se usa el array filtrado
                             historicalFileInput.value = '';
                             importHistoricalBtn.disabled = true;
                             importHistoricalBtn.classList.add('hidden');
+                            if (conferencesSkipped > 0) showAlert(`Se omitieron ${conferencesSkipped} conferencias/eventos para preservar los datos existentes.`, "info");
                         
                         } catch (error) {
                             console.error("Error al procesar el archivo:", error);
@@ -6853,7 +6837,6 @@
             historicalTableBody = document.getElementById('historical-table-body');
             noHistoricalMessage = document.getElementById('no-historical-message');
             historicalFileInput = document.getElementById('historical-file-input');
-            historicalFileName = document.getElementById('file-name');
             importHistoricalBtn = document.getElementById('import-historical-btn');
             reportesDataSource = document.getElementById('reportes-data-source');
             dynamicChartCanvas = document.getElementById('dynamicChart');
@@ -6870,9 +6853,6 @@
             confirmModal = document.getElementById('confirm-modal');
             cancelDeleteBtn = document.getElementById('cancel-delete-btn');
             confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-            replaceHistoricalModal = document.getElementById('replace-historical-modal');
-            cancelReplaceBtn = document.getElementById('cancel-replace-btn');
-            confirmReplaceBtn = document.getElementById('confirm-replace-btn');
             editOptionModal = document.getElementById('edit-option-modal');
             editOptionInput = document.getElementById('edit-option-input');
             cancelEditOptionBtn = document.getElementById('cancel-edit-option-btn');
