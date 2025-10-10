@@ -49,6 +49,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <style>
+        /* --- Variables de Color y Tipografía Base --- */
         :root {
             --primary-color: #9C2348;
             --secondary-color: #A6802D;
@@ -59,7 +60,8 @@
         
         html { font-size: 60%; }
         body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
-        
+
+        /* --- Clases de Utilidad para Colores --- */
         .bg-primary { background-color: var(--primary-color); }
         .text-primary { color: var(--primary-color); }
         .border-primary { border-color: var(--primary-color); }
@@ -79,12 +81,14 @@
         .bg-danger { background-color: var(--danger-color); }
         .hover\:bg-danger-dark:hover { background-color: #DC2626; }
         
+        /* --- Estilos para Componentes de UI --- */
+
+        /* Estilo para tarjetas indicadoras cuando un filtro está activo */
         .indicator-card.active-filter {
             box-shadow: 0 0 0 2px var(--primary-color), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transform: translateY(-2px);
         }
 
-        /* Estilos para el nuevo radar de días */
         .day-indicator {
             cursor: pointer;
             padding: 0.25rem 1rem; /* Aumentar padding para texto más largo */
@@ -111,14 +115,17 @@
             background-color: #fcfdff;
         }
 
+        /* Animaciones para la entrada y salida de modales */
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
         
+        /* Estilo para pestañas de navegación (Tabs) */
         .hidden { display: none; }
         .tab-btn.active { border-color: var(--primary-color); color: var(--primary-color); font-weight: bold; }
         
+        /* Indicador de carga (Spinner) */
         .loader { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background-color: rgba(255, 255, 255, 0.9); z-index: 9999; 
@@ -130,6 +137,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
+        /* Contenedor de tablas con scroll */
         .table-container { 
             overflow-x: auto; 
             max-height: 430px;
@@ -141,6 +149,7 @@
             max-height: 425px; /* <-- Puedes ajustar este valor a tu preferencia */
         }
         
+        /* Estilos para la barra de scroll */
         .table-container::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -160,7 +169,7 @@
             background: #a8a8a8;
         }
         
-        /* Mejora para encabezados de tabla fijos */
+        /* Encabezados de tabla fijos (sticky) */
         .table-container thead th {
             position: sticky;
             top: 0;
@@ -168,10 +177,7 @@
             background-color: #f1f5f9; /* Color de bg-slate-100 para evitar transparencia */
         }
 
-        .sortable-header { cursor: pointer; }
-        .sortable-header .sort-icon { display: none; }
-        .sortable-header.asc .sort-icon.asc,
-        .sortable-header.desc .sort-icon.desc { display: inline-block; }
+        /* Estilos para filtros en encabezados de tabla */
         .filterable-header { 
             cursor: pointer; 
             position: relative;
@@ -186,6 +192,7 @@
             color: var(--primary-color);
         }
 
+        /* Dropdown para los filtros de columna */
         .filter-dropdown {
             position: absolute;
             background-color: white;
@@ -198,9 +205,8 @@
             min-width: 200px;
         }
         
+        /* Estilo para campos de formulario inválidos */
         input:invalid, select:invalid { border-color: #ef4444; }
-        
-        .section-title { font-weight: bold; color: var(--primary-color); margin-bottom: 1rem; }
         
         .max-w-7xl {
             max-width: 100% !important;
@@ -218,6 +224,7 @@
             overflow-x: auto;
         }
 
+        /* --- Estilos para los Formularios de Registro/Edición --- */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -243,8 +250,7 @@
             color: #374151;
         }
 
-        /* --- Reglas para restaurar el tamaño original de Resumen, Comentario y Fuente --- */
-
+        /* Reglas para campos de formulario que ocupan el ancho completo */
         /* 1. Hacer que el contenedor del campo ocupe todo el ancho del grid */
         .form-field.full-width {
             grid-column: 1 / -1; /* Ocupa todas las columnas del grid */
@@ -271,6 +277,7 @@
             display: none;
         }
 
+        /* Contenedor del formulario con scroll interno */
         .news-form-container {
             max-height: 75vh;
             overflow-y: auto;
@@ -295,6 +302,7 @@
             background: #a8a8a8;
         }
 
+        /* Contenedor flexible para campos de formulario con botones (ej. Select2 + botón editar) */
         .flex-with-buttons {
             display: flex;
             align-items: flex-end; /* Alinea el botón con la base del campo */
@@ -337,6 +345,7 @@
             background-color: #16463c;
         }
         
+        /* --- Estilos para la librería Select2 --- */
         .select2-container--default .select2-selection--single {
             height: 38px;
             padding: 5px;
@@ -356,7 +365,7 @@
             width: 100% !important;
         }
 
-        /* Regla clave para truncar el texto dentro del campo de selección */
+        /* Trunca el texto dentro del campo de selección para evitar desbordamiento */
         .select2-container .select2-selection--single .select2-selection__rendered {
             display: block;
             padding-left: 8px;
@@ -366,6 +375,7 @@
             text-overflow: ellipsis;
         }
 
+        /* Estilo para celdas de tabla que contienen enlaces */
         .link-cell {
             max-width: 200px;
             overflow: hidden;
@@ -376,15 +386,18 @@
             cursor: pointer;
         }
 
+        /* Ancho extendido para modales */
         .wide-modal .relative {
             max-width: 76rem !important;
         }
 
+        /* --- Estilos para la sección de Reportes y Gráficas --- */
         .chart-wrapper {
             position: relative;
             height: 100%;
         }
 
+        /* Contenedor principal para una gráfica y su tabla de datos */
         .dynamic-chart-container {
             margin-top: 2rem;
             margin-bottom: 2rem;
@@ -394,6 +407,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
+        /* Encabezado de la sección de la gráfica (título, selectores) */
         .dynamic-chart-header {
             display: flex;
             align-items: center;
@@ -401,12 +415,14 @@
             gap: 1rem;
         }
         
+        /* Layout de grid para la gráfica y la tabla */
         .dynamic-chart-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.5rem;
         }
         
+        /* Contenedor de la tabla de datos asociada a una gráfica */
         .dynamic-table-container {
             background: #f9fafb;
             padding: 1rem;
@@ -415,6 +431,7 @@
             overflow-y: auto;
         }
         
+        /* Estilos base para la tabla de datos de una gráfica */
         .dynamic-table {
             width: 100%;
             border-collapse: collapse;
@@ -436,6 +453,7 @@
             background-color: #f3f4f6;
         }
         
+        /* Estilos para el botón de mostrar/ocultar etiquetas de la gráfica */
         #toggle-labels-btn {
             transition: all 0.3s ease;
         }
@@ -444,6 +462,7 @@
             background-color: var(--primary-color) !important;
         }
 
+        /* --- Estilos para el Modal de Vista Web (WebView) --- */
         .webview-modal {
             display: flex;
             align-items: center;
@@ -463,7 +482,7 @@
             border-radius: 0.5rem;
         }
 
-        /* Estilos para el modal de detalles de la noticia */
+        /* --- Estilos para el Modal de Detalles de Noticia (Individual y Múltiple) --- */
         .details-modal-content {
             border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
@@ -500,6 +519,7 @@
             text-align: center;
         }
 
+        /* Estilo para campos de texto enriquecido (contenteditable) */
         .contenteditable {
             min-height: 100px;
             border: 1px solid #d1d5db;
@@ -516,7 +536,7 @@
             box-shadow: 0 0 0 3px rgba(156, 35, 72, 0.2);
         }
 
-        /* Estilos para tablas DENTRO del editor contenteditable */
+        /* Estilos para tablas DENTRO del editor de texto enriquecido */
         .contenteditable table {
             font-size: 0.9em; /* Letra más pequeña para tablas en el editor */
             border-collapse: collapse;
@@ -527,6 +547,7 @@
             height: auto; /* Asegura que la altura se ajuste al contenido */
         }
 
+        /* Estilos para el contenido HTML formateado en los modales de detalles */
         .formatted-content {
             font-size: 1rem;
             line-height: 1.5;
@@ -542,7 +563,7 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Regla mejorada para la sangría de las listas */
+        /* Sangría correcta para listas (ul, ol) dentro del contenido formateado */
         .formatted-content ul li, .formatted-content ol li {
             list-style-position: outside !important; /* Asegura que la viñeta esté fuera del flujo de texto */
             padding-left: 1.5em; /* Espacio para la viñeta y un poco más */
@@ -562,12 +583,12 @@
             text-decoration: underline;
         }
 
-        /* Estilos de tabla replicados de la app de licitaciones */
+        /* Estilos para tablas dentro de los modales de detalles */
         .details-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         .details-table th, .details-table td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; vertical-align: top; }
         .details-table th { background-color: var(--primary-color); font-weight: 600; color: white; }
 
-        /* Clase para bloquear el scroll del body cuando un modal está abierto */
+        /* Estilo para cada item en el modal de múltiples detalles */
         .multi-details-item {
             border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
@@ -580,11 +601,12 @@
             margin-bottom: 0;
         }
 
+        /* Bloquea el scroll del body cuando un modal está abierto */
         body.modal-open {
             overflow: hidden;
         }
 
-        /* Estilos para tablas pegadas desde Word */
+        /* Contenedor para tablas pegadas (ej. desde Word) para permitir scroll horizontal */
         .details-table-container {
             overflow-x: auto;
             margin-top: 1rem;
@@ -595,6 +617,7 @@
             border-collapse: collapse;
             border: 1px solid #e5e7eb;
         }
+
         /* Estilo para resaltar el texto de búsqueda */
         .highlight {
             background-color: #ffd966; /* Tailwind yellow-100 */
@@ -608,14 +631,14 @@
             transition: all 0.2s ease-in-out;
         }
 
-        /* Estilos para la Alerta de Resumen (copiado de Licitaciones y Llamadas) */
+        /* --- Estilos para Notificaciones y Tooltips --- */
+
+        /* Animación para las alertas de notificación */
         .train-alert.alert-enter { animation: slideInUp 0.5s ease-out forwards; }
         .train-alert.alert-leave { animation: slideOutDown 0.5s ease-in forwards; }
-
         @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-        /* Estilos para el tooltip de vista rápida (replicado de la app de llamadas) */
         #quick-view-tooltip {
             position: fixed;
             display: none; /* Oculto por defecto */
@@ -662,7 +685,8 @@
         #quick-view-tooltip p { margin-bottom: 0.25rem; }
         #quick-view-tooltip .cita-text { font-style: italic; color: #4b5563; border-left: 3px solid var(--secondary-color); padding-left: 0.75rem; margin-top: 0.5rem; }
     </style>
-    
+
+     <!-- Configuración de Tailwind con nueva paleta de colores -->
     <script>
         tailwind.config = {
             theme: {
@@ -691,23 +715,32 @@
 </head>
 <body class="antialiased text-slate-700">
 
+    <!-- ===== INDICADOR DE CARGA INICIAL ===== -->
+    <!-- Se muestra mientras se cargan los datos iniciales de Firebase. -->
     <div id="loader" class="loader">
         <div class="spinner"></div>
         <p class="mt-4 text-sm text-slate-600">Cargando datos, por favor espera...</p>
     </div>
 
+    <!-- ===== CONTENEDOR PRINCIPAL DE LA APLICACIÓN ===== -->
+    <!-- Oculto por defecto, se muestra cuando los datos están listos. -->
     <div id="app" class="min-h-screen hidden">
 
+        <!-- ===== ENCABEZADO FIJO ===== -->
+        <!-- Contiene el logo, título y la información del usuario. Es 'sticky' para permanecer visible. -->
         <header class="bg-primary shadow-lg sticky top-0 z-30">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div class="flex items-center space-x-4">
                     <img src="https://github.com/SAGB-JCM/NoticiasTrenesM-xico/blob/main/Trenes%20de%20M%C3%A9xico%20-%20LOGO.png?raw=true" alt="Logo Tren México" class="h-16 w-auto">
                     <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Noticias Sobre los Trenes de México</h1>
                 </div>
+                <!-- Contenedor para mostrar información del usuario (ej. ID anónimo) -->
                 <div id="user-info" class="text-white text-sm font-mono"></div>
             </div>
         </header>
 
+        <!-- ===== BARRA DE PESTAÑAS DE NAVEGACIÓN ===== -->
+        <!-- Permite cambiar entre las vistas de Noticias, Histórico y Reportes. También es 'sticky'. -->
         <div class="bg-white shadow-sm sticky top-[56px] z-20">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div id="tabs" class="border-b border-gray-200">
@@ -720,10 +753,13 @@
             </div>
         </div>
 
+        <!-- ===== CONTENEDOR DEL CONTENIDO PRINCIPAL DE LAS PESTAÑAS ===== -->
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
+            <!-- ===== PESTAÑA: NOTICIAS ===== -->
             <main id="tab-content-noticias" class="tab-content">
                 <section id="news-dashboard-medios" class="mb-8">
+                    <!-- Encabezado y filtro de días de la semana -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary flex-shrink-0">Radar de Medios</h2>
                         <div id="day-filter-container" class="flex items-center justify-end space-x-2 flex-grow">
@@ -735,6 +771,7 @@
                             <button data-day="5" class="day-indicator">Viernes</button>
                         </div>
                     </div>
+                    <!-- Tarjetas indicadoras (KPIs) para el radar de medios -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Total Noticias -->
                         <div id="news-medio-indicator-total" data-medio="__NOTICIAS_ONLY__" class="indicator-card bg-white p-4 rounded-xl shadow-md flex items-center space-x-3 cursor-pointer transition-all duration-200" title="Hacer clic para filtrar">
@@ -759,9 +796,11 @@
                     </div>
                 </section>
                 <section id="news-log">
+                    <!-- Controles de la tabla de noticias: búsqueda, filtros y acciones -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Registro de Noticias</h2>
                         <div class="flex items-center space-x-2">
+                            <!-- Controles de filtro y vista -->
                             <div class="flex items-center space-x-2">
                                 <button id="clear-all-filters-main-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Limpiar todos los filtros">
                                     <i class="fa-solid fa-paint-brush"></i>
@@ -774,7 +813,8 @@
                                     <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                     <button id="clear-filter-btn-main" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden"><i class="fa-solid fa-times-circle"></i></button>
                                 </div>
-                            </div>                            
+                            </div>
+                            <!-- Botones de acción principales -->
                             <button id="add-news-btn" class="bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-plus"></i>
                                 <span>Nueva Noticia</span>
@@ -787,6 +827,7 @@
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Descargar Excel</span>
                             </button>
+                            <!-- Botones para el modo de migración de noticias -->
                             <button id="start-migration-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-database"></i>
                                 <span>Migrar Noticias</span>
@@ -801,10 +842,12 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Contenedor de la tabla de noticias con scroll -->
                     <div class="bg-white rounded-xl shadow-md table-container">
                         <table class="w-full text-sm text-left text-slate-500">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr id="main-table-header">
+                                    <!-- Columna para checkboxes de migración (oculta por defecto) -->
                                     <th scope="col" class="py-3 px-6 migration-select-col hidden">
                                         <input type="checkbox" id="select-all-news-checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
                                     </th>
@@ -821,8 +864,10 @@
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
+                            <!-- Cuerpo de la tabla donde se insertarán las noticias dinámicamente -->
                             <tbody id="news-table-body"></tbody>
                         </table>
+                        <!-- Mensaje que se muestra si no hay noticias -->
                         <div id="no-news-message" class="p-6 text-center text-slate-500 hidden">
                             <p>No hay noticias registradas en la base de datos.</p>
                         </div>
@@ -830,8 +875,10 @@
                 </section>
             </main>
 
+            <!-- ===== PESTAÑA: HISTÓRICO ===== -->
             <div id="tab-content-historico" class="tab-content hidden">
                 <section id="dashboard-medios" class="mb-8">
+                    <!-- Radar de medios para la sección de Histórico -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Radar de Medios</h2>
                     </div>
@@ -859,9 +906,11 @@
                     </div>
                 </section>
                 <section id="historical-log">
+                    <!-- Controles de la tabla de histórico: búsqueda, filtros y acciones -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Registro Histórico</h2>
                         <div class="flex items-center space-x-2">
+                            <!-- Controles de filtro y vista -->
                             <div class="flex items-center space-x-2">
                                 <button id="clear-all-filters-historical-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg" title="Limpiar todos los filtros">
                                     <i class="fa-solid fa-paint-brush"></i>
@@ -874,13 +923,15 @@
                                     <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
                                     <button id="clear-filter-btn-historical" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden"><i class="fa-solid fa-times-circle"></i></button>
                                 </div>
-                            </div>                            
+                            </div>
+                            <!-- Botones de acción para el histórico (descargar, subir, importar) -->
                             <button id="download-historical-excel-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Descargar Excel</span>
                             </button>
                             <label for="historical-file-input" class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap"><i class="fa-solid fa-file-upload"></i><span>Subir Excel</span><input type="file" id="historical-file-input" class="hidden" accept=".xlsx, .xls"></label>
                             <button id="import-historical-btn" class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-200 ease-in-out hidden items-center space-x-2 whitespace-nowrap" disabled><i class="fa-solid fa-database"></i><span>Importar Excel</span></button>
+                            <!-- Botones para la migración inversa (de Histórico a Noticias) -->
                             <button id="start-reverse-migration-btn" class="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center space-x-2 whitespace-nowrap">
                                 <i class="fa-solid fa-arrow-left"></i>
                                 <span>Migrar a Noticias</span>
@@ -895,10 +946,12 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Contenedor de la tabla de histórico con scroll -->
                     <div id="historical-table-container" class="bg-white rounded-xl shadow-md table-container">
                         <table class="w-full text-sm text-left text-slate-500">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr id="historical-table-header">
+                                    <!-- Columna para checkboxes de migración inversa (oculta por defecto) -->
                                     <th scope="col" class="py-3 px-6 reverse-migration-select-col hidden">
                                         <input type="checkbox" id="select-all-historical-news-checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
                                     </th>
@@ -915,8 +968,10 @@
                                     <th scope="col" class="py-3 px-6">Acciones</th>
                                 </tr>
                             </thead>
+                            <!-- Cuerpo de la tabla donde se insertarán los datos históricos -->
                             <tbody id="historical-table-body"></tbody>
                         </table>
+                        <!-- Mensaje que se muestra si no hay datos históricos -->
                         <div id="no-historical-message" class="p-6 text-center text-slate-500 hidden">
                             <p>No hay datos históricos cargados.</p>
                         </div>
@@ -924,11 +979,14 @@
                 </section>
             </div>
 
+            <!-- ===== PESTAÑA: REPORTES ===== -->
             <div id="tab-content-reportes" class="tab-content hidden">
                 <section id="reportes" class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <!-- Controles de la sección de reportes: fuente de datos y configuración -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-primary">Reportes</h2>
                         <div class="flex items-center space-x-2">
+                            <!-- Selector para elegir la fuente de datos de los gráficos -->
                             <div class="flex items-center space-x-1">
                                 <label for="reportes-data-source" class="block text-sm font-medium text-gray-700">Fuente de datos:</label>
                                 <select id="reportes-data-source" class="mt-1 block w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2">
@@ -936,6 +994,7 @@
                                     <option value="noticias">Noticias</option>
                                     <option value="combinado">Histórico + Noticias</option>
                                 </select>
+                                <!-- Botón para abrir el modal de configuración de reportes -->
                                 <button id="report-settings-btn" class="text-slate-500 hover:text-primary p-2 rounded-lg transition-colors" title="Configuración de Reportes">
                                     <i class="fa-solid fa-cog fa-lg"></i>
                                 </button>
@@ -943,7 +1002,7 @@
                         </div>
                     </div>
 
-                    <!-- Total de Noticias y Conferencias Registradas -->
+                    <!-- Contenedor para la gráfica de "Total de Noticias y Conferencias" -->
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
                             <h3 class="text-xl font-semibold text-slate-800">Total de Noticias y Conferencias Registradas</h3>
@@ -951,10 +1010,12 @@
                                 <i class="fa-solid fa-chart-pie"></i>
                             </button>
                         </div>
+                        <!-- Grid para alinear la gráfica y su tabla de datos -->
                         <div class="dynamic-chart-content">
                             <div class="chart-wrapper">
                                 <canvas id="totalNewsByTypeChart"></canvas>
                             </div>
+                            <!-- Tabla de datos para la gráfica de totales -->
                             <div class="dynamic-table-container">
                                 <div class="flex justify-between items-center mb-2">
                                     <h4 class="text-lg font-semibold text-slate-800 text-center flex-grow">Distribución por Tipo</h4>
@@ -1024,7 +1085,7 @@
                         </div>
                     </div>
 
-                    <!-- Gráfica de Proyectos por Categoría (Movida aquí) -->
+                    <!-- Contenedor para la gráfica de "Proyectos por Categoría" -->
                     <div class="dynamic-chart-container">
                         <div class="dynamic-chart-header">
                             <h3 class="text-xl font-semibold text-slate-800">Proyectos por Categoría</h3>
@@ -1035,6 +1096,7 @@
                         <div class="chart-wrapper" style="height: 400px;">
                             <canvas id="projectCategoryChart"></canvas>
                         </div>
+                        <!-- Tabla de datos para la gráfica de proyectos por categoría -->
                         <div class="dynamic-table-container mt-4">
                             <div class="flex justify-between items-center mb-2">
                                 <h4 class="text-lg font-semibold text-slate-800 text-center flex-grow">Distribución Detallada</h4>
@@ -1057,14 +1119,18 @@
         </div>
     </div>
     
+    <!-- ===== MODAL: REGISTRAR NUEVA NOTICIA ===== -->
+    <!-- Formulario para añadir un nuevo registro de tipo "Noticia". -->
     <div id="news-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fa-solid fa-times-circle fa-lg"></i>
             </button>
             <h3 class="text-2xl font-bold text-primary mb-6">Registrar Nueva Noticia</h3>
+            <!-- Contenedor del formulario con scroll interno -->
             <div class="news-form-container">
                 <form id="news-form" class="space-y-6" novalidate>
+                    <!-- Campos de Fecha y Fuente -->
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
                         <div class="form-field ">
                             <label for="news-date">Fecha de la Noticia</label>
@@ -1080,6 +1146,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Campos de selección (Proyecto, Subproyecto, Categoría, Medio) -->
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
                         <div class="form-field">
                             <label for="news-project">Proyecto</label>
@@ -1118,6 +1185,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Campos de texto libre (Noticia, Cita, Resumen) -->
                     <div class="form-field full-width">
                         <label for="news-comment">Noticia (Título)</label>
                         <div class="flex-with-buttons">
@@ -1134,6 +1202,7 @@
                     </div>
                     <div class="form-field full-width">
                         <label for="news-summary">Resumen de la Noticia</label>
+                        <!-- El resumen es un 'div' con contenteditable para permitir texto enriquecido -->
                         <div class="flex-with-buttons">
                             <div id="news-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                             <button type="button" id="edit-summary-btn" class="edit-btn">
@@ -1141,6 +1210,7 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Botón para guardar el formulario -->
                     <div class="flex items-center justify-end pt-4">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Noticia</button>
                     </div>
@@ -1149,15 +1219,19 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: EDITAR NOTICIA ===== -->
+    <!-- Formulario para editar un registro existente de tipo "Noticia". La estructura es idéntica al de registro. -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-edit-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fa-solid fa-times-circle fa-lg"></i>
             </button>
             <h3 class="text-2xl font-bold text-primary mb-6">Editar Noticia</h3>
+            <!-- Contenedor del formulario con scroll interno -->
             <div class="news-form-container">
                 <form id="edit-form" class="space-y-6" novalidate>
                     <input type="hidden" id="edit-id">
+                    <!-- Campos de Fecha y Fuente -->
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
                         <div class="form-field ">
                             <label for="edit-news-date">Fecha de la Noticia</label>
@@ -1173,6 +1247,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Campos de selección (Proyecto, Subproyecto, Categoría, Medio) -->
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
                         <div class="form-field">
                             <label for="edit-news-project">Proyecto</label>
@@ -1211,6 +1286,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Campos de texto libre (Noticia, Cita, Resumen) -->
                     <div class="form-field full-width">
                         <label for="edit-news-comment">Noticia (Título)</label>
                         <div class="flex-with-buttons">
@@ -1227,6 +1303,7 @@
                     </div>
                     <div class="form-field full-width">
                         <label for="edit-news-summary">Resumen de la Noticia</label>
+                        <!-- El resumen es un 'div' con contenteditable para permitir texto enriquecido -->
                         <div class="flex-with-buttons">
                             <div id="edit-news-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                             <button type="button" id="edit-summary-edit-btn" class="edit-btn">
@@ -1234,6 +1311,7 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Botón para guardar los cambios -->
                     <div class="flex items-center justify-end pt-4">
                         <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-200 ease-in-out">Guardar Cambios</button>
                     </div>
@@ -1242,15 +1320,19 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: REGISTRAR NUEVA CONFERENCIA ===== -->
+    <!-- Formulario simplificado para añadir registros de tipo Conferencia, Evento o Informe. -->
     <div id="conference-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-conference-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fa-solid fa-times-circle fa-lg"></i>
             </button>
             <h3 class="text-2xl font-bold text-primary mb-6">Registrar Nueva Conferencia</h3>
+            <!-- Contenedor del formulario con scroll interno -->
             <div class="news-form-container">
                 <form id="conference-form" class="space-y-6" novalidate>
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
+                        <!-- Campos de Fecha, Categoría y Medio -->
                         <div class="form-field sm:col-span-2">
                             <label for="conference-date">Fecha de la Conferencia/Evento/Informe</label>
                             <input type="date" id="conference-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
@@ -1269,6 +1351,7 @@
                             <select id="conference-medio" name="medio" required></select>
                         </div>
                     </div>
+                    <!-- Campo para uno o múltiples enlaces -->
                     <div class="form-field sm:col-span-2 full-width">
                         <label for="conference-source">Enlace(s) (URL)</label>
                         <div class="flex items-center space-x-2">
@@ -1278,10 +1361,12 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Campo de resumen con texto enriquecido -->
                     <div class="form-field full-width">
                         <label for="conference-summary" id="conference-summary-label">Resumen de la Conferencia</label>
                         <div id="conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
+                    <!-- Campo para subir un documento .docx opcional -->
                     <div class="form-field full-width">
                         <label for="conference-docx">Subir Documento (docx)</label>
                         <input type="file" id="conference-docx" name="conferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
@@ -1295,15 +1380,19 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: EDITAR CONFERENCIA ===== -->
+    <!-- Formulario para editar un registro existente de tipo Conferencia, Evento o Informe. -->
     <div id="edit-conference-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-edit-conference-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <i class="fa-solid fa-times-circle fa-lg"></i>
             </button>
             <h3 class="text-2xl font-bold text-primary mb-6">Editar Conferencia</h3>
+            <!-- Contenedor del formulario con scroll interno -->
             <div class="news-form-container">
                 <form id="edit-conference-form" class="space-y-6" novalidate>
                     <input type="hidden" id="edit-conference-id">
+                    <!-- Campos de Fecha, Categoría y Medio -->
                     <div class="form-grid grid-cols-1 sm:grid-cols-2">
                         <div class="form-field sm:col-span-2">
                             <label for="edit-conference-date">Fecha de la Conferencia/Evento/Informe</label>
@@ -1323,6 +1412,7 @@
                             <select id="edit-conference-medio" name="medio" required></select>
                         </div>
                     </div>
+                    <!-- Campo para uno o múltiples enlaces -->
                     <div class="form-field sm:col-span-2 full-width">
                         <label for="edit-conference-source">Enlace(s) (URL)</label>
                         <div class="flex items-center space-x-2">
@@ -1332,10 +1422,12 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Campo de resumen con texto enriquecido -->
                     <div class="form-field full-width">
                         <label for="edit-conference-summary" id="edit-conference-summary-label">Resumen de la Conferencia</label>
                         <div id="edit-conference-summary" name="resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 contenteditable" contenteditable="true"></div>
                     </div>
+                    <!-- Campo para subir un documento .docx opcional -->
                     <div class="form-field full-width">
                         <label for="edit-conference-docx">Subir Documento (docx)</label>
                         <input type="file" id="edit-conference-docx" name="editConferenceDocx" accept=".docx" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark" />
@@ -1349,16 +1441,20 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: GESTIONAR MÚLTIPLES ENLACES ===== -->
+    <!-- Permite añadir, ver y eliminar múltiples URLs para un solo registro. -->
     <div id="multi-link-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-[51] flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl mx-4">
             <h3 class="text-xl font-bold text-primary mb-4">Gestionar Enlaces</h3>
             <div class="space-y-4">
+                <!-- Campo para añadir un nuevo enlace -->
                 <div class="flex space-x-2">
                     <input type="url" id="new-link-input" placeholder="Pegue un nuevo enlace aquí" class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                     <button id="add-link-btn" class="bg-success hover:bg-success-dark text-white font-bold py-2 px-4 rounded-lg">Añadir</button>
                 </div>
+                <!-- Contenedor donde se listan los enlaces añadidos -->
                 <div id="link-list-container" class="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2 bg-gray-50">
-                    <!-- Los enlaces se añadirán aquí dinámicamente -->
+                    <!-- Mensaje si no hay enlaces -->
                     <p id="no-links-message" class="text-gray-500 text-center">No hay enlaces añadidos.</p>
                 </div>
             </div>
@@ -1369,6 +1465,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: CONFIRMAR ELIMINACIÓN ===== -->
     <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-slate-800 mb-4">Confirmar Eliminación</h3>
@@ -1380,6 +1477,7 @@
         </div>
     </div>
     
+    <!-- ===== MODAL: REEMPLAZAR HISTÓRICO ===== -->
     <div id="replace-historical-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Reemplazar Histórico</h3>
@@ -1391,6 +1489,7 @@
         </div>
     </div>
     
+    <!-- ===== MODAL: EDITAR OPCIÓN DE SELECT ===== -->
     <div id="edit-option-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Editar Opción</h3>
@@ -1402,6 +1501,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: VERIFICACIÓN DE CONTRASEÑA ===== -->
     <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[55] flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Verificación de Seguridad</h3>
@@ -1414,6 +1514,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: VISTA WEB (WEBVIEW) ===== -->
     <div id="webview-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center webview-modal">
         <div class="relative bg-white rounded-lg shadow-xl webview-container">
             <button id="close-webview-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10 bg-white rounded-full p-1">
@@ -1423,6 +1524,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: ADVERTENCIA DE IMPORTACIÓN ===== -->
     <div id="import-warning-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Advertencia de Importación</h3>
@@ -1435,6 +1537,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: CONFIRMAR MIGRACIÓN ===== -->
     <div id="migrate-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm mx-4 text-center">
             <h3 class="text-xl font-bold text-primary mb-4">Migrar Noticias</h3>
@@ -1446,6 +1549,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: SUBIR PLANTILLA WORD ===== -->
     <div id="template-upload-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
             <div class="flex justify-between items-center mb-6">
@@ -1467,7 +1571,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN DE REPORTES -->
+    <!-- ===== MODAL: CONFIGURACIÓN DE REPORTES ===== -->
     <div id="report-settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4">
             <div class="flex justify-between items-center mb-6">
@@ -1477,12 +1581,14 @@
                 </button>
             </div>
             <div class="space-y-6">
+                <!-- Sección para cargar plantillas de Word -->
                 <div>
                     <h4 class="text-md font-semibold text-slate-700 mb-2">Plantillas</h4>
                     <button id="open-template-uploader-btn" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-upload"></i><span>Cargar Plantilla Word</span>
                     </button>
                 </div>
+                <!-- Sección para configurar el filtro de fechas de los reportes -->
                 <div class="border-t border-gray-200 pt-4">
                     <h4 class="text-md font-semibold text-slate-700 mb-3">Filtro de Fechas para Reportes</h4>
                     <fieldset class="space-y-2">
@@ -1495,6 +1601,7 @@
                             <label for="date-filter-period" class="ml-3 block text-sm font-medium text-gray-700">Seleccionar periodo</label>
                         </div>
                     </fieldset>
+                    <!-- Selector de rango de fechas (deshabilitado por defecto) -->
                     <div id="date-range-picker-container" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50 transition-opacity">
                         <div>
                             <label for="report-start-date" class="block text-sm font-medium text-gray-700">Fecha de inicio</label>
@@ -1515,6 +1622,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: DETALLE DE NOTICIA INDIVIDUAL ===== -->
     <div id="view-details-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-details-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
@@ -1524,6 +1632,7 @@
                 <img src="https://github.com/SAGB-JCM/NoticiasTrenesM-xico/blob/main/Trenes%20de%20M%C3%A9xico%20-%20LOGO.png?raw=true" alt="Logo Tren México" class="h-16 w-auto">
                 <h3 class="text-2xl font-bold text-primary">Detalle de la Noticia</h3>
             </div>
+            <!-- Contenedor con scroll para el contenido del detalle -->
             <div class="news-form-container">
                 <div id="details-modal-content" class="details-modal-content">
                     <!-- El contenido se generará dinámicamente -->
@@ -1532,6 +1641,7 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: DETALLE DE MÚLTIPLES NOTICIAS ===== -->
     <div id="multi-details-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center wide-modal">
         <div class="relative bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl mx-4">
             <button id="close-multi-details-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
@@ -1541,23 +1651,34 @@
                 <img src="https://github.com/SAGB-JCM/NoticiasTrenesM-xico/blob/main/Trenes%20de%20M%C3%A9xico%20-%20LOGO.png?raw=true" alt="Logo Tren México" class="h-16 w-auto">
                 <h3 class="text-2xl font-bold text-primary">Detalle de Noticias Filtradas</h3>
             </div>
+            <!-- Contenedor con scroll para los múltiples detalles -->
             <div id="multi-details-content-container" class="news-form-container">
                 <!-- El contenido se generará dinámicamente -->
             </div>
         </div>
     </div>
 
-    <!-- Contenedor para las Alertas de Noticias (adaptado de Licitaciones) -->
+    <!-- ===== CONTENEDOR DE NOTIFICACIONES (ALERTAS) ===== -->
+    <!-- Wrapper en la esquina inferior derecha para mostrar alertas flotantes. -->
     <div id="notifications-wrapper" class="fixed bottom-4 right-4 w-full max-w-sm z-40 space-y-3"></div>
 
-    <!-- Tooltip para vista rápida en tablas (Elemento Faltante) -->
+    <!-- ===== TOOLTIP DE VISTA RÁPIDA ===== -->
+    <!-- Elemento flotante que muestra un resumen al pasar el cursor sobre una fila de la tabla. -->
     <div id="quick-view-tooltip"></div>
 
     <script>
-        // =============================================
-        // MÓDULO: Verificación de dependencias
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: VERIFICACIÓN DE DEPENDENCIAS
+         * @summary Contiene funciones para verificar que todas las librerías externas
+         * se hayan cargado correctamente y para intentar cargar fallbacks si es necesario.
+         * =================================================================================
+         */
         
+        /**
+         * @summary Verifica la existencia de las librerías globales requeridas por la aplicación.
+         * @returns {string[]} Un array con los nombres de las librerías que no se encontraron.
+         */
         function checkRequiredLibraries() {
             // Retrocompatibilidad: si PizZip se carga como PizZipUtils, asignarlo.
             if (typeof window.PizZip === 'undefined' && typeof window.PizZipUtils !== 'undefined') {
@@ -1582,6 +1703,12 @@
             return missing;
         }
         
+        /**
+         * @summary Carga un script de forma asíncrona y devuelve una promesa.
+         * @param {string} src - La URL del script a cargar.
+         * @returns {Promise<void>} Una promesa que se resuelve cuando el script se carga
+         * o se rechaza si hay un error.
+         */
         function loadScript(src) {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -1592,6 +1719,11 @@
             });
         }
 
+        /**
+         * @summary Intenta cargar librerías faltantes desde una URL de fallback (CDN).
+         * @param {string[]} missingLibs - Un array con los nombres de las librerías a cargar.
+         * @returns {Promise<any[]>} Una promesa que se resuelve cuando todos los scripts de fallback se han cargado.
+         */
         function loadFallbackLibraries(missingLibs) {
             const fallbacks = {
                 'PizZip': 'https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js',
@@ -1600,9 +1732,12 @@
             return Promise.all(missingLibs.filter(lib => fallbacks[lib]).map(lib => loadScript(fallbacks[lib])));
         }
 
-        // =============================================
-        // MÓDULO: Configuración de Firebase
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: CONFIGURACIÓN DE FIREBASE
+         * @summary Inicializa la conexión con Firebase y exporta las instancias de los servicios.
+         * =================================================================================
+         */
         const firebaseConfig = {
             apiKey: "AIzaSyDbvGa-79AsyP1KJv78YzKoTSBhF-1iDYU",
             authDomain: "noticiastrenesm-xico.firebaseapp.com",
@@ -1618,23 +1753,28 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // =============================================
-        // MÓDULO: Variables globales y estado de la aplicación
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: ESTADO GLOBAL DE LA APLICACIÓN
+         * @summary Almacena todas las variables de estado, referencias a elementos del DOM
+         * y datos principales de la aplicación.
+         * =================================================================================
+         */
+
+        // --- Almacenes de Datos Principales ---
         let news = [];
         let historicalNews = [];
         let userId;
 
-        // Referencias a colecciones de Firebase
+        // --- Referencias a Colecciones de Firebase ---
         const newsCollectionRef = db.collection("news");
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
-        // Variables de estado de la aplicación y referencias DOM
+        // --- Referencias a Elementos del DOM (se asignan en DOMContentLoaded) ---
         let loader, appContainer, userInfo, tabsContainer, tabContents, addNewsBtn, downloadExcelBtn, newsTableBody, noNewsMessage, historicalTableBody, noHistoricalMessage, historicalFileInput, historicalFileName, importHistoricalBtn, reportesDataSource, dynamicChartCanvas, dynamicChartVariable, toggleLabelsBtn, dynamicTableBody, dynamicTableHeader, dynamicChart, newsModal, newsForm, closeModalBtn, editModal, editForm, closeEditModalBtn, confirmModal, cancelDeleteBtn, confirmDeleteBtn, replaceHistoricalModal, cancelReplaceBtn, confirmReplaceBtn, editOptionModal, editOptionInput, cancelEditOptionBtn, confirmEditOptionBtn, passwordModal, passwordInput, cancelPasswordBtn, confirmPasswordBtn, webviewModal, webviewFrame, closeWebviewBtn, uploadTemplateBtn, viewDetailsModal, closeDetailsModalBtn, detailsModalContent, templateUploadModal, closeTemplateUploadModalBtn, addConferenceBtn, conferenceModal, conferenceForm, closeConferenceModalBtn, editConferenceModal, editConferenceForm, closeEditConferenceModalBtn, multiLinkModal, newLinkInput, addLinkBtn, linkListContainer, noLinksMessage, cancelLinksBtn, saveLinksBtn, multiDetailsModal, closeMultiDetailsModalBtn, multiDetailsContentContainer;
         let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
         let quickViewTooltip, projectCategoryChart;
         let reportSettingsModal, closeReportSettingsModalBtn, openTemplateUploaderBtn, reportSettingsBtn;
-        let currentEditIsHistorical = false;
         
         let newsSummaryEditor, editNewsSummaryEditor;
         // Objeto para almacenar la configuración de los reportes
@@ -1644,6 +1784,8 @@
             endDate: '',
             dataSource: 'historico' // Valor por defecto
         };
+
+        // --- Opciones para los Selects Dinámicos ---
         let fieldOptions = {
             proyectos: [],
             categorias: [],
@@ -1651,47 +1793,65 @@
             subproyectos: []
         };
 
+        // --- Variables de Estado de la UI y Lógica ---
+        let currentEditIsHistorical = false; // Flag para saber si la edición es en la tabla de histórico.
         let currentEditingField = null;
         let currentEditingValue = null;
-        let pendingAction = null;
-        let showChartLabels = true;
+        let pendingAction = null; // Almacena una función a ejecutar después de la verificación de contraseña.
+        let showChartLabels = true; // Controla la visibilidad de las etiquetas en las gráficas.
+        
+        // Almacena los filtros activos para cada tabla ('main' y 'historical').
         let activeFilters = {
             main: {},
             historical: {}
         }; 
+
+        // Almacena las instancias de los gráficos de Chart.js para poder destruirlas y recrearlas.
         let charts = {
             dynamic: null,
             projectCategory: null
         };
 
-        let currentFilterDropdown = null;
-        let activeSelectElement = null;
+        let currentFilterDropdown = null; // Referencia al dropdown de filtro de columna actualmente abierto.
+        let activeSelectElement = null; // Referencia al <select> que se está editando.
         let openModalCount = 0; // Contador para modales anidados
         let activeNewsMedioFilter = null; // Para el filtro del radar de medios en la pestaña de Noticias (main)
         let activeMedioDashboardFilter = null; // Para el filtro del radar de medios
         let activeDayFilters = new Set(); // Para el nuevo filtro de días de la semana
         let currentLinkTargetInput = null; // Para saber a qué campo de texto actualizar
         let isProjectChartStacked = false; // Estado para controlar si la gráfica de proyectos es apilada
-        let isTotalNewsChartPie = true; // Estado para controlar si la gráfica de totales es de pastel (por defecto)
+        let isTotalNewsChartPie = true; // Estado para controlar si la gráfica de totales es de pastel (por defecto).
 
-        // Estado para la funcionalidad de migración
+        // --- Estado para la Funcionalidad de Migración ---
         let isMigrationModeActive = false;
         let selectedNewsIdsToMigrate = new Set();
         let isReverseMigrationModeActive = false;
-
-        // Variable de estado para las notificaciones
-        let weeklyAlertsShown = false;
         let selectedHistoricalNewsIdsToMigrate = new Set();
 
-        // =============================================
-        // MÓDULO: Utilidades
-        // =============================================
+        // --- Estado para Notificaciones ---
+        let weeklyAlertsShown = false;
+
+        /**
+         * =================================================================================
+         * MÓDULO: UTILIDADES
+         * @summary Contiene funciones de ayuda reutilizables en toda la aplicación,
+         * como formateo de datos, manipulación del DOM y lógica de UI genérica.
+         * =================================================================================
+         */
         
+        /**
+         * @summary Oculta el cargador inicial y muestra el contenedor principal de la aplicación.
+         */
         function showApp() {
             loader.classList.add('hidden');
             appContainer.classList.remove('hidden');
         }
 
+        /**
+         * @summary Muestra una notificación flotante temporal en la esquina de la pantalla.
+         * @param {string} message - El mensaje a mostrar.
+         * @param {'info'|'success'|'warning'|'error'} [type='info'] - El tipo de alerta, que determina su color.
+         */
         function showAlert(message, type = 'info') {
             const alertContainer = document.createElement('div');
             const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-gray-500' };
@@ -1701,7 +1861,12 @@
             setTimeout(() => { alertContainer.remove(); }, 3000);
         }
 
-        //Función para resaltar texto
+        /**
+         * @summary Envuelve las ocurrencias de un término de búsqueda dentro de un texto con una etiqueta <span> para resaltarlo.
+         * @param {string} text - El texto en el que buscar.
+         * @param {string} searchTerm - El término a resaltar.
+         * @returns {string} El texto con las coincidencias resaltadas.
+         */
         function highlightText(text, searchTerm) {
             if (!searchTerm || searchTerm.trim() === '' || typeof text !== 'string') {
                 return text;
@@ -1713,11 +1878,11 @@
         }
 
         /**
-         * Resalta el término de búsqueda dentro de un contenido HTML de forma segura.
-         * Recorre los nodos de texto y envuelve las coincidencias sin romper las etiquetas HTML.
+         * @summary Resalta un término de búsqueda dentro de un contenido HTML de forma segura,
+         * recorriendo solo los nodos de texto para no romper la estructura HTML.
          * @param {string} htmlContent - El contenido HTML a procesar.
          * @param {string} searchTerm - El término de búsqueda.
-         * @returns {string} - El HTML con el texto resaltado.
+         * @returns {string} El HTML con el texto resaltado.
          */
         function highlightHtmlContent(htmlContent, searchTerm) {
             if (!searchTerm || !htmlContent) {
@@ -1749,6 +1914,11 @@
             return tempDiv.innerHTML;
         }
 
+        /**
+         * @summary Abre un modal con una animación de entrada y bloquea el scroll del body.
+         * @param {HTMLElement} modal - El elemento del modal a abrir.
+         * @description Utiliza un contador `openModalCount` para gestionar correctamente el bloqueo de scroll en modales anidados.
+         */
         function openModal(modal) {
             modal.classList.remove('hidden', 'modal-leave');
             modal.classList.add('modal-enter');
@@ -1758,6 +1928,10 @@
             openModalCount++;
         }
 
+        /**
+         * @summary Cierra un modal con una animación de salida y restaura el scroll del body si es el último modal.
+         * @param {HTMLElement} modal - El elemento del modal a cerrar.
+         */
         function closeModal(modal) {
             modal.classList.remove('modal-enter');
             modal.classList.add('modal-leave');
@@ -1771,11 +1945,21 @@
             }, 300);
         }
 
+        /**
+         * @summary Abre un modal y, después de la animación, enfoca un elemento específico dentro de él.
+         * @param {HTMLElement} modal - El modal a abrir.
+         * @param {HTMLElement} elementToFocus - El elemento que recibirá el foco.
+         */
         function openModalWithFocus(modal, elementToFocus) {
             openModal(modal);
             setTimeout(() => elementToFocus.focus(), 150); // Pequeño delay para la animación
         }
 
+        /**
+         * @summary Formatea una fecha en formato 'YYYY-MM-DD' a un formato localizado 'DD/MM/YYYY'.
+         * @param {string} dateString - La fecha a formatear.
+         * @returns {string} La fecha formateada o 'N/A' si es inválida.
+         */
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             try {
@@ -1790,10 +1974,10 @@
         }
 
         /**
-         * Obtiene el día de la semana (1=Lunes, ..., 7=Domingo) de una fecha en formato YYYY-MM-DD.
-         * Trata la fecha como UTC para evitar problemas de zona horaria.
+         * @summary Obtiene el día de la semana (1=Lunes, ..., 7=Domingo) de una fecha en formato 'YYYY-MM-DD'.
+         * @description Trata la fecha como UTC para evitar problemas de zona horaria.
          * @param {string} dateString - La fecha en formato 'YYYY-MM-DD'.
-         * @returns {number|null} - El día de la semana o null si la fecha es inválida.
+         * @returns {number|null} El día de la semana o null si la fecha es inválida.
          */
         function getDayOfWeekFromYYYYMMDD(dateString) {
             if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
@@ -1804,11 +1988,22 @@
             return dayOfWeek === 0 ? 7 : dayOfWeek;
         }
 
+        /**
+         * @summary Trunca un texto a una longitud máxima y añade puntos suspensivos.
+         * @param {string} text - El texto a truncar.
+         * @param {number} [maxLength=50] - La longitud máxima permitida.
+         * @returns {string} El texto truncado o 'N/A' si el texto es nulo.
+         */
         function truncateText(text, maxLength = 50) {
             if (!text) return 'N/A';
             return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
         }
 
+        /**
+         * @summary Valida si una cadena de texto es una URL válida.
+         * @param {string} string - La cadena a validar.
+         * @returns {boolean} `true` si es una URL válida, `false` en caso contrario.
+         */
         function isValidUrl(string) {
             try {
                 new URL(string);
@@ -1818,6 +2013,11 @@
             }
         }
 
+        /**
+         * @summary Convierte una cadena de HTML a texto plano, conservando saltos de línea para párrafos y listas.
+         * @param {string} html - El contenido HTML a convertir.
+         * @returns {string} El texto plano resultante.
+         */
         function htmlToPlainText(html) {
             if (!html) return '';
             
@@ -1838,6 +2038,11 @@
             return tempDiv.textContent.trim() || "";
         }
 
+        /**
+         * @summary Detecta si una cadena contiene etiquetas HTML.
+         * @param {string} str - La cadena a verificar.
+         * @returns {boolean} `true` si la cadena parece ser HTML.
+         */
         function isHtml(str) {
             if (typeof str !== 'string') return false;
             // Una expresión regular simple para detectar la presencia de etiquetas HTML.
@@ -1845,6 +2050,11 @@
             return htmlRegex.test(str);
         }
 
+        /**
+         * @summary Formatea una fecha 'YYYY-MM-DD' a un formato largo y legible (ej. "lunes, 15 de enero de 2024").
+         * @param {string} dateString - La fecha a formatear.
+         * @returns {string} La fecha en formato largo.
+         */
         function formatLongDate(dateString) {
             if (!dateString) return 'Fecha no disponible';
             try {
@@ -1862,6 +2072,11 @@
             } catch (e) { return dateString; }
         }
 
+        /**
+         * @summary Obtiene el nombre del mes en español a partir de una fecha 'YYYY-MM-DD'.
+         * @param {string} dateString - La fecha de la cual extraer el mes.
+         * @returns {string} El nombre del mes capitalizado (ej. "Enero").
+         */
         function getMonthName(dateString) {
             if (!dateString) return 'Mes no disponible';
             try {
@@ -1878,6 +2093,11 @@
             } catch (e) { return 'Error de mes'; }
         }
 
+        /**
+         * @summary Convierte una cadena en formato Base64 a un ArrayBuffer.
+         * @param {string} base64 - La cadena Base64 (puede incluir el prefijo 'data:...').
+         * @returns {ArrayBuffer} El ArrayBuffer resultante.
+         */
         function base64ToArrayBuffer(base64) {
             // Primero, removemos el prefijo "data:application/..." si existe
             const base64Data = base64.substring(base64.indexOf(',') + 1);
@@ -1890,6 +2110,12 @@
             return bytes.buffer;
         }
 
+        /**
+         * @summary Limpia el HTML pegado desde aplicaciones como Microsoft Word, eliminando estilos y atributos innecesarios
+         * pero intentando preservar la estructura (tablas, listas) y el formato básico (bordes, colores de fondo en tablas).
+         * @param {string} html - El fragmento de HTML a limpiar.
+         * @returns {string} El HTML sanitizado.
+         */
         function sanitizePastedHtml(html) {
             if (!html) return '';
 
@@ -1977,7 +2203,7 @@
         }
 
         /**
-         * Actualiza el dashboard de medios basándose en los datos del histórico.
+         * @summary Actualiza las tarjetas del "Radar de Medios" en la pestaña de Histórico.
          */
         function updateMediosDashboard() {
             const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
@@ -2005,7 +2231,8 @@
         }
 
         /**
-         * Actualiza el dashboard de medios basándose en los datos de Noticias.
+         * @summary Actualiza las tarjetas del "Radar de Medios" en la pestaña de Noticias,
+         * respetando los filtros de día de la semana que estén activos.
          */
         function updateNewsMediosDashboard() {
             // 1. Determinar qué datos usar: todas las noticias o solo las de los días filtrados.
@@ -2046,6 +2273,11 @@
             if (informeElement) informeElement.textContent = counts.informe;
         }
 
+        /**
+         * @summary Escapa caracteres especiales de XML (&, <, >, ", ').
+         * @param {string} str - La cadena a escapar.
+         * @returns {string} La cadena con los caracteres escapados.
+         */
         function escapeXml(str) {
             if (typeof str !== 'string') return '';
             return str.replace(/[<>&'"]/g, c => ({
@@ -2057,6 +2289,13 @@
             }[c]));
         }
 
+        /**
+         * @summary Convierte un fragmento de HTML a formato OpenXML para ser usado en plantillas de Word (.docx).
+         * @description Esta función es compleja. Maneja párrafos, listas (incluyendo las de Word), formato de texto (negrita, cursiva),
+         * enlaces y tablas, traduciéndolos a sus equivalentes en la especificación de Word.
+         * @param {string} html - El contenido HTML a convertir.
+         * @returns {string} Una cadena de texto que representa el fragmento en formato OpenXML.
+         */
         function htmlToOpenXml(html) {
             if (!html) return '';
             const tempDiv = document.createElement('div');
@@ -2331,8 +2570,8 @@
         }
 
         /**
-         * Limpia todos los filtros aplicados a la tabla de noticias principal.
-         * Esto incluye el buscador, los filtros de columna y el filtro del radar de medios.
+         * @summary Limpia todos los filtros aplicados a la tabla de noticias principal.
+         * @description Restablece el buscador, los filtros de columna, el filtro del radar de medios y el filtro de días.
          */
         function clearAllMainFilters() {
             // 1. Limpiar filtro del radar de medios
@@ -2358,16 +2597,16 @@
             }
 
             // 4. Re-renderizar la tabla para mostrar todos los datos
-            sortAndRenderTable(newsTableBody, news, false);
-            // 5. ¡Clave! Actualizar el radar de medios para que refleje los totales sin filtros.
-            updateNewsMediosDashboard();
+            sortAndRenderTable(newsTableBody, news, false); // <-- Re-renderiza la tabla
+            updateNewsMediosDashboard(); // <-- Sincroniza el radar con los datos sin filtrar
 
             showAlert("Filtros de Noticias limpiados.", "info");
         }
 
         /**
-         * Limpia todos los filtros aplicados a la tabla de noticias históricas.
-         * Esto incluye el buscador, los filtros de columna y el filtro del radar de medios.
+         * @summary Limpia todos los filtros aplicados a la tabla de noticias históricas.
+         * @description Restablece el buscador, los filtros de columna y el filtro del radar de medios
+         * para la pestaña de Histórico.
          */
         function clearAllHistoricalFilters() {
             // 1. Limpiar filtro del radar de medios
@@ -2386,6 +2625,11 @@
             sortAndRenderTable(historicalTableBody, historicalNews, true);
         }
 
+        /**
+         * @summary Convierte texto plano a formato OpenXML, envolviendo cada línea en un párrafo de Word.
+         * @param {string} text - El texto plano a convertir.
+         * @returns {string} El texto en formato OpenXML.
+         */
         function plainTextToOpenXml(text) {
             if (!text) return '';
             const lines = text.split('\n');
@@ -2397,6 +2641,9 @@
             }).join('');
         }
 
+        /**
+         * @summary Configura los listeners para la navegación por pestañas (Noticias, Histórico, Reportes).
+         */
         function setupTabs() {
             tabsContainer.addEventListener('click', (e) => {
                 if (e.target.matches('.tab-btn')) {
@@ -2416,6 +2663,11 @@
         }
 
 
+        /**
+         * @summary Procesa un archivo de un input de tipo 'file' y lo convierte a una cadena Base64.
+         * @param {HTMLInputElement} fileInput - El input de archivo que contiene el fichero.
+         * @returns {Promise<string|null>} Una promesa que se resuelve con la cadena Base64 (sin el prefijo) o `null` si no hay archivo.
+         */
         async function processFile(fileInput) {
             const file = fileInput.files[0];
 
@@ -2433,10 +2685,18 @@
                 }
             });
         }
-        // =============================================
-        // MÓDULO: Interfaz de usuario
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: INTERFAZ DE USUARIO (UI)
+         * @summary Contiene funciones para renderizar y manejar las interacciones con los
+         * componentes principales de la UI, como tablas, filtros y modales de detalle.
+         * =================================================================================
+         */
         
+        /**
+         * @summary Manejador de clics centralizado para las filas de las tablas. Delega la acción al manejador específico (editar, eliminar, etc.).
+         * @param {MouseEvent} event - El objeto del evento de clic.
+         */
         function handleTableClick(event) {
             const target = event.target; // El elemento exacto donde se hizo clic (ej. el <i>)
         
@@ -2469,6 +2729,13 @@
             }
         }
         
+        /**
+         * @summary Renderiza las filas de una tabla a partir de un conjunto de datos.
+         * @description Es una función altamente optimizada que utiliza un DocumentFragment para minimizar las manipulaciones del DOM.
+         * @param {HTMLTableSectionElement} tableBody - El `<tbody>` de la tabla a poblar.
+         * @param {object[]} data - El array de objetos de noticias a renderizar.
+         * @param {boolean} [isHistorical=false] - Flag que indica si se está renderizando la tabla de histórico.
+         */
         function renderTable(tableBody, data, isHistorical = false) {
             const noDataMessage = isHistorical ? document.getElementById('no-historical-message') : document.getElementById('no-news-message');
 
@@ -2562,11 +2829,11 @@
         }
 
         /**
-         * Obtiene el valor normalizado de un campo para ser usado en los filtros.
-         * Asegura que el tratamiento de valores nulos/vacíos sea consistente.
+         * @summary Obtiene el valor normalizado de un campo para ser usado en los filtros.
+         * @description Asegura que el tratamiento de valores nulos/vacíos sea consistente, devolviendo 'N/A'.
          * @param {object} item - El objeto de datos (la fila).
          * @param {string} columnKey - La clave de la columna (ej. 'fecha', 'cita').
-         * @returns {string} - El valor normalizado para el filtro.
+         * @returns {string} El valor normalizado para el filtro.
          */
         function getFilterableValue(item, columnKey) {
             if (columnKey === 'fecha') return formatDate(item[columnKey]);
@@ -2574,6 +2841,12 @@
             return (value === null || value === undefined || String(value).trim() === '') ? 'N/A' : String(value).trim();
         }
 
+        /**
+         * @summary Filtra un conjunto de datos aplicando todos los filtros activos (búsqueda, columnas, radar, días).
+         * @param {object[]} data - El array de datos a filtrar.
+         * @param {string} filterKey - La clave del conjunto de filtros a usar ('main' o 'historical').
+         * @returns {object[]} Un nuevo array con los datos que cumplen todos los criterios de filtrado.
+         */
         function applyAllFilters(data, filterKey) {
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
             const searchText = searchInput ? searchInput.value.toLowerCase() : '';
@@ -2629,12 +2902,12 @@
         }
 
         /**
-         * Obtiene los datos pre-filtrados por todas las columnas excepto la especificada.
-         * Esto es crucial para que los dropdowns de filtro muestren solo opciones relevantes.
+         * @summary Obtiene los datos pre-filtrados por todas las columnas excepto la especificada.
+         * @description Esto es crucial para que los dropdowns de filtro muestren solo opciones relevantes y no opciones que ya han sido excluidas por otros filtros.
          * @param {function} dataProvider - Función que devuelve el conjunto de datos completo.
          * @param {string} filterKey - 'main' o 'historical'.
          * @param {string} excludeColumn - La clave de la columna a excluir del filtrado.
-         * @returns {Array} - Los datos filtrados.
+         * @returns {object[]} Los datos filtrados.
          */
         function getPreFilteredData(dataProvider, filterKey, excludeColumn) {
             const allData = dataProvider() || [];
@@ -2664,6 +2937,13 @@
             });
         }
 
+        /**
+         * @summary Configura los listeners para los encabezados de columna filtrables de una tabla.
+         * @param {string} headerId - El ID del `<tr>` que contiene los encabezados.
+         * @param {function(): object[]} dataProvider - Una función que devuelve el conjunto de datos completo para la tabla.
+         * @param {function} renderFunc - La función de renderizado de la tabla.
+         * @param {string} filterKey - La clave del conjunto de filtros a usar ('main' o 'historical').
+         */
         function setupColumnFilters(headerId, dataProvider, renderFunc, filterKey) {
             const headerRow = document.getElementById(headerId);
             headerRow.addEventListener('click', e => {
@@ -2760,7 +3040,9 @@
             }, true);
         }
 
-        // CORRECCIÓN: Implementación completa de la función del tooltip.
+        /**
+         * @summary Configura los listeners para mostrar un tooltip con vista rápida al pasar el cursor sobre las filas de las tablas.
+         */
         function setupQuickViewTooltip() {
             const tooltip = quickViewTooltip;
             const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
@@ -2856,6 +3138,13 @@
             });
         }
 
+        /**
+         * @summary Configura el listener para el campo de búsqueda de una tabla.
+         * @param {string} inputId - El ID del `input` de búsqueda.
+         * @param {function(): object[]} dataProvider - Función que devuelve el conjunto de datos completo.
+         * @param {function} renderFunc - La función de renderizado de la tabla.
+         * @param {boolean} [isHistorical=false] - Flag que indica si es la tabla de histórico.
+         */
         function setupFiltering(inputId, dataProvider, renderFunc, isHistorical = false) {
             const filterInput = document.getElementById(inputId);
             const filterKey = isHistorical ? 'historical' : 'main';
@@ -2871,10 +3160,13 @@
             });
         }
 
+        /**
+         * @summary Ordena los datos por fecha (descendente) y luego por fecha de creación (descendente) y los renderiza en la tabla.
+         * @param {HTMLTableSectionElement} tableBody - El `<tbody>` de la tabla.
+         * @param {object[]} data - El array de datos a ordenar y renderizar.
+         * @param {boolean} isHistorical - Flag que indica si es la tabla de histórico.
+         */
         function sortAndRenderTable(tableBody, data, isHistorical) {
-            // Lógica de ordenamiento corregida y definitiva:
-            // 1. Criterio principal: Fecha de la noticia (descendente).
-            // 2. Criterio de desempate: Fecha de creación del registro (descendente).
             data.sort((a, b) => {
                 try {
                     // Normalizar fechas para evitar errores. Se usa una fecha muy antigua como fallback.
@@ -2899,6 +3191,10 @@
             renderTable(tableBody, filteredData, isHistorical);
         }
 
+        /**
+         * @summary Abre una URL en un iframe dentro de un modal (vista web).
+         * @param {string} url - La URL a cargar en el iframe.
+         */
         function openWebviewModal(url) {
             // 1. Limpiar el src anterior para evitar mostrar contenido viejo brevemente.
             webviewFrame.src = 'about:blank';
@@ -2910,10 +3206,18 @@
             openModal(webviewModal);
         }
 
-        // =============================================
-        // MÓDULO: Gestión de noticias
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: GESTIÓN DE DATOS (CRUD)
+         * @summary Contiene las funciones para Crear, Leer, Actualizar y Eliminar (CRUD)
+         * registros en las colecciones de Firebase.
+         * =================================================================================
+         */
         
+        /**
+         * @summary Guarda un nuevo registro en la colección 'news' de Firebase.
+         * @param {object} newsData - El objeto con los datos de la noticia a guardar.
+         */
         async function saveNews(newsData) {
             try {
                 await newsCollectionRef.add({ 
@@ -2928,6 +3232,12 @@
             }
         }
 
+        /**
+         * @summary Actualiza un registro existente en Firebase.
+         * @param {string} id - El ID del documento a actualizar.
+         * @param {object} updateData - El objeto con los campos a actualizar.
+         * @param {boolean} isHistorical - Indica si el registro pertenece a la colección de histórico.
+         */
         async function updateNews(id, updateData, isHistorical) {
             if (!id) {
                 console.error("ID no válido para actualización");
@@ -2953,6 +3263,11 @@
             }
         }
 
+        /**
+         * @summary Elimina un registro de Firebase.
+         * @param {string} id - El ID del documento a eliminar.
+         * @param {boolean} isHistorical - Indica si el registro pertenece a la colección de histórico.
+         */
         async function deleteNews(id, isHistorical) {
             if (!id) {
                 console.error("ID no válido para eliminación");
@@ -2978,6 +3293,11 @@
             }
         }
 
+        /**
+         * @summary Maneja el clic en el botón de editar de una fila de la tabla.
+         * @description Pide contraseña, encuentra el registro, y abre el modal de edición correspondiente (noticia o conferencia).
+         * @param {HTMLButtonElement} button - El botón de editar que fue presionado.
+         */
         function handleEditClick(button) {
             requirePassword(() => {
                 const newsId = button.getAttribute('data-id');
@@ -3037,22 +3357,11 @@
             });
         }
 
-        //Función Anterior sin delegación de eventos
-        //function handleDeleteClick(button) {
-          //  requirePassword(() => {
-            //    newsToDeleteId = button.getAttribute('data-id');
-              //  newsToDeleteIsHistorical = button.getAttribute('data-is-historical') === 'true';
-                
-                //if (!newsToDeleteId) {
-                  //  console.error("ID de noticia no encontrado para eliminación");
-                    //return;
-                //}
-                
-                //openModal(confirmModal);
-           // });
-        //}
-        
-        //Nueva funcion acorde a delegación de eventos
+        /**
+         * @summary Maneja el clic en el botón de eliminar de una fila.
+         * @description Pide contraseña y luego abre el modal de confirmación, guardando los datos del registro a eliminar en el modal.
+         * @param {HTMLButtonElement} button - El botón de eliminar que fue presionado.
+         */
         function handleDeleteClick(button) {
             requirePassword(() => {
                 confirmModal.dataset.pendingId = button.dataset.id || button.getAttribute('data-id');
@@ -3062,6 +3371,12 @@
         }
         
         
+        /**
+         * @summary Muestra el modal con los detalles completos de un registro.
+         * @description Renderiza un layout diferente si es una noticia o una conferencia/evento.
+         * @param {object} newsItem - El objeto de datos del registro a mostrar.
+         * @param {boolean} [isHistorical=false] - Indica si el registro es del histórico.
+         */
         function showDetailsModal(newsItem, isHistorical = false) {
             if (!newsItem) return;
 
@@ -3204,6 +3519,13 @@
             openModal(viewDetailsModal);
         }
 
+        /**
+         * @summary Genera el fragmento de HTML para un único item en el modal de múltiples detalles.
+         * @param {object} newsItem - El objeto de datos del registro.
+         * @param {number} index - El índice del item en la lista.
+         * @param {boolean} [isHistorical=false] - Indica si el registro es del histórico.
+         * @returns {string} El string HTML del item de detalle.
+         */
         function generateSingleDetailHtml(newsItem, index, isHistorical = false) {
             if (!newsItem) return '';
 
@@ -3286,6 +3608,10 @@
             }
         }
 
+        /**
+         * @summary Muestra un modal con los detalles de todas las noticias actualmente visibles en una tabla.
+         * @param {boolean} isHistorical - Indica si se deben mostrar los detalles de la tabla de histórico.
+         */
         function showMultiDetailsModal(isHistorical) {
             const filterKey = isHistorical ? 'historical' : 'main';
             const dataProvider = isHistorical ? () => historicalNews : () => news;
@@ -3304,9 +3630,10 @@
         }
 
         /**
-         * Genera un documento .docx a partir de una plantilla en Firebase Storage.
+         * @summary Genera y descarga un documento .docx para un registro específico usando una plantilla.
+         * @description Selecciona la plantilla adecuada según el tipo de medio, maneja documentos .docx adjuntos,
+         * y convierte el contenido HTML a formato OpenXML para la inserción en la plantilla.
          * @param {string} newsId - El ID del registro de la noticia.
-         * @param {boolean} isHistorical - Indica si el registro es del histórico.
          */
         async function generateDoc(newsId, isHistorical) {
             // 1. Verificar que las librerías necesarias estén cargadas y cargar fallbacks si es necesario
@@ -3476,6 +3803,9 @@
         }
 
 
+        /**
+         * @summary Configura los listeners para las tarjetas del "Radar de Medios" en la pestaña de Noticias.
+         */
         function setupNewsMediosDashboardFilter() {
             const indicators = document.querySelectorAll('#news-dashboard-medios .indicator-card');
 
@@ -3510,6 +3840,9 @@
             });
         }
 
+        /**
+         * @summary Configura los listeners para las tarjetas del "Radar de Medios" en la pestaña de Histórico.
+         */
         function setupMediosDashboardFilter() {
             const indicators = document.querySelectorAll('#tab-content-historico #dashboard-medios .indicator-card');
 
@@ -3546,6 +3879,10 @@
             });
         }
 
+        /**
+         * @summary Genera una cadena de texto con la fecha y hora actual, formateada para nombres de archivo.
+         * @returns {string} La marca de tiempo formateada (ej. "15-01-2024_14h-30m-05s").
+         */
         function getFormattedTimestamp() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
@@ -3558,10 +3895,10 @@
         }
 
         /**
-         * Convierte HTML complejo (incluyendo el de MS Word) a texto plano optimizado para Excel.
-         * Maneja párrafos, listas y tablas, convirtiéndolas a un formato de texto legible.
+         * @summary Convierte HTML complejo (incluyendo el de MS Word) a texto plano optimizado para Excel.
+         * @description Maneja párrafos, listas y tablas, convirtiéndolas a un formato de texto legible con saltos de línea y tabulaciones.
          * @param {string} html - El contenido HTML a convertir.
-         * @returns {string} - El texto plano formateado para Excel.
+         * @returns {string} El texto plano formateado para Excel.
          */
         function htmlToExcelText(html) {
             if (!html) return '';
@@ -3617,14 +3954,20 @@
             return result.replace(/(\n\s*){3,}/g, '\n\n'); // Normalizar múltiples saltos de línea a solo dos.
         }
 
-        // =============================================
-        // MÓDULO: Gestión de datos históricos
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: GESTIÓN DE DATOS HISTÓRICOS Y MIGRACIÓN
+         * @summary Contiene funciones para importar datos, migrar registros entre colecciones
+         * y utilidades de soporte para operaciones en lote.
+         * =================================================================================
+         */
 
-        /*
-        * Utilerías de soporte para migraciones seguras
-        */
-
+        /**
+         * @summary Divide un array en sub-arrays (chunks) de un tamaño específico.
+         * @param {Array} arr - El array a dividir.
+         * @param {number} size - El tamaño de cada chunk.
+         * @returns {Array[]} Un array de chunks.
+         */
         // Trocea un array en chunks de tamaño 'size'
         function chunkArray(arr, size) {
             const chunks = [];
@@ -3634,13 +3977,22 @@
             return chunks;
         }
 
-        // Pequeña espera (ms)
+        /**
+         * @summary Pausa la ejecución durante un número determinado de milisegundos.
+         * @param {number} ms - El tiempo a esperar en milisegundos.
+         * @returns {Promise<void>}
+         */
         function sleep(ms) {
             return new Promise(res => setTimeout(res, ms));
         }
 
-        // Mapea de forma segura un objeto histórico/nota a la forma "newsData" esperada.
-        // Si existe newsItem.newsData lo usa, si no, intenta reconstruir a partir de campos conocidos.
+        /**
+         * @summary Mapea de forma segura un objeto (de histórico o noticia) a la estructura de datos estándar de una noticia.
+         * @description Si el objeto ya tiene una propiedad `newsData`, la usa. De lo contrario, reconstruye el objeto
+         * a partir de los campos conocidos, asegurando que todos los campos esperados existan.
+         * @param {object} newsItem - El objeto de origen.
+         * @returns {object} Un objeto con la estructura de datos de una noticia.
+         */
         function resolveNewsDataFromItem(newsItem) {
             if (!newsItem) return {};
             if (newsItem.newsData && typeof newsItem.newsData === 'object') return newsItem.newsData;
@@ -3660,8 +4012,8 @@
 
 
         /**
-         * Elimina todos los registros del histórico EXCEPTO las conferencias.
-         * Se utiliza antes de importar un nuevo archivo de Excel.
+         * @summary Elimina todos los registros del histórico EXCEPTO los que son de tipo Conferencia, Evento o Informe.
+         * @description Se utiliza antes de importar un nuevo archivo de Excel para no duplicar noticias.
          */
         async function deleteNonConferenceHistorical() {
             const batch = db.batch();
@@ -3675,6 +4027,10 @@
             await batch.commit();
         }
 
+        /**
+         * @summary Importa un lote de registros al histórico de Firebase.
+         * @param {object[]} data - Un array de objetos de noticias para importar.
+         */
         async function importHistoricalData(data) {
             try {
                 const batch = db.batch();
@@ -3694,11 +4050,15 @@
             }
         }
 
-        // =============================================================
-        // MÓDULO: Catálogos de opciones dinámicas (Actualizado)
-        // =============================================================
+        /**
+         * =================================================================================
+         * MÓDULO: GESTIÓN DE CATÁLOGOS DINÁMICOS
+         * @summary Contiene funciones para gestionar las opciones de los menús desplegables (Select2),
+         * actualizándolas dinámicamente a partir de los datos existentes y permitiendo su edición.
+         * =================================================================================
+         */
 
-        // Catálogo de proyectos ferroviarios
+        // Catálogos base (se expandirán dinámicamente)
         const catalogoProyectos = [
         ];
 
@@ -3719,6 +4079,10 @@
 
         const specialMedios = ["Conferencia de prensa matutina", "Evento Presidencial", "Informe de Gobierno"];
 
+        /**
+         * @summary Recopila todas las opciones únicas de los campos (proyecto, categoría, etc.) de ambas colecciones
+         * de datos (`news` y `historicalNews`) y actualiza los menús desplegables en toda la aplicación.
+         */
         function updateDynamicSelectOptions() {
             const allData = [...news, ...historicalNews];
 
@@ -3781,6 +4145,13 @@
             "Evento Presidencial",
             "Informe de Gobierno"
         ];
+
+        /**
+         * @summary Actualiza las opciones de un conjunto de menús desplegables (Select2).
+         * @param {string} field - El tipo de campo a actualizar (ej. 'proyectos', 'categorias').
+         * @param {string[]} options - El array de strings con las nuevas opciones.
+         * @param {string|null} [selectedId=null] - Opcional. El ID de la opción que debe quedar seleccionada.
+         */
         function updateSelectOptions(field, options, selectedId = null) {
             const fieldToSelectMap = {
                 'proyectos': ['news-project', 'edit-news-project'],
@@ -3824,6 +4195,14 @@
 
 
 
+        /**
+         * @summary Busca y reemplaza un valor en un campo específico en toda la base de datos (ambas colecciones).
+         * @param {string} field - El tipo de campo a modificar (ej. 'proyectos').
+         * @param {string} oldValue - El valor actual que se va a reemplazar.
+         * @param {string} newValue - El nuevo valor.
+         * @param {string|null} activeFormId - El ID del formulario que estaba activo durante la edición.
+         * @param {object|null} formStateBeforeEdit - El estado del formulario antes de la edición, para poder restaurarlo.
+         */
         async function findAndReplaceInDatabase(field, oldValue, newValue, activeFormId, formStateBeforeEdit) {
             const fieldToDbFieldMap = {
                 'proyectos': 'proyecto', 
@@ -3874,6 +4253,11 @@
             }
         }
 
+        /**
+         * @summary Captura el estado actual de todos los campos de un formulario.
+         * @param {string} formId - El ID del formulario.
+         * @returns {object|null} Un objeto que representa el estado del formulario.
+         */
         function getFormState(formId) {
             const form = document.getElementById(formId);
             if (!form) return null;
@@ -3904,6 +4288,11 @@
             return state;
         }
 
+        /**
+         * @summary Restaura el estado de un formulario a partir de un objeto de estado guardado.
+         * @param {string} formId - El ID del formulario a restaurar.
+         * @param {object} state - El objeto de estado previamente guardado con `getFormState`.
+         */
         function restoreFormState(formId, state) {
             const form = document.getElementById(formId);
             if (!form || !state) return;
@@ -3928,6 +4317,9 @@
             });
         }
 
+        /**
+         * @summary Configura los listeners para los botones de "editar opción" (el icono de lápiz) junto a los campos de formulario.
+         */
         function setupAddEditButtons() {
             const buttonToFieldMap = {
                 'edit-project-btn': 'proyectos',
@@ -4030,10 +4422,16 @@
         }
 
 
-        // =============================================
-        // MÓDULO: Autenticación y seguridad
-        // =============================================
-
+        /**
+         * =================================================================================
+         * MÓDULO: AUTENTICACIÓN Y SEGURIDAD
+         * @summary Gestiona la autenticación anónima de usuarios y la verificación por contraseña para acciones sensibles.
+         * =================================================================================
+         */
+        
+        /**
+         * @summary Verifica la contraseña introducida en el modal de seguridad. Si es correcta, ejecuta la acción pendiente.
+         */
         function verifyPassword() {
             const password = passwordInput.value;
             
@@ -4050,6 +4448,9 @@
             }
         }
 
+        /**
+         * @summary Configura los listeners para el modal de verificación de contraseña.
+         */
         function setupPasswordVerification() {
             confirmPasswordBtn.addEventListener('click', verifyPassword);
             cancelPasswordBtn.addEventListener('click', () => {
@@ -4064,6 +4465,12 @@
             });
         }
 
+        /**
+         * @summary Envuelve una acción en una solicitud de contraseña. Muestra el modal de contraseña y ejecuta la acción solo si la verificación es exitosa.
+         * @param {Function} action - La función a ejecutar después de la verificación.
+         * @param {boolean} [isAsync=false] - Indica si la acción es asíncrona.
+         * @returns {Promise|void} Devuelve una promesa si la acción es asíncrona.
+         */
         function requirePassword(action, isAsync = false) {
             pendingAction = action;
             openModalWithFocus(passwordModal, passwordInput);
@@ -4083,8 +4490,10 @@
             }
         }
 
-        //INICIALIZA APP CON AUTENTICACION
-
+        /**
+         * @summary Inicializa la autenticación anónima de Firebase. Si el usuario ya está logueado, muestra la app.
+         * Si no, intenta loguearlo anónimamente.
+         */
         async function initializeAppWithAuth() {
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
@@ -4105,8 +4514,11 @@
             });
         }
         
-        //INICIALIZA LAS TABLAS Y DEMÁS
-
+        /**
+         * @summary Configura los listeners en tiempo real (`onSnapshot`) de Firebase para las colecciones 'news' y 'historicalNews'.
+         * @description Cuando los datos cambian en Firebase, estos listeners actualizan automáticamente los datos locales
+         * y vuelven a renderizar las tablas y componentes de la UI correspondientes.
+         */
         function setupRealtimeListeners() {
             let noticiasCargadas = false;
             let historicoCargado = false;
@@ -4239,9 +4651,14 @@
             if (eventoElement) eventoElement.textContent = counts.evento;
             if (informeElement) informeElement.textContent = counts.informe;
         }
-        // =============================================
-        // MÓDULO: Gráficos y reportes
-        // =============================================
+        
+        /**
+         * =================================================================================
+         * MÓDULO: GRÁFICOS Y REPORTES
+         * @summary Contiene funciones para generar y actualizar las gráficas y tablas
+         * en la pestaña de "Reportes".
+         * =================================================================================
+         */
         
         /**
          * Obtiene y filtra los datos para los reportes según la configuración guardada.
@@ -4270,6 +4687,9 @@
             return baseData; // Devuelve todos los datos si el filtro no está activo.
         }
 
+        /**
+         * @summary Función principal que actualiza todas las gráficas en la pestaña de reportes.
+         */
         function updateCharts() {
             const source = reportesDataSource.value;
             let data = [];
@@ -4288,9 +4708,9 @@
         }
  
         /**
-         * Navega a la pestaña de histórico y aplica los filtros especificados.
+         * @summary Navega a una pestaña de datos ('Noticias' o 'Histórico') y aplica un conjunto de filtros.
          * @param {string} targetTab - La pestaña de destino ('noticias' o 'historico').
-         * @param {Object} filtersToApply - Un objeto donde las claves son los campos a filtrar y los valores son arrays de los valores a incluir.
+         * @param {Object<string, string[]>} filtersToApply - Un objeto donde las claves son los campos a filtrar y los valores son arrays de los valores a incluir.
          */
         function navigateAndFilter(targetTab, filtersToApply) {
             if (targetTab !== 'noticias' && targetTab !== 'historico') return;
@@ -4353,6 +4773,9 @@
             sortAndRenderTable(tableBody, dataProvider(), isHistorical);
         }
 
+        /**
+         * @summary Actualiza la gráfica y la tabla de "Proyectos por Categoría".
+         */
         function updateProjectCategoryChart() {
             const data = getReportData();
             const projectCategoryData = {};
@@ -4463,7 +4886,11 @@
                 { value: 'categoria', text: 'Categoría' }
             ]
         };
-
+        
+        /**
+         * @summary Actualiza la gráfica y tabla dinámicas (Noticias/Conferencias por Proyecto/Categoría, etc.).
+         * @description Lee los selectores de tipo y variable para filtrar y agrupar los datos correctamente.
+         */
         function updateDynamicChart() {
             const data = getReportData();
             const selectedType = document.getElementById('dynamic-chart-type').value;
@@ -4553,6 +4980,9 @@
             });
         }
         
+        /**
+         * @summary Actualiza la gráfica y tabla de "Total de Noticias y Conferencias Registradas".
+         */
         function updateTotalNewsByTypeChart() {
             const data = getReportData();
             const counts = {
@@ -4634,6 +5064,11 @@
             });
         }
 
+        /**
+         * @summary Actualiza la etiqueta del campo de resumen en los modales de conferencia según el tipo de medio seleccionado.
+         * @param {string} medio - El medio seleccionado (ej. "Conferencia de prensa matutina").
+         * @param {HTMLLabelElement} labelElement - El elemento de la etiqueta a actualizar.
+         */
         function updateConferenceSummaryLabel(medio, labelElement) {
             let labelText = 'Resumen';
             if (medio === 'Conferencia de prensa matutina') {
@@ -4646,16 +5081,24 @@
             labelElement.textContent = labelText;
         }
 
+        /**
+         * @summary Puebla un menú desplegable con los medios especiales (Conferencia, Evento, Informe).
+         * @param {string} selectElementId - El ID del elemento `<select>` a poblar.
+         */
         function populateConferenceMedioSelect(selectElementId) {
             const select = document.getElementById(selectElementId);
             select.innerHTML = specialMedios.map(medio => `<option value="${medio}">${medio}</option>`).join('');
         }
 
 
-        // =============================================
-        // MÓDULO: Exportación/Importación
-        // =============================================
-
+        /**
+         * =================================================================================
+         * MÓDULO: EXPORTACIÓN E IMPORTACIÓN
+         * @summary Contiene funciones para exportar datos a Excel con formato y para
+         * importar datos desde archivos Excel.
+         * =================================================================================
+         */
+        
         const exportHeaders = [
             "No.", "Fecha", "Proyecto", "Subproyecto", "Categoría", "Noticia", "Cita", "Resumen", "Medio", "Enlace"
         ];
@@ -4679,10 +5122,10 @@
         }
 
         /**
-         * Exporta datos a un archivo Excel con formato personalizado.
+         * @summary Exporta un conjunto de datos a un archivo Excel con formato profesional.
          * @param {Array} data - Los datos a exportar.
          * @param {string} sheetName - El nombre de la hoja de Excel.
-         * @param {string} fileName - El nombre del archivo a descargar.
+         * @param {string} fileName - El nombre del archivo final.
          */
         function exportToExcelWithFormatting(data, sheetName, fileName) {
             if (data.length === 0) {
@@ -4801,10 +5244,10 @@
         }
 
         /**
-         * Exporta una tabla HTML a un archivo Excel con formato profesional.
+         * @summary Exporta una tabla HTML a un archivo Excel, preservando el formato y las celdas combinadas.
          * @param {string} tableId - El ID de la tabla HTML a exportar.
          * @param {string} sheetName - El nombre para la hoja de Excel.
-         * @param {string} fileName - El nombre del archivo a descargar.
+         * @param {string} fileName - El nombre del archivo final.
          */
         function exportTableToExcel(tableId, sheetName, fileName) {
             const table = document.getElementById(tableId);
@@ -4902,10 +5345,10 @@
             XLSX.writeFile(wb, fileName);
         }
 
-        // =============================================
-        // MÓDULO: Migración de datos
-        // =============================================
-        
+        /**
+         * @summary Migra las noticias seleccionadas de la colección 'news' a 'historicalNews' y las elimina del origen.
+         * @description Realiza la operación en lotes (chunks) para evitar exceder los límites de escritura de Firebase.
+         */
         async function migrateSelectedNewsToHistorical() {
             try {
                 if (selectedNewsIdsToMigrate.size === 0) {
@@ -4983,6 +5426,10 @@
             }
         }
 
+        /**
+         * @summary Activa o desactiva el "modo migración" para la tabla de noticias principal.
+         * @param {boolean} activate - `true` para activar, `false` para desactivar.
+         */
         function toggleMigrationMode(activate) {
             isMigrationModeActive = activate;
             selectedNewsIdsToMigrate.clear();
@@ -5007,8 +5454,10 @@
             if (selectAllCheckbox) selectAllCheckbox.checked = false;
         }
 
-        // --- INICIO: Funciones para Migración Inversa ---
-
+        /**
+         * @summary Activa o desactiva el "modo migración inversa" para la tabla de histórico.
+         * @param {boolean} activate - `true` para activar, `false` para desactivar.
+         */
         function toggleReverseMigrationMode(activate) {
             isReverseMigrationModeActive = activate;
             selectedHistoricalNewsIdsToMigrate.clear();
@@ -5030,6 +5479,10 @@
 
         }
 
+        /**
+         * @summary Migra las noticias seleccionadas de la colección 'historicalNews' a 'news' y las elimina del histórico.
+         * @description Realiza la operación en lotes (chunks) para mayor seguridad.
+         */
         async function migrateSelectedNewsToRegistry() {
             try {
                 if (selectedHistoricalNewsIdsToMigrate.size === 0) {
@@ -5105,9 +5558,10 @@
             }
         }
 
-        // --- FIN: Funciones para Migración Inversa ---
-
-        // Añadir función showLoader si no existe
+        /**
+         * @summary Muestra u oculta el indicador de carga principal de la aplicación.
+         * @param {boolean} show - `true` para mostrar el cargador, `false` para ocultarlo.
+         */
         function showLoader(show) {
             const loaderElement = document.getElementById('loader');
             if (loaderElement) {
@@ -5115,6 +5569,11 @@
             }
         }
 
+        /**
+         * @summary Maneja el evento de doble clic en una fila de la tabla para mostrar el modal de detalles.
+         * @param {MouseEvent} e - El objeto del evento de doble clic.
+         * @param {boolean} isHistorical - Indica si el evento ocurrió en la tabla de histórico.
+         */
         function handleRowDoubleClick(e, isHistorical) {
             const row = e.target.closest('tr');
             // Se previene la acción si se hace clic en un botón o en el span del enlace
@@ -5129,6 +5588,11 @@
             showDetailsModal(newsItem, isHistorical);
         }
 
+        /**
+         * @summary Manejador de clic para los botones de generar documento (.docx).
+         * @description Muestra un spinner en el botón mientras se genera el documento para evitar clics múltiples.
+         * @param {HTMLButtonElement} button - El botón que fue presionado.
+         */
         async function handleGenerateDocClick(button) {
             const newsId = button.dataset.id;
             const isHistorical = button.dataset.isHistorical === 'true';
@@ -5148,9 +5612,18 @@
             }
         }
 
-        // =============================================
-        // MÓDULO: Notificación de Resumen Semanal (Adaptado de Llamadas)
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: NOTIFICACIONES
+         * @summary Contiene la lógica para mostrar alertas y notificaciones al usuario,
+         * como el resumen semanal de conferencias.
+         * =================================================================================
+         */
+        
+        /**
+         * @summary Calcula el rango de fechas para la semana actual (de Lunes a Domingo).
+         * @returns {{start: Date, end: Date}} Un objeto con las fechas de inicio y fin de la semana.
+         */
         function getWeekRange() {
             const now = new Date();
             const dayOfWeek = now.getDay(); // 0 (Dom) - 6 (Sáb)
@@ -5166,6 +5639,10 @@
             return { start: startOfWeek, end: endOfWeek };
         }
 
+        /**
+         * @summary Cuenta el número de conferencias, eventos e informes registrados en la semana actual.
+         * @returns {{mananera: number, evento: number, informe: number}} Un objeto con los conteos.
+         */
         function calculateWeeklyAlertCounts() {
             // 1. Se obtienen las fechas de la semana y se inicializan los contadores.
             const { start, end } = getWeekRange();
@@ -5186,6 +5663,10 @@
             return alertCounts;
         }
 
+        /**
+         * @summary Muestra notificaciones flotantes si hay registros de conferencias/eventos en la semana actual.
+         * @param {object} alertCounts - El objeto con los conteos devuelto por `calculateWeeklyAlertCounts`.
+         */
         function checkAndShowTrainAlerts(alertCounts) {
             if (weeklyAlertsShown) return;
             if (alertCounts.mananera === 0 && alertCounts.evento === 0 && alertCounts.informe === 0) return;
@@ -5235,6 +5716,9 @@
             weeklyAlertsShown = true;
         }
 
+        /**
+         * @summary Configura los listeners para las notificaciones de resumen semanal, manejando el clic y el cierre.
+         */
         function setupTrainAlertsListeners() {
             document.getElementById('notifications-wrapper').addEventListener('click', (e) => {
                 const alertDiv = e.target.closest('.train-alert');
@@ -5273,9 +5757,12 @@
             }, true);
         }
 
-        // =============================================
-        // MÓDULO: Configuración de eventos
-        // =============================================
+        /**
+         * =================================================================================
+         * MÓDULO: CONFIGURACIÓN DE EVENTOS
+         * @summary Centraliza la asignación de todos los `event listeners` de la aplicación.
+         * =================================================================================
+         */
         
         function setupEventListeners() {
             setupTabs();
@@ -6125,10 +6612,13 @@
             });
         }
 
-        // =============================================
-        // DELEGACIÓN CENTRALIZADA DE EVENTOS (AQUÍ PONDRE LAS FUNCIONES)
-        // =============================================
-
+        /**
+         * =================================================================================
+         * MÓDULO: DELEGACIÓN DE EVENTOS GLOBALES
+         * @summary Centraliza la gestión de eventos para elementos que se crean, destruyen y
+         * recrean dinámicamente, como los checkboxes de migración o las celdas de las tablas.
+         * =================================================================================
+         */
         /**
         * Configura la delegación global de eventos para elementos dinámicos.
         * Esta función se llama una sola vez al inicio.
@@ -6342,10 +6832,13 @@
         });
         }
 
-        // =============================================
-        // MÓDULO: Inicialización
-        // =============================================
-
+        /**
+         * =================================================================================
+         * MÓDULO: INICIALIZACIÓN
+         * @summary Punto de entrada de la aplicación. Se ejecuta cuando el DOM está listo.
+         * Asigna las referencias a los elementos del DOM, inicializa librerías y configura los listeners principales.
+         * =================================================================================
+         */
         document.addEventListener('DOMContentLoaded', () => {
             // Asignar elementos del DOM una vez que la página esté cargada
             loader = document.getElementById('loader');
@@ -6466,9 +6959,6 @@
              const today = new Date().toISOString().split('T')[0];
              document.getElementById('news-date').value = today;
         });
-
-        // Iniciar la aplicación
-        // La inicialización ahora ocurre dentro del listener DOMContentLoaded
 
     </script>
 </body>  
