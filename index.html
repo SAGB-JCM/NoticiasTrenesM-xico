@@ -742,6 +742,7 @@
         .login-form-container {
             padding: 3rem;
             width: 55%;
+            position: relative; /* Añadido para posicionar el botón de cierre */
         }
         @media (max-width: 768px) {
             .login-card { flex-direction: column; }
@@ -771,6 +772,10 @@
             </div>
             <!-- Columna del Formulario -->
             <div class="login-form-container">
+                <!-- Botón sutil para cerrar el modal de login -->
+                <button id="close-login-screen-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors z-10" title="Cerrar">
+                    <i class="fa-solid fa-times-circle fa-lg"></i>
+                </button>
                 <h3 class="text-2xl font-bold text-primary mb-2">Iniciar Sesión</h3>
                 <p class="text-slate-500 mb-6">Ingrese sus credenciales de acceso.</p>
                 <form id="login-form">
@@ -7143,18 +7148,33 @@
                 auth.signOut();
             });
 
-            togglePasswordVisibility.addEventListener('click', () => {
-                const passwordInput = document.getElementById('login-password');
-                const icon = togglePasswordVisibility.querySelector('i');
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    passwordInput.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
+            // --- Lógica mejorada para visibilidad de contraseña (mantener presionado) ---
+            const passwordInputForToggle = document.getElementById('login-password');
+            const iconForToggle = togglePasswordVisibility.querySelector('i');
+
+            const showPassword = () => {
+                passwordInputForToggle.type = 'text';
+                iconForToggle.classList.remove('fa-eye');
+                iconForToggle.classList.add('fa-eye-slash');
+            };
+
+            const hidePassword = () => {
+                passwordInputForToggle.type = 'password';
+                iconForToggle.classList.remove('fa-eye-slash');
+                iconForToggle.classList.add('fa-eye');
+            };
+
+            // Eventos para ratón
+            togglePasswordVisibility.addEventListener('mousedown', showPassword);
+            togglePasswordVisibility.addEventListener('mouseup', hidePassword);
+            togglePasswordVisibility.addEventListener('mouseleave', hidePassword); // Ocultar si el ratón se va del botón
+
+            // Eventos para dispositivos táctiles
+            togglePasswordVisibility.addEventListener('touchstart', (e) => { e.preventDefault(); showPassword(); });
+            togglePasswordVisibility.addEventListener('touchend', hidePassword);
+
+            document.getElementById('close-login-screen-btn').addEventListener('click', () => {
+                loginScreen.classList.add('hidden');
             });
 
             // Configurar Select2 para los selects
