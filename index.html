@@ -712,6 +712,44 @@
             }
         }
     </script>
+    <!-- Estilos para la pantalla de inicio de sesión -->
+    <style>
+        #login-screen {
+            background: linear-gradient(135deg, #f0f2f5 0%, #e6e9ed 100%);
+        }
+        .login-card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            display: flex;
+            max-width: 900px;
+            width: 100%;
+        }
+        .login-art {
+            background-color: #9C2348;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            width: 45%;
+        }
+        .login-form-container {
+            padding: 3rem;
+            width: 55%;
+        }
+        @media (max-width: 768px) {
+            .login-card { flex-direction: column; }
+            .login-art, .login-form-container { width: 100%; }
+            .login-art { padding: 2rem 1rem; }
+            .login-form-container { padding: 2rem 1.5rem; }
+        }
+    </style>
 </head>
 <body class="antialiased text-slate-700">
 
@@ -720,6 +758,42 @@
     <div id="loader" class="loader">
         <div class="spinner"></div>
         <p class="mt-4 text-sm text-slate-600">Cargando datos, por favor espera...</p>
+    </div>
+
+    <!----------------- PANTALLA DE INICIO DE SESIÓN ---------------->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="login-card">
+            <!-- Columna de Arte y Logo -->
+            <div class="login-art">
+                <img src="https://github.com/SAGB-JCM/NoticiasTrenesM-xico/blob/main/Trenes%20de%20M%C3%A9xico%20-%20LOGO.png?raw=true" alt="Logo Tren de México" class="h-32 w-auto mb-6">
+                <h2 class="text-2xl font-bold text-center mb-2">Noticias Sobre los Trenes de México</h2>
+                <p class="text-center text-sm opacity-80">Bienvenido. Por favor, inicie sesión para continuar.</p>
+            </div>
+            <!-- Columna del Formulario -->
+            <div class="login-form-container">
+                <h3 class="text-2xl font-bold text-primary mb-2">Iniciar Sesión</h3>
+                <p class="text-slate-500 mb-6">Ingrese sus credenciales de acceso.</p>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-sm font-medium text-slate-600 mb-1">Correo Electrónico</label>
+                        <input type="email" id="login-email" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="usuario@dominio.com">
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-sm font-medium text-slate-600 mb-1">Contraseña</label>
+                        <div class="relative">
+                            <input type="password" id="login-password" required class="w-full px-4 py-2 pr-10 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="••••••••">
+                            <button type="button" id="toggle-password-visibility" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p id="login-error" class="text-red-500 text-sm text-center mb-4 hidden"></p>
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-300">
+                        Acceder
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- ===== CONTENEDOR PRINCIPAL DE LA APLICACIÓN ===== -->
@@ -735,7 +809,15 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Noticias Sobre los Trenes de México</h1>
                 </div>
                 <!-- Contenedor para mostrar información del usuario (ej. ID anónimo) -->
-                <div id="user-info" class="text-white text-sm font-mono"></div>
+                <button id="login-btn" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors hidden">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Iniciar Sesión
+                </button>
+                <div id="user-info" class="flex items-center space-x-4 hidden">
+                    <span id="user-email" class="text-white text-sm font-medium"></span>
+                    <button id="logout-btn" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar Sesión
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -861,7 +943,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Enlace <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6">Acciones</th>
+                                    <th scope="col" class="py-3 px-6 actions-col">Acciones</th>
                                 </tr>
                             </thead>
                             <!-- Cuerpo de la tabla donde se insertarán las noticias dinámicamente -->
@@ -965,7 +1047,7 @@
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="resumen">Resumen <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="medio">Medio <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
                                     <th scope="col" class="py-3 px-6 filterable-header" data-filter-by="fuente">Enlace <span class="filter-icon"><i class="fa-solid fa-filter ml-1"></i></span></th>
-                                    <th scope="col" class="py-3 px-6">Acciones</th>
+                                    <th scope="col" class="py-3 px-6 actions-col">Acciones</th>
                                 </tr>
                             </thead>
                             <!-- Cuerpo de la tabla donde se insertarán los datos históricos -->
@@ -1558,12 +1640,14 @@
             </div>
             <div class="space-y-6">
                 <!-- Sección para cargar plantillas de Word -->
-                <div>
+                <div id="template-upload-section">
                     <h4 class="text-md font-semibold text-slate-700 mb-2">Plantillas</h4>
                     <button id="open-template-uploader-btn" class="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-upload"></i><span>Cargar Plantilla Word</span>
                     </button>
                 </div>
+
+
                 <!-- Sección para configurar el filtro de fechas de los reportes -->
                 <div class="border-t border-gray-200 pt-4">
                     <h4 class="text-md font-semibold text-slate-700 mb-3">Filtro de Fechas para Reportes</h4>
@@ -1737,12 +1821,17 @@
          * =================================================================================
          */
 
+        // --- Constantes Globales de Configuración ---
+        const NEWS_USER_UID = 'sucw7HPYiPQY2rFsVhUJY4f1ec53';  // --- Clave de FRIDA
+        const CONFERENCE_USER_UID = 'XwtE2jsWIKdIbEhXZTyUewrSz8q2'; // --- Clave de YOSELIN
+
+
         // --- Almacenes de Datos Principales ---
         let news = [];
         let historicalNews = [];
         let userId;
 
-        // --- Referencias a Colecciones de Firebase ---
+        // --- Referencias a Colecciones de Firebase y elementos del DOM ---
         const newsCollectionRef = db.collection("news");
         const historicalNewsCollectionRef = db.collection("historicalNews");
 
@@ -1751,6 +1840,7 @@
         let importWarningModal, cancelImportWarningBtn, confirmImportWarningBtn;
         let quickViewTooltip, projectCategoryChart;
         let reportSettingsModal, closeReportSettingsModalBtn, openTemplateUploaderBtn, reportSettingsBtn;
+        let loginScreen, loginForm, loginBtn, logoutBtn, userEmailSpan, loginError, togglePasswordVisibility;
         
         let newsSummaryEditor, editNewsSummaryEditor;
         // Objeto para almacenar la configuración de los reportes
@@ -2725,6 +2815,9 @@
             const searchInput = document.getElementById(`filter-input-${filterKey}`);
             const searchText = searchInput ? searchInput.value.trim() : '';
 
+            // Determinar si el usuario ha iniciado sesión para mostrar/ocultar la columna de acciones.
+            const isLoggedIn = auth.currentUser && !auth.currentUser.isAnonymous;
+
             const linkSeparator = ';';
 
             data.forEach((newsItem, index) => { // Corregido: `news` a `data`
@@ -2774,10 +2867,10 @@
                     <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.categoria, 30))}</td>
                     <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.comentario, 40))}</td>
                     <td class="py-4 px-6">${applyHighlight(truncateText(newsItem.cita, 40))}</td>                    
-                    <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 40))}</td>
+                    <td class="py-4 px-6">${applyHighlight(truncateText(htmlToPlainText(newsItem.resumen), 40))}</td> 
                     <td class="py-4 px-6 whitespace-nowrap">${applyHighlight(truncateText(newsItem.medio, 30))}</td>
                     <td class="py-4 px-6 text-center">${linkCellContent}</td>
-                    <td class="py-4 px-6 flex space-x-2">
+                    <td class="py-4 px-6 flex space-x-2 actions-col">
                         <button data-id="${newsItem.id}" data-is-historical="${isHistorical}" class="generate-doc-btn text-blue-600 hover:text-blue-800" title="Generar Reporte Individual">
                             <i class="fa-solid fa-file-word"></i>
                         </button>
@@ -2791,6 +2884,9 @@
                 `;
                 
                 row.innerHTML = migrationCell + reverseMigrationCell + rowContent;
+
+                // Ocultar la celda de acciones si el usuario no ha iniciado sesión.
+                row.querySelector('.actions-col').classList.toggle('hidden', !isLoggedIn);
 
                 fragment.appendChild(row); // Anexar la fila al fragmento en lugar de al DOM directamente
             });
@@ -3275,6 +3371,27 @@
          * @param {HTMLButtonElement} button - El botón de editar que fue presionado.
          */
         function handleEditClick(button) {
+            // --- INICIO DE LA MEJORA: Verificación de Roles ---
+            const newsIdForCheck = button.getAttribute('data-id');
+            const isHistoricalForCheck = button.getAttribute('data-is-historical') === 'true';
+            const dataSet = isHistoricalForCheck ? historicalNews : news;
+            const recordToCheck = dataSet.find(item => item.id === newsIdForCheck);
+
+            if (!recordToCheck) return; // No se encontró el registro
+
+            const currentUser = auth.currentUser;
+            if (!currentUser) return; // No hay usuario
+
+            const isConferenceRecord = specialMedios.includes(recordToCheck.medio);
+
+            if (isConferenceRecord && currentUser.uid !== CONFERENCE_USER_UID) {
+                return showAlert("No tiene permiso para editar conferencias o eventos.", "warning");
+            }
+            if (!isConferenceRecord && currentUser.uid !== NEWS_USER_UID) {
+                return showAlert("No tiene permiso para editar noticias.", "warning");
+            }
+            // --- FIN DE LA MEJORA ---
+
             requirePassword(() => {
                 const newsId = button.getAttribute('data-id');
                 const isHistorical = button.getAttribute('data-is-historical') === 'true';
@@ -3339,6 +3456,27 @@
          * @param {HTMLButtonElement} button - El botón de eliminar que fue presionado.
          */
         function handleDeleteClick(button) {
+            // --- INICIO DE LA MEJORA: Verificación de Roles ---
+            const newsIdForCheck = button.dataset.id || button.getAttribute('data-id');
+            const isHistoricalForCheck = button.dataset.isHistorical === 'true' || button.getAttribute('data-is-historical') === 'true';
+            const dataSet = isHistoricalForCheck ? historicalNews : news;
+            const recordToCheck = dataSet.find(item => item.id === newsIdForCheck);
+
+            if (!recordToCheck) return; // No se encontró el registro
+
+            const currentUser = auth.currentUser;
+            if (!currentUser) return; // No hay usuario
+
+            const isConferenceRecord = specialMedios.includes(recordToCheck.medio);
+
+            if (isConferenceRecord && currentUser.uid !== CONFERENCE_USER_UID) {
+                return showAlert("No tiene permiso para eliminar conferencias o eventos.", "warning");
+            }
+            if (!isConferenceRecord && currentUser.uid !== NEWS_USER_UID) {
+                return showAlert("No tiene permiso para eliminar noticias.", "warning");
+            }
+            // --- FIN DE LA MEJORA ---
+
             requirePassword(() => {
                 confirmModal.dataset.pendingId = button.dataset.id || button.getAttribute('data-id');
                 confirmModal.dataset.pendingIsHistorical = button.dataset.isHistorical || button.getAttribute('data-is-historical') || 'false';
@@ -4467,30 +4605,6 @@
         }
 
         /**
-         * @summary Inicializa la autenticación anónima de Firebase. Si el usuario ya está logueado, muestra la app.
-         * Si no, intenta loguearlo anónimamente.
-         */
-        async function initializeAppWithAuth() {
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    userInfo.textContent = `Usuario Anónimo: ${userId.substring(0, 8)}...`;
-                    setupRealtimeListeners();
-                    showApp();
-                } else {
-                    try {
-                        await auth.signInAnonymously();
-                    } catch (error) {
-                        console.error("Error en autenticación anónima:", error);
-                        showAlert("Error de conexión. Algunas funciones pueden no estar disponibles.", "warning");
-                        // Mostrar la app de todos modos en modo offline
-                        showApp();
-                    }
-                }
-            });
-        }
-        
-        /**
          * @summary Configura los listeners en tiempo real (`onSnapshot`) de Firebase para las colecciones 'news' y 'historicalNews'.
          * @description Cuando los datos cambian en Firebase, estos listeners actualizan automáticamente los datos locales
          * y vuelven a renderizar las tablas y componentes de la UI correspondientes.
@@ -4590,6 +4704,83 @@
             // Mostrar loader al inicio de los listeners
             showLoader(true); // ← Usa TU función existente
         }
+
+        /**
+         * @summary Gestiona el estado de la UI basado en si el usuario es anónimo o ha iniciado sesión.
+         * @param {object|null} user - El objeto de usuario de Firebase.
+         */
+        function updateUserUI(user) {
+            const isLoggedIn = user && !user.isAnonymous;
+ 
+            // --- Control de visibilidad de la columna de acciones ---
+            document.querySelectorAll('.actions-col').forEach(col => {
+                col.classList.toggle('hidden', !isLoggedIn);
+            });
+ 
+            // --- Control de visibilidad de otros elementos ---
+            document.getElementById('add-news-btn').classList.toggle('hidden', !isLoggedIn || user.uid !== NEWS_USER_UID);
+            document.getElementById('add-conference-btn').classList.toggle('hidden', !isLoggedIn || user.uid !== CONFERENCE_USER_UID);
+            document.getElementById('start-migration-btn').classList.toggle('hidden', !isLoggedIn);
+            document.getElementById('start-reverse-migration-btn').classList.toggle('hidden', !isLoggedIn);
+            document.querySelector('label[for="historical-file-input"]').classList.toggle('hidden', !isLoggedIn);
+            document.getElementById('template-upload-section').classList.toggle('hidden', !isLoggedIn);
+ 
+            // --- Control de la UI de sesión ---
+            if (user && !user.isAnonymous) {
+                // --- Usuario con sesión iniciada (correo y contraseña) ---
+                userEmailSpan.textContent = user.email;
+                userInfo.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+                loginScreen.classList.add('hidden'); // Ocultar pantalla de login si está visible
+ 
+                // Re-renderizar las tablas para asegurar que la columna de acciones se muestre
+                // si los datos se cargaron antes de que el usuario iniciara sesión.
+                if (news.length > 0) {
+                    sortAndRenderTable(newsTableBody, news, false);
+                }
+                if (historicalNews.length > 0) {
+                    sortAndRenderTable(historicalTableBody, historicalNews, true);
+                }
+            } else {
+                // --- Usuario anónimo o sin sesión ---
+                userEmailSpan.textContent = '';
+                userInfo.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * @summary Inicializa la autenticación de Firebase. Reutiliza la sesión existente o crea una anónima si no hay ninguna.
+         */
+         function initializeAppWithAuth() {
+             auth.onAuthStateChanged(async (user) => {
+                 if (user) {
+                     // --- Caso 1: Ya existe un usuario (anónimo o con email) ---
+                     // La sesión persiste entre recargas. Simplemente usamos el usuario existente.
+                     userId = user.uid;
+                     console.log("Sesión existente reutilizada:", userId, "Anónima:", user.isAnonymous);
+ 
+                     updateUserUI(user);
+                     setupRealtimeListeners();
+                     showApp();
+                 } else {
+                     // --- Caso 2: No hay ningún usuario ---
+                     // Esto ocurre en la primera visita o después de un signOut().
+                     // Creamos una nueva sesión anónima.
+                     try {
+                         const userCredential = await auth.signInAnonymously();
+                         const newAnonymousUser = userCredential.user;
+                         console.log("Nueva sesión anónima creada:", newAnonymousUser.uid);
+                         // El listener onAuthStateChanged se volverá a disparar con este nuevo usuario,
+                         // entrando en el `if (user)` y cargando la app.
+                     } catch (error) {
+                         console.error("Error en la autenticación anónima:", error);
+                         showAlert("Error de conexión. No se pudo iniciar la sesión.", "error");
+                         showLoader(false);
+                     }
+                 }
+             });
+         }
 
 
         /**
@@ -6896,6 +7087,13 @@
             closeReportSettingsModalBtn = document.getElementById('close-report-settings-modal-btn'); // Ya existe
             openTemplateUploaderBtn = document.getElementById('open-template-uploader-btn'); // Ya existe
             reportSettingsBtn = document.getElementById('report-settings-btn'); // Ya existe
+            loginScreen = document.getElementById('login-screen');
+            loginForm = document.getElementById('login-form');
+            loginBtn = document.getElementById('login-btn');
+            logoutBtn = document.getElementById('logout-btn');
+            userEmailSpan = document.getElementById('user-email');
+            loginError = document.getElementById('login-error');
+            togglePasswordVisibility = document.getElementById('toggle-password-visibility');
 
             projectCategoryChart = document.getElementById('projectCategoryChart');
             // Nuevas referencias para los botones de migración
@@ -6915,6 +7113,49 @@
             setupEventListeners();
             setupGlobalEventDelegation();
             setupMediosDashboardFilter();
+
+            // --- Lógica de Autenticación ---
+            loginBtn.addEventListener('click', () => {
+                loginScreen.classList.remove('hidden');
+                loginError.classList.add('hidden');
+                loginForm.reset();
+            });
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // El onAuthStateChanged se encargará de actualizar la UI
+                        loginScreen.classList.add('hidden');
+                    })
+                    .catch((error) => {
+                        loginError.textContent = "Credenciales incorrectas. Por favor, intente de nuevo.";
+                        loginError.classList.remove('hidden');
+                        console.error("Error de inicio de sesión:", error);
+                    });
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                // Simplemente cerramos la sesión. onAuthStateChanged se encargará de crear una nueva sesión anónima.
+                auth.signOut();
+            });
+
+            togglePasswordVisibility.addEventListener('click', () => {
+                const passwordInput = document.getElementById('login-password');
+                const icon = togglePasswordVisibility.querySelector('i');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
 
             // Configurar Select2 para los selects
             $('#news-project, #news-subproject, #news-category, #news-medio, #edit-news-project, #edit-news-subproject, #edit-news-category, #edit-news-medio, #conference-category, #edit-conference-category, #conference-medio, #edit-conference-medio').each(function() {
