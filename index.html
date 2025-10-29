@@ -4886,7 +4886,6 @@
         function navigateAndFilter(targetTab, filtersToApply) {
             if (targetTab !== 'noticias' && targetTab !== 'historico') return;
 
-            // --- INICIO DE LA SOLUCIÓN ---
             // Cierra cualquier modal de reportes que pueda estar abierto antes de navegar.
             // Esto previene que la clase 'modal-open' se quede "pegada" en el body.
             if (reportSettingsModal && !reportSettingsModal.classList.contains('hidden')) closeModal(reportSettingsModal);
