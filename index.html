@@ -4887,6 +4887,12 @@
         function navigateAndFilter(targetTab, filtersToApply) {
             if (targetTab !== 'noticias' && targetTab !== 'historico') return;
 
+            // --- INICIO DE LA SOLUCIÓN ---
+            // Cierra cualquier modal de reportes que pueda estar abierto antes de navegar.
+            // Esto previene que la clase 'modal-open' se quede "pegada" en el body.
+            if (reportSettingsModal && !reportSettingsModal.classList.contains('hidden')) closeModal(reportSettingsModal);
+            // --- FIN DE LA SOLUCIÓN ---
+
             // 1. Cambiar a la pestaña correcta
             document.querySelector(`button[data-tab="${targetTab}"]`).click();
 
