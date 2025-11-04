@@ -1224,11 +1224,11 @@
                             <input type="date" id="news-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
                         </div>
                         <div class="form-field sm:col-span-2">
-                            <label for="news-source">Fuente de la Noticia (URL)</label>
-                            <div class="flex-with-buttons">
-                                <input type="url" id="news-source" name="fuente" placeholder="https://ejemplo.com/noticia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
-                                <button type="button" id="edit-source-btn" class="edit-btn">
-                                    <i class="fa-solid fa-pen"></i>
+                            <label for="news-source">Enlace(s) (URL)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="news-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                                <button type="button" id="manage-links-news-btn" class="bg-primary hover:bg-primary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                                    <i class="fa-solid fa-plus"></i>
                                 </button>
                             </div>
                         </div>
@@ -1325,11 +1325,11 @@
                             <input type="date" id="edit-news-date" name="fecha" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
                         </div>
                         <div class="form-field sm:col-span-2">
-                            <label for="edit-news-source">Fuente de la Noticia (URL)</label>
-                            <div class="flex-with-buttons">
-                                <input type="url" id="edit-news-source" name="fuente" placeholder="https://ejemplo.com/noticia" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
-                                <button type="button" id="edit-source-edit-btn" class="edit-btn">
-                                    <i class="fa-solid fa-pen"></i>
+                            <label for="edit-news-source">Enlace(s) (URL)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="edit-news-source" name="fuente" placeholder="https://ejemplo.com/noticia1; https://ejemplo.com/noticia2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2" required>
+                                <button type="button" id="manage-links-edit-news-btn" class="bg-primary hover:bg-primary-dark text-white font-bold p-2 rounded-lg shadow-md transition-all duration-200 ease-in-out mt-1" title="Gestionar múltiples enlaces">
+                                    <i class="fa-solid fa-plus"></i>
                                 </button>
                             </div>
                         </div>
@@ -1829,6 +1829,7 @@
         // --- Constantes Globales de Configuración ---
         const NEWS_USER_UID = 'sucw7HPYiPQY2rFsVhUJY4f1ec53';  // --- Clave de FRIDA
         const CONFERENCE_USER_UID = 'ZxhHQrY9hOgnUyp0Vj0mga6HIAH3'; // --- Clave de YOSELIN
+        const ADMIN_USER_UID = 'oFZHw4LBqgWE21CYJXOTkRFisn72'; // --- Clave de ADMIN
 
 
         // --- Almacenes de Datos Principales ---
@@ -3389,10 +3390,10 @@
 
             const isConferenceRecord = specialMedios.includes(recordToCheck.medio);
 
-            if (isConferenceRecord && currentUser.uid !== CONFERENCE_USER_UID) {
+            if (isConferenceRecord && ![CONFERENCE_USER_UID, ADMIN_USER_UID].includes(currentUser.uid)) {
                 return showAlert("No tiene permiso para editar conferencias o eventos.", "warning");
             }
-            if (!isConferenceRecord && currentUser.uid !== NEWS_USER_UID) {
+            if (!isConferenceRecord && ![NEWS_USER_UID, ADMIN_USER_UID].includes(currentUser.uid)) {
                 return showAlert("No tiene permiso para editar noticias.", "warning");
             }
             // --- FIN DE LA MEJORA ---
@@ -3474,10 +3475,10 @@
 
             const isConferenceRecord = specialMedios.includes(recordToCheck.medio);
 
-            if (isConferenceRecord && currentUser.uid !== CONFERENCE_USER_UID) {
+            if (isConferenceRecord && ![CONFERENCE_USER_UID, ADMIN_USER_UID].includes(currentUser.uid)) {
                 return showAlert("No tiene permiso para eliminar conferencias o eventos.", "warning");
             }
-            if (!isConferenceRecord && currentUser.uid !== NEWS_USER_UID) {
+            if (!isConferenceRecord && ![NEWS_USER_UID, ADMIN_USER_UID].includes(currentUser.uid)) {
                 return showAlert("No tiene permiso para eliminar noticias.", "warning");
             }
             // --- FIN DE LA MEJORA ---
@@ -4720,10 +4721,8 @@
             document.querySelectorAll('.actions-col').forEach(col => {
                 col.classList.toggle('hidden', !isLoggedIn);
             });
- 
-            // --- Control de visibilidad de otros elementos ---
-            document.getElementById('add-news-btn').classList.toggle('hidden', !isLoggedIn || user.uid !== NEWS_USER_UID);
-            document.getElementById('add-conference-btn').classList.toggle('hidden', !isLoggedIn || user.uid !== CONFERENCE_USER_UID);
+            document.getElementById('add-news-btn').classList.toggle('hidden', !isLoggedIn || ![NEWS_USER_UID, ADMIN_USER_UID].includes(user.uid));
+            document.getElementById('add-conference-btn').classList.toggle('hidden', !isLoggedIn || ![CONFERENCE_USER_UID, ADMIN_USER_UID].includes(user.uid));
             document.getElementById('start-migration-btn').classList.toggle('hidden', !isLoggedIn);
             document.getElementById('start-reverse-migration-btn').classList.toggle('hidden', !isLoggedIn);
             document.querySelector('label[for="historical-file-input"]').classList.toggle('hidden', !isLoggedIn);
@@ -6364,6 +6363,30 @@
 
             document.getElementById('manage-links-edit-conference-btn').addEventListener('click', () => {
                 openMultiLinkEditor(document.getElementById('edit-conference-source'));
+            });
+
+            document.getElementById('manage-links-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('news-source'));
+            });
+
+            document.getElementById('manage-links-edit-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('edit-news-source'));
+            });
+
+            document.getElementById('manage-links-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('news-source'));
+            });
+
+            document.getElementById('manage-links-edit-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('edit-news-source'));
+            });
+
+            document.getElementById('manage-links-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('news-source'));
+            });
+
+            document.getElementById('manage-links-edit-news-btn').addEventListener('click', () => {
+                openMultiLinkEditor(document.getElementById('edit-news-source'));
             });
 
             function renderLinkList(links) {
