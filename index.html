@@ -200,8 +200,9 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             border-radius: 6px;
             z-index: 20;
-            max-height: 250px;
-            overflow-y: auto;
+            max-height: 300px; /* Aumentamos un poco la altura máxima */
+            max-width: 450px; /* Ancho máximo para que no se extienda demasiado */
+            overflow: auto;   /* Habilita ambos scrolls (vertical y horizontal) si es necesario */
             min-width: 200px;
         }
         
@@ -3062,7 +3063,7 @@
                         ${uniqueValues.map(value => `
                             <label class="flex items-center space-x-2 p-1 hover:bg-gray-100 rounded cursor-pointer filter-option-label">
                                 <input type="checkbox" class="filter-checkbox" value="${value}" ${activeColumnFilters.includes(value) ? 'checked' : ''}>
-                                <span class="text-sm text-gray-700">${truncateText(value, 40)}</span>
+                                <span class="text-sm text-gray-700">${value}</span>
                             </label>
                         `).join('')}
                     </div>
